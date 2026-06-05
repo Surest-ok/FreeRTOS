@@ -1,47 +1,58 @@
 /*
  * Main entry point for FreeRTOS SMP kernel prototype
- * Phase 1: Bare-metal Hello World
+ * Phase 2: Exception vectors, GICv2, Generic Timer tick
  */
 
 #include <stdint.h>
 #include "platform.h"
 #include "uart.h"
+#include "gic.h"
+#include "gtimer.h"
+#include "interrupt.h"
 
-/* Secondary CPU entry point */
 void secondary_cpu_entry(void)
 {
-    /* Just print a message and loop */
-    uart_printf("Secondary CPU entry (not implemented yet)\n");
-
-    /* For now, just loop indefinitely */
+    uart_printf("Secondary CPU entry (not implemented yet)\r\n");
     while (1) {
-        /* Wait for interrupt */
         asm volatile("wfi");
     }
 }
 
-/* Main function called from startup.S */
 int main(void)
 {
-    /* Initialize UART first */
     uart_init();
-    uart_puts("UART initialized\n");
+    uart_puts("=== Phase 2: Exception Vectors + GICv2 + Timer ===\r\n");
 
-    /* Print hello message with some system info */
-    uart_printf("Hello from QEMU AArch64!\n");
-    uart_printf("Running at EL1\n");
+    /* Check current EL */
+    uint64_t current_el;
+    asm volatile("mrs %0, CurrentEL" : "=r"(current_el));
+    uart_printf("Core 0 at EL%d\r\n", (uint32_t)(current_el >> 2) & 3);
 
-    /* Read MPIDR to get core ID */
-    uint64_t mpidr = 0;
-    asm volatile("mrs %0, MPIDR_EL1" : "=r"(mpidr));
-    uint32_t core_id = mpidr & 0xFF;
-    uart_printf("Core ID: %d\n", core_id);
+    /* Step 1: Install exception vector table */
+    interrupt_init();
+    uart_puts("[1] Vector table installed\r\n");
 
-    /* For now, just loop */
-    uart_printf("Entering infinite loop...\n");
+    /* Step 2: Initialize GICv2 */
+    gic_init();
+    uart_puts("[2] GICv2 initialized\r\n");
+
+    /* Step 3: Initialize Generic Timer */
+    gtimer_init();
+    uart_puts("[3] Timer initialized\r\n");
+
+    /* Step 4: Register timer ISR */
+    interrupt_install(IRQ_TIMER, gtimer_handler);
+    uart_puts("[4] Timer ISR registered\r\n");
+
+    /* Step 5: Unmask IRQ and start timer */
+    asm volatile("msr daifclr, #0x2");
+    gtimer_start();
+    uart_puts("[5] IRQ unmasked, timer started\r\n");
+    uart_puts("=== Initialization complete ===\r\n\r\n");
+
+    /* Main loop */
     while (1) {
-        /* Do nothing */
-        asm volatile("nop");
+        asm volatile("wfi");
     }
     return 0;
 }
