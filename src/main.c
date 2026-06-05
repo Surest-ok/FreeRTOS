@@ -1,5 +1,7 @@
 /*
- * Phase 2: GICv3 + Generic Timer on QEMU virt
+ * Phase 3: FreeRTOS V11.x on QEMU virt AArch64 (GICv3)
+ *
+ * Demo: two tasks printing at different rates via preemptive scheduling.
  */
 
 #include <stdint.h>
@@ -7,11 +9,33 @@
 #include "uart.h"
 #include "gic.h"
 #include "gtimer.h"
-#include "interrupt.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
-void secondary_cpu_entry(void)
+/* Demo Task A: prints every 1 second */
+static void task_print_a(void *pvParameters)
 {
-    while (1) asm volatile("wfi");
+    (void)pvParameters;
+    int count = 0;
+    for (;;) {
+        uart_printf("[TaskA] count=%d, tick=%d\r\n",
+                     count, (uint32_t)xTaskGetTickCount());
+        count++;
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+/* Demo Task B: prints every 700ms */
+static void task_print_b(void *pvParameters)
+{
+    (void)pvParameters;
+    int count = 0;
+    for (;;) {
+        uart_printf("[TaskB] count=%d, tick=%d\r\n",
+                     count, (uint32_t)xTaskGetTickCount());
+        count++;
+        vTaskDelay(pdMS_TO_TICKS(700));
+    }
 }
 
 int main(void)
@@ -21,26 +45,51 @@ int main(void)
     el = (el >> 2) & 3;
 
     uart_init();
-    uart_printf("=== Phase 2: GICv3 + EL%d + Timer ===\r\n", (uint32_t)el);
+    uart_printf("=== Phase 3: FreeRTOS V11.x on EL%d ===\r\n", (uint32_t)el);
 
-    /* 1. Vector table */
-    interrupt_init();
-    uart_puts("[1] Vector table installed\r\n");
-
-    /* 2. GICv3 */
+    /* Initialize GICv3 (Distributor + Redistributor + CPU Interface) */
     gic_init(0);
-    uart_puts("[2] GICv3 initialized\r\n");
+    uart_puts("[1] GICv3 initialized\r\n");
 
-    /* 3. Timer */
+    /* Initialize timer (compute step, but don't start yet) */
     gtimer_init();
-    interrupt_install(IRQ_TIMER, gtimer_handler);
-    uart_puts("[3] Timer + ISR ready\r\n");
 
-    /* 4. Enable IRQ + start timer */
-    asm volatile("msr daifclr, #0x2");
-    gtimer_start();
-    uart_puts("[4] Timer started\r\n\r\n");
+    /* Note: Vector table is NOT installed here.
+     * FreeRTOS installs _freertos_vector_table via VBAR_EL1
+     * when vTaskStartScheduler() calls vPortRestoreTaskContext(). */
 
+    /* Create demo tasks */
+    xTaskCreate(task_print_a, "TaskA", 256, NULL, 2, NULL);
+    xTaskCreate(task_print_b, "TaskB", 256, NULL, 2, NULL);
+    uart_puts("[2] Tasks created\r\n");
+
+    /* Start the scheduler — never returns */
+    uart_puts("[3] Starting scheduler...\r\n");
+    vTaskStartScheduler();
+
+    /* Should never reach here */
+    uart_puts("ERROR: Scheduler exited!\r\n");
     while (1) asm volatile("wfi");
     return 0;
+}
+
+/* ---- FreeRTOS Hook Functions ---- */
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    (void)xTask;
+    uart_printf("STACK OVERFLOW in: %s\r\n", pcTaskName);
+    for (;;) asm volatile("wfi");
+}
+
+void vApplicationMallocFailedHook(void)
+{
+    uart_puts("MALLOC FAILED\r\n");
+    for (;;) asm volatile("wfi");
+}
+
+void vAssertCalled(const char *file, int line)
+{
+    uart_printf("ASSERT FAIL: %s:%d\r\n", file, line);
+    for (;;) asm volatile("wfi");
 }

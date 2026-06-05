@@ -1,9 +1,24 @@
-#ifndef __STDDEF_H__
-#define __STDDEF_H__
+/*
+ * stddef.h for AArch64 bare-metal
+ *
+ * Provides correct 64-bit definitions that the cross-compiler's
+ * stddef.h may get wrong due to sysroot interference.
+ */
+#ifndef _STDDEF_H
+#define _STDDEF_H
 
-typedef long ptrdiff_t;
-typedef unsigned size_t;
+/* Guard against GCC's stddef.h redefinitions */
+#define ___int_size_t_h
+#define _SIZE_T
+#define __size_t
 
-#define NULL ((void*)0)
+typedef long unsigned int  size_t;
+typedef long int           ptrdiff_t;
 
-#endif /* __STDDEF_H__ */
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+
+typedef unsigned int wchar_t;
+
+#endif /* _STDDEF_H */

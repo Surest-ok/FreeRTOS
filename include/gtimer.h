@@ -1,6 +1,11 @@
 /*
  * ARM Generic Timer Driver for QEMU virt AArch64
- * Uses the EL1 Physical Timer (CNTP_TVAL_EL0 / CNTP_CTL_EL0)
+ * EL1 Physical Timer: CNTP_TVAL_EL0 / CNTP_CTL_EL0
+ * Interrupt: PPI 14 → INTID 30
+ *
+ * FreeRTOS tick integration:
+ *   vConfigureTickInterrupt() — called by xPortStartScheduler()
+ *   vClearTickInterrupt()     — called by FreeRTOS_Tick_Handler()
  */
 
 #ifndef __GTIMER_H__
@@ -8,46 +13,18 @@
 
 #include <stdint.h>
 
-/* Default tick rate (ticks per second) */
-#define GTIMER_TICK_RATE    100
+/* Tick rate for FreeRTOS (must match configTICK_RATE_HZ) */
+#define GTIMER_TICK_RATE    1000
 
-/*
- * Initialize the Generic Timer
- * - Reads frequency from CNTFRQ_EL0
- * - Configures timer for periodic interrupts at tick_rate Hz
- * - Enables timer interrupt in GIC
- */
 void gtimer_init(void);
-
-/*
- * Start the timer (enable CNTP_CTL_EL0)
- */
 void gtimer_start(void);
-
-/*
- * Stop the timer (disable CNTP_CTL_EL0)
- */
 void gtimer_stop(void);
-
-/*
- * Reload the timer for next tick
- * Called from the ISR to re-arm the timer
- */
 void gtimer_reload(void);
-
-/*
- * Get the timer frequency (CNTFRQ_EL0)
- */
 uint64_t gtimer_get_frequency(void);
-
-/*
- * Get current counter value (CNTPCT_EL0)
- */
 uint64_t gtimer_get_counter(void);
 
-/*
- * Timer ISR callback - called from interrupt_dispatch
- */
-void gtimer_handler(void);
+/* FreeRTOS tick hooks */
+void vConfigureTickInterrupt(void);
+void vClearTickInterrupt(void);
 
 #endif /* __GTIMER_H__ */
