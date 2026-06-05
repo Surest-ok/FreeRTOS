@@ -65,14 +65,14 @@ el1_entry:
     /* Now at EL1 — set up stack */
     msr spsel, #1
     ldr x20, =stack_top
-    add x20, x20, #4096
+    add x20, x20, #8192
     mov sp, x20
     b common_init
 
 el1_setup:
     msr spsel, #1
     ldr x20, =stack_top
-    add x20, x20, #4096
+    add x20, x20, #8192
     mov sp, x20
 
     mrs x6, CPACR_EL1
@@ -106,4 +106,4 @@ park_secondary:
 .section .bss.stack
 .global stack_top
 stack_top:
-    .space 4096
+    .space 8192

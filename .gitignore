@@ -23,4 +23,4 @@ Thumbs.db
 # Debug files
 *.gdbinit
 debug/
-logs/
+logs/FreeRTOS-Kernel/

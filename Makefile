@@ -1,16 +1,19 @@
 #
-# Makefile for FreeRTOS SMP kernel prototype on QEMU virt AArch64
-# Phase 2: Exception vectors, GICv3, Generic Timer
+# Makefile for FreeRTOS on QEMU virt AArch64
+# Phase 3: FreeRTOS V11.x + GICv3 + Generic Timer
 #
 
 # Toolchain configuration
 CROSS := aarch64-linux-gnu-
 CC := $(CROSS)gcc
-AS := $(CROSS)as
-LD := $(CROSS)ld
+AS := $(CROSS)gcc
+LD := $(CROSS)gcc
 OBJCOPY := $(CROSS)objcopy
 OBJDUMP := $(CROSS)objdump
 NM := $(CROSS)nm
+
+# FreeRTOS kernel source directory
+FREERTOS_DIR := FreeRTOS-Kernel
 
 # Compiler flags
 CFLAGS := -mcpu=cortex-a53 \
@@ -21,32 +24,58 @@ CFLAGS := -mcpu=cortex-a53 \
           -g \
           -Wall \
           -Wextra \
-          -Iinclude
+          -DGUEST \
+          -DQEMU \
+          -Iinclude \
+          -I$(FREERTOS_DIR)/include \
+          -I$(FREERTOS_DIR)/portable/GCC/ARM_AARCH64_SRE
 
 # Assembly flags
 ASFLAGS := -mcpu=cortex-a53 \
-           -g
+           -g \
+           -DGUEST \
+           -DQEMU
 
 # Linker flags
 LDFLAGS := -T linker.ld \
-           -nostdlib
+           -nostdlib \
+           -lgcc
 
 # Directories
 BUILD_DIR := build
 
+# ---------------------------------------------------------------
 # Source files
-SRCS_S := src/startup.S \
-          src/vectors.S
+# ---------------------------------------------------------------
 
+# Application assembly
+SRCS_S := src/startup.S \
+          src/freertos_vectors.S
+
+# FreeRTOS port assembly
+SRCS_S += $(FREERTOS_DIR)/portable/GCC/ARM_AARCH64_SRE/portASM.S
+
+# Application C
 SRCS_C := src/main.c \
           src/uart.c \
           src/gic.c \
           src/gtimer.c \
-          src/interrupt.c
+          src/app_irq.c \
+          src/string.c
 
-# Object files
-OBJS := $(SRCS_S:src/%=$(BUILD_DIR)/src/%.o) \
-        $(SRCS_C:src/%=$(BUILD_DIR)/src/%.o)
+# FreeRTOS kernel C
+SRCS_C += $(FREERTOS_DIR)/tasks.c \
+          $(FREERTOS_DIR)/queue.c \
+          $(FREERTOS_DIR)/list.c \
+          $(FREERTOS_DIR)/timers.c \
+          $(FREERTOS_DIR)/event_groups.c \
+          $(FREERTOS_DIR)/stream_buffer.c \
+          $(FREERTOS_DIR)/portable/GCC/ARM_AARCH64_SRE/port.c \
+          $(FREERTOS_DIR)/portable/MemMang/heap_4.c
+
+# Object files — transform path: replace / with _ in build dir
+OBJS := $(patsubst %.S,$(BUILD_DIR)/%.S.o,$(SRCS_S)) \
+        $(patsubst %.c,$(BUILD_DIR)/%.c.o,$(SRCS_C))
 
 DEPS := $(OBJS:.o=.d)
 
@@ -64,44 +93,24 @@ all: $(BUILD_DIR) $(TARGET) $(IMAGE)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Build directory for source objects
-$(BUILD_DIR)/src:
-	mkdir -p $(BUILD_DIR)/src
+# ---- Generic compilation rules ----
 
-# ---- Assembly files ----
-$(BUILD_DIR)/src/startup.S.o: src/startup.S | $(BUILD_DIR)/src
+# Assembly files
+$(BUILD_DIR)/%.S.o: %.S | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	@echo "AS  $<"
 	@$(CC) $(ASFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/src/vectors.S.o: src/vectors.S | $(BUILD_DIR)/src
-	@echo "AS  $<"
-	@$(CC) $(ASFLAGS) -c $< -o $@
-
-# ---- C files ----
-$(BUILD_DIR)/src/main.c.o: src/main.c | $(BUILD_DIR)/src
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/src/uart.c.o: src/uart.c | $(BUILD_DIR)/src
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/src/gic.c.o: src/gic.c | $(BUILD_DIR)/src
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/src/gtimer.c.o: src/gtimer.c | $(BUILD_DIR)/src
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/src/interrupt.c.o: src/interrupt.c | $(BUILD_DIR)/src
+# C files
+$(BUILD_DIR)/%.c.o: %.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	@echo "CC  $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 # Link kernel
 $(TARGET): $(OBJS)
 	@echo "LD  $(TARGET)"
-	@$(CC) $(LDFLAGS) -o $@ $(OBJS)
+	@$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
 # Convert to binary image
 $(IMAGE): $(TARGET)
