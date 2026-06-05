@@ -58,6 +58,13 @@ bss_cleared:
     /* Initialize timer frequency (optional) */
     /* For now, assume CNTFRQ_EL0 is already set by QEMU */
 
+    /* Enable IRQ exceptions in DAIF register
+     * DAIF bits: bit7=D(Debug), bit6=A(SError), bit5=IRQ, bit4=FIQ
+     * Clearing bit 5 (IRQ) enables IRQ interrupts.
+     * We use msr daifclr to clear specific bits.
+     */
+    msr daifclr, #0x2   /* Clear IRQ mask (bit 1 = IRQ in daifclr encoding) */
+
     /* Jump to C main */
     bl main
 

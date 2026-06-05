@@ -1,6 +1,6 @@
 #
 # Makefile for FreeRTOS SMP kernel prototype on QEMU virt AArch64
-# Phase 1: Bare-metal boot with PL011 UART
+# Phase 2: Exception vectors, GICv3, Generic Timer
 #
 
 # Toolchain configuration
@@ -35,12 +35,19 @@ LDFLAGS := -T linker.ld \
 BUILD_DIR := build
 
 # Source files
-SRCS := src/startup.S \
-        src/main.c \
-        src/uart.c
+SRCS_S := src/startup.S \
+          src/vectors.S
+
+SRCS_C := src/main.c \
+          src/uart.c \
+          src/gic.c \
+          src/gtimer.c \
+          src/interrupt.c
 
 # Object files
-OBJS := $(SRCS:src/%=$(BUILD_DIR)/src/%.o)
+OBJS := $(SRCS_S:src/%=$(BUILD_DIR)/src/%.o) \
+        $(SRCS_C:src/%=$(BUILD_DIR)/src/%.o)
+
 DEPS := $(OBJS:.o=.d)
 
 # Default target
@@ -48,7 +55,7 @@ TARGET := kernel.elf
 IMAGE := kernel.bin
 
 # Phony targets
-.PHONY: all clean run debug build_objs
+.PHONY: all clean run debug nm dump
 
 # Default target
 all: $(BUILD_DIR) $(TARGET) $(IMAGE)
@@ -57,11 +64,20 @@ all: $(BUILD_DIR) $(TARGET) $(IMAGE)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Build all object files
+# Build directory for source objects
+$(BUILD_DIR)/src:
+	mkdir -p $(BUILD_DIR)/src
+
+# ---- Assembly files ----
 $(BUILD_DIR)/src/startup.S.o: src/startup.S | $(BUILD_DIR)/src
 	@echo "AS  $<"
 	@$(CC) $(ASFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/src/vectors.S.o: src/vectors.S | $(BUILD_DIR)/src
+	@echo "AS  $<"
+	@$(CC) $(ASFLAGS) -c $< -o $@
+
+# ---- C files ----
 $(BUILD_DIR)/src/main.c.o: src/main.c | $(BUILD_DIR)/src
 	@echo "CC  $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
@@ -70,8 +86,17 @@ $(BUILD_DIR)/src/uart.c.o: src/uart.c | $(BUILD_DIR)/src
 	@echo "CC  $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/src:
-	mkdir -p $(BUILD_DIR)/src
+$(BUILD_DIR)/src/gic.c.o: src/gic.c | $(BUILD_DIR)/src
+	@echo "CC  $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/src/gtimer.c.o: src/gtimer.c | $(BUILD_DIR)/src
+	@echo "CC  $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/src/interrupt.c.o: src/interrupt.c | $(BUILD_DIR)/src
+	@echo "CC  $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 # Link kernel
 $(TARGET): $(OBJS)
@@ -83,13 +108,18 @@ $(IMAGE): $(TARGET)
 	@echo "OBJCOPY $(IMAGE)"
 	@$(OBJCOPY) -O binary $(TARGET) $(IMAGE)
 
-# Build all objects (dependency calculation)
-build_objs: $(OBJS)
-
 # Run in QEMU
 run: $(TARGET)
 	@echo "Running QEMU..."
-	@./scripts/run-qemu.sh $(TARGET)
+	@timeout 10 qemu-system-aarch64 \
+	    -M virt \
+	    -cpu cortex-a53 \
+	    -smp 1 \
+	    -m 512 \
+	    -kernel $(TARGET) \
+	    -nographic \
+	    -monitor none \
+	    -serial stdio 2>&1 || true
 
 # Debug mode (with GDB)
 debug: CFLAGS += -O0 -g3
@@ -114,8 +144,3 @@ dump: $(TARGET)
 
 # Include dependencies
 -include $(DEPS)
-
-# Rule to generate dependencies
-$(BUILD_DIR)/src/%.d: %.c
-	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -MM $< -MT $(BUILD_DIR)/src/$*.o > $@
