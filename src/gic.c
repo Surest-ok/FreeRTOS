@@ -2,8 +2,8 @@
  * GICv3 Driver Implementation for QEMU virt AArch64
  *
  * Prerequisites:
- *   - ICC_SRE_EL2.SRE set at EL2 before dropping to EL1
- *   - HCR_EL2 = 0 (physical IRQ/FIQ routed to EL1)
+ *   - ICC_SRE_EL2.SRE set at EL2 before dropping to EL1 (startup.S)
+ *   - HCR_EL2.RW=1, no IRQ/FIQ routing (startup.S)
  *
  * GICv3 components:
  *   - GICD (Distributor): 0x08000000 — SPI routing, priority
@@ -138,29 +138,13 @@ static void gicr_init(uint32_t core_id)
 }
 
 /* ================================================================
- * CPU Interface init (works at EL1 or EL2)
- *
- * At EL2: ICC_SRE_EL2 must be set (done in startup.S).
- *         Then ICC_*_EL1 registers are accessible from EL2.
- * At EL1: ICC_SRE_EL1 must be set.
+ * CPU Interface init — always runs at EL1 after startup drop
  * ================================================================ */
 static void gic_cpuif_init(void)
 {
     uint64_t val;
-    uint64_t current_el;
 
-    /* Detect current EL */
-    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
-    current_el = (current_el >> 2) & 3;
-
-    if (current_el == 2) {
-        /* At EL2: ensure ICC_SRE_EL2 is enabled */
-        val = read_sysreg("S3_4_C12_C9_5");  /* ICC_SRE_EL2 */
-        val |= 0x7;
-        write_sysreg("S3_4_C12_C9_5", val);
-    }
-
-    /* Enable system register access at EL1 (accessible from EL2) */
+    /* Enable system register access */
     val = read_sysreg(ICC_SRE_EL1);
     val |= 0x7;
     write_sysreg(ICC_SRE_EL1, val);
