@@ -8,9 +8,6 @@
 
 #include <stdint.h>
 
-/* Timer interrupt: PPI 30 in GICv3 = INTID 30 */
-#define GTIMER_IRQ          30
-
 /* Default tick rate (ticks per second) */
 #define GTIMER_TICK_RATE    100
 

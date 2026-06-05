@@ -1,6 +1,5 @@
 /*
- * Main entry point for FreeRTOS SMP kernel prototype
- * Phase 2: Exception vectors, GICv2, Generic Timer tick
+ * Phase 2: GICv3 + Generic Timer on QEMU virt
  */
 
 #include <stdint.h>
@@ -12,47 +11,36 @@
 
 void secondary_cpu_entry(void)
 {
-    uart_printf("Secondary CPU entry (not implemented yet)\r\n");
-    while (1) {
-        asm volatile("wfi");
-    }
+    while (1) asm volatile("wfi");
 }
 
 int main(void)
 {
+    uint64_t el;
+    asm volatile("mrs %0, CurrentEL" : "=r"(el));
+    el = (el >> 2) & 3;
+
     uart_init();
-    uart_puts("=== Phase 2: Exception Vectors + GICv2 + Timer ===\r\n");
+    uart_printf("=== Phase 2: GICv3 + EL%d + Timer ===\r\n", (uint32_t)el);
 
-    /* Check current EL */
-    uint64_t current_el;
-    asm volatile("mrs %0, CurrentEL" : "=r"(current_el));
-    uart_printf("Core 0 at EL%d\r\n", (uint32_t)(current_el >> 2) & 3);
-
-    /* Step 1: Install exception vector table */
+    /* 1. Vector table */
     interrupt_init();
     uart_puts("[1] Vector table installed\r\n");
 
-    /* Step 2: Initialize GICv2 */
-    gic_init();
-    uart_puts("[2] GICv2 initialized\r\n");
+    /* 2. GICv3 */
+    gic_init(0);
+    uart_puts("[2] GICv3 initialized\r\n");
 
-    /* Step 3: Initialize Generic Timer */
+    /* 3. Timer */
     gtimer_init();
-    uart_puts("[3] Timer initialized\r\n");
-
-    /* Step 4: Register timer ISR */
     interrupt_install(IRQ_TIMER, gtimer_handler);
-    uart_puts("[4] Timer ISR registered\r\n");
+    uart_puts("[3] Timer + ISR ready\r\n");
 
-    /* Step 5: Unmask IRQ and start timer */
+    /* 4. Enable IRQ + start timer */
     asm volatile("msr daifclr, #0x2");
     gtimer_start();
-    uart_puts("[5] IRQ unmasked, timer started\r\n");
-    uart_puts("=== Initialization complete ===\r\n\r\n");
+    uart_puts("[4] Timer started\r\n\r\n");
 
-    /* Main loop */
-    while (1) {
-        asm volatile("wfi");
-    }
+    while (1) asm volatile("wfi");
     return 0;
 }

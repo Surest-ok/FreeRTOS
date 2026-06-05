@@ -1,11 +1,14 @@
 /*
- * GICv2 Driver Implementation for QEMU virt AArch64
+ * GICv3 Driver Implementation for QEMU virt AArch64
  *
- * GICv2 uses a simpler memory-mapped interface:
- *   - GICD (Distributor): manages interrupt routing, priority, enable
- *   - GICC (CPU Interface): per-core acknowledge, end-of-interrupt, priority mask
+ * Prerequisites:
+ *   - ICC_SRE_EL2.SRE set at EL2 before dropping to EL1
+ *   - HCR_EL2 = 0 (physical IRQ/FIQ routed to EL1)
  *
- * No ICC_* system registers needed — everything is MMIO.
+ * GICv3 components:
+ *   - GICD (Distributor): 0x08000000 — SPI routing, priority
+ *   - GICR (Redistributor): 0x080A0000 — per-core SGI/PPI
+ *   - ICC_* (CPU Interface): system registers — per-core interrupt handling
  */
 
 #include <stdint.h>
@@ -14,152 +17,223 @@
 #include "uart.h"
 
 /* ---------------------------------------------------------------
- * Base addresses
+ * MMIO access helpers
  * --------------------------------------------------------------- */
-#define GICD_BASE_ADDR   ((uint64_t)GICD_BASE)   /* 0x08000000 */
-#define GICC_BASE_ADDR   ((uint64_t)0x08010000)  /* GICv2 CPU Interface */
+#define GICD_REG(offset)       (*(volatile uint32_t *)((uint64_t)GICD_BASE + (offset)))
+#define GICD_REG64(offset)     (*(volatile uint64_t *)((uint64_t)GICD_BASE + (offset)))
+#define GICR_REG(core, offset) (*(volatile uint32_t *)((uint64_t)GICR_BASE + (uint64_t)(core) * 0x20000 + (offset)))
 
 /* ---------------------------------------------------------------
  * GIC Distributor register offsets
  * --------------------------------------------------------------- */
-#define GICD_CTLR        0x0000
-#define GICD_TYPER       0x0004
-#define GICD_ISENABLER(n) (0x0100 + ((n) / 32) * 4)
-#define GICD_ICENABLER(n) (0x0180 + ((n) / 32) * 4)
-#define GICD_ISPENDR(n)  (0x0200 + ((n) / 32) * 4)
-#define GICD_ICPENDR(n)  (0x0280 + ((n) / 32) * 4)
+#define GICD_CTLR          0x0000
+#define GICD_TYPER         0x0004
+#define GICD_ISENABLER(n)  (0x0100 + ((n) / 32) * 4)
+#define GICD_ICENABLER(n)  (0x0180 + ((n) / 32) * 4)
+#define GICD_ICPENDR(n)    (0x0280 + ((n) / 32) * 4)
+#define GICD_IGROUPR(n)    (0x0080 + ((n) / 32) * 4)
 #define GICD_IPRIORITYR(n) (0x0400 + ((n) / 4) * 4)
-#define GICD_ITARGETSR(n) (0x0800 + ((n) / 4) * 4)
-#define GICD_ICFGR(n)    (0x0C00 + ((n) / 16) * 4)
-#define GICD_SGIR        0x0F00
+#define GICD_ICFGR(n)      (0x0C00 + ((n) / 16) * 4)
+#define GICD_IROUTER(n)    (0x6000 + (n) * 8)
 
 /* GICD_CTLR bits */
-#define GICD_CTLR_ENABLE  0x1
-#define GICD_CTLR_RWP     (1 << 31)
+#define GICD_CTLR_ENABLEGRP1NS  (1 << 1)
+#define GICD_CTLR_ENABLEGRP1    (1 << 0)
+#define GICD_CTLR_ARE_NS        (1 << 4)
 
 /* ---------------------------------------------------------------
- * GIC CPU Interface register offsets
+ * GIC Redistributor register offsets
+ * RD_base (0x00000): CTLR, TYPER, WAKER
+ * SGI_base (0x10000): ISENABLER, IPRIORITYR, IGROUPR for SGI/PPI
  * --------------------------------------------------------------- */
-#define GICC_CTLR        0x0000
-#define GICC_PMR         0x0004
-#define GICC_BPR         0x0008
-#define GICC_IAR         0x000C
-#define GICC_EOIR        0x0010
+#define GICR_WAKER             0x0014
+#define GICR_WAKER_PS          (1 << 1)   /* ProcessorSleep */
+#define GICR_WAKER_CA          (1 << 2)   /* ChildrenAsleep */
 
-/* GICC_CTLR bits */
-#define GICC_CTLR_ENABLE  0x1
-
-/* ---------------------------------------------------------------
- * MMIO access helpers
- * --------------------------------------------------------------- */
-#define GICD_REG(offset)     (*(volatile uint32_t *)(GICD_BASE_ADDR + (offset)))
-#define GICC_REG(offset)     (*(volatile uint32_t *)(GICC_BASE_ADDR + (offset)))
+#define GICR_SGI_BASE          0x10000
+#define GICR_IGROUPR0          (GICR_SGI_BASE + 0x0080)
+#define GICR_ISENABLER0        (GICR_SGI_BASE + 0x0100)
+#define GICR_ICENABLER0        (GICR_SGI_BASE + 0x0180)
+#define GICR_ICPENDR0          (GICR_SGI_BASE + 0x0280)
+#define GICR_IPRIORITYR_BASE   (GICR_SGI_BASE + 0x0400)
 
 /* ---------------------------------------------------------------
- * Initialize GICv2 Distributor
+ * GICv3 CPU Interface system register encodings
+ * Format: S3_<op1>_C<CRn>_C<CRm>_<op2>
  * --------------------------------------------------------------- */
+#define ICC_IAR1_EL1     "S3_0_C12_C12_0"
+#define ICC_EOIR1_EL1    "S3_0_C12_C12_1"
+#define ICC_BPR1_EL1     "S3_0_C12_C12_3"
+#define ICC_PMR_EL1      "S3_0_C4_C6_0"
+#define ICC_SRE_EL1      "S3_0_C12_C12_5"
+#define ICC_IGRPEN1_EL1  "S3_0_C12_C12_7"
+#define ICC_SGI1R_EL1    "S3_0_C12_C11_5"
+
+/* ---------------------------------------------------------------
+ * System register access
+ * --------------------------------------------------------------- */
+#define read_sysreg(reg) ({ \
+    uint64_t _val; \
+    __asm__ volatile("mrs %0, " reg : "=r"(_val)); \
+    _val; \
+})
+
+#define write_sysreg(reg, val) do { \
+    __asm__ volatile("msr " reg ", %0" :: "r"((uint64_t)(val))); \
+    __asm__ volatile("isb"); \
+} while(0)
+
+/* ================================================================
+ * Distributor init
+ * ================================================================ */
 static void gicd_init(void)
 {
-    uint32_t typer;
-    uint32_t max_irq;
-
-    typer = GICD_REG(GICD_TYPER);
-    max_irq = ((typer & 0x1F) + 1) * 32;
-    if (max_irq > 1020)
-        max_irq = 1020;
+    uint32_t typer = GICD_REG(GICD_TYPER);
+    uint32_t max_irq = ((typer & 0x1F) + 1) * 32;
+    if (max_irq > 1020) max_irq = 1020;
 
     /* Disable Distributor */
     GICD_REG(GICD_CTLR) = 0;
 
-    /* Set all SPIs to target core 0
-     * GICD_ITARGETSR: 4 interrupts per register, 8-bit target each
-     */
-    for (int i = SPI_START; i < (int)max_irq; i += 4) {
-        GICD_REG(GICD_ITARGETSR(i)) = 0x01010101;  /* All target core 0 */
-    }
+    /* Set all SPIs to Group 1 NS */
+    for (int i = SPI_START; i < (int)max_irq; i += 32)
+        GICD_REG(GICD_IGROUPR(i)) = 0xFFFFFFFF;
 
-    /* Set all SPI priorities to 0xA0 (medium) */
-    for (int i = SPI_START; i < (int)max_irq; i += 4) {
+    /* Set default priority for all */
+    for (int i = 0; i < (int)max_irq; i += 4)
         GICD_REG(GICD_IPRIORITYR(i)) = 0xA0A0A0A0;
-    }
 
-    /* Set all PPI priorities too */
-    for (int i = 0; i < SPI_START; i += 4) {
-        GICD_REG(GICD_IPRIORITYR(i)) = 0xA0A0A0A0;
-    }
+    /* Route all SPIs to core 0 */
+    for (int i = SPI_START; i < (int)max_irq; i++)
+        GICD_REG64(GICD_IROUTER(i)) = 0;
 
-    /* Disable all SPIs */
-    for (int i = SPI_START; i < (int)max_irq; i += 32) {
-        GICD_REG(GICD_ICENABLER(i)) = 0xFFFFFFFF;
-    }
-
-    /* Clear all SPI pending */
-    for (int i = SPI_START; i < (int)max_irq; i += 32) {
-        GICD_REG(GICD_ICPENDR(i)) = 0xFFFFFFFF;
-    }
-
-    /* Enable Distributor */
-    GICD_REG(GICD_CTLR) = GICD_CTLR_ENABLE;
+    /* Enable Distributor: ARE_NS + EnableGrp1NS + EnableGrp1 */
+    GICD_REG(GICD_CTLR) = GICD_CTLR_ARE_NS | GICD_CTLR_ENABLEGRP1NS | GICD_CTLR_ENABLEGRP1;
 }
 
-/* ---------------------------------------------------------------
- * Initialize GICv2 CPU Interface
- * --------------------------------------------------------------- */
-static void gicc_init(void)
+/* ================================================================
+ * Redistributor init (per-core)
+ * ================================================================ */
+static void gicr_init(uint32_t core_id)
 {
-    /* Disable CPU Interface */
-    GICC_REG(GICC_CTLR) = 0;
+    /* Wake up Redistributor */
+    GICR_REG(core_id, GICR_WAKER) &= ~GICR_WAKER_PS;
 
-    /* Set priority mask (allow all priorities) */
-    GICC_REG(GICC_PMR) = 0xFF;
+    /* Wait for ChildrenAsleep to clear */
+    volatile int timeout = 1000000;
+    while ((GICR_REG(core_id, GICR_WAKER) & GICR_WAKER_CA) && --timeout)
+        ;
 
-    /* Set binary point (no preemption) */
-    GICC_REG(GICC_BPR) = 0;
+    /* Disable all SGI/PPI */
+    GICR_REG(core_id, GICR_ICENABLER0) = 0xFFFFFFFF;
+    GICR_REG(core_id, GICR_ICPENDR0) = 0xFFFFFFFF;
 
-    /* Enable CPU Interface */
-    GICC_REG(GICC_CTLR) = GICC_CTLR_ENABLE;
+    /* Set all SGI/PPI to Group 1 NS (IGROUPR0 bit=1 → Group 1) */
+    GICR_REG(core_id, GICR_IGROUPR0) = 0xFFFFFFFF;
+
+    /* Set default priority for SGI/PPI */
+    for (int i = 0; i < 32; i++)
+        *(volatile uint8_t *)((uint64_t)GICR_BASE + (uint64_t)core_id * 0x20000
+                              + GICR_IPRIORITYR_BASE + i) = 0xA0;
 }
 
-/* ---------------------------------------------------------------
+/* ================================================================
+ * CPU Interface init (works at EL1 or EL2)
+ *
+ * At EL2: ICC_SRE_EL2 must be set (done in startup.S).
+ *         Then ICC_*_EL1 registers are accessible from EL2.
+ * At EL1: ICC_SRE_EL1 must be set.
+ * ================================================================ */
+static void gic_cpuif_init(void)
+{
+    uint64_t val;
+    uint64_t current_el;
+
+    /* Detect current EL */
+    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
+    current_el = (current_el >> 2) & 3;
+
+    if (current_el == 2) {
+        /* At EL2: ensure ICC_SRE_EL2 is enabled */
+        val = read_sysreg("S3_4_C12_C9_5");  /* ICC_SRE_EL2 */
+        val |= 0x7;
+        write_sysreg("S3_4_C12_C9_5", val);
+    }
+
+    /* Enable system register access at EL1 (accessible from EL2) */
+    val = read_sysreg(ICC_SRE_EL1);
+    val |= 0x7;
+    write_sysreg(ICC_SRE_EL1, val);
+
+    /* Priority mask: allow all */
+    write_sysreg(ICC_PMR_EL1, 0xFF);
+
+    /* Binary point */
+    write_sysreg(ICC_BPR1_EL1, 0);
+
+    /* Enable Group 1 NS interrupts */
+    val = read_sysreg(ICC_IGRPEN1_EL1);
+    val |= 0x1;
+    write_sysreg(ICC_IGRPEN1_EL1, val);
+}
+
+/* ================================================================
  * Public API
- * --------------------------------------------------------------- */
+ * ================================================================ */
 
-void gic_init(void)
+void gic_init(uint32_t core_id)
 {
-    gicd_init();
-    gicc_init();
+    if (core_id == 0)
+        gicd_init();
+    gicr_init(core_id);
+    gic_cpuif_init();
 }
 
 void gic_enable_irq(uint32_t irq)
 {
-    GICD_REG(GICD_ISENABLER(irq)) = (1 << (irq % 32));
+    if (irq < 32)
+        GICR_REG(0, GICR_ISENABLER0) = (1 << irq);
+    else
+        GICD_REG(GICD_ISENABLER(irq)) = (1 << (irq % 32));
 }
 
 void gic_disable_irq(uint32_t irq)
 {
-    GICD_REG(GICD_ICENABLER(irq)) = (1 << (irq % 32));
+    if (irq < 32)
+        GICR_REG(0, GICR_ICENABLER0) = (1 << irq);
+    else
+        GICD_REG(GICD_ICENABLER(irq)) = (1 << (irq % 32));
 }
 
 void gic_set_priority(uint32_t irq, uint8_t priority)
 {
-    volatile uint32_t *reg = &GICD_REG(GICD_IPRIORITYR(irq));
-    uint32_t shift = (irq % 4) * 8;
-    uint32_t mask = 0xFF << shift;
-    *reg = (*reg & ~mask) | ((uint32_t)priority << shift);
+    if (irq < 32) {
+        *(volatile uint8_t *)((uint64_t)GICR_BASE + GICR_IPRIORITYR_BASE + irq) = priority;
+    } else {
+        volatile uint32_t *reg = &GICD_REG(GICD_IPRIORITYR(irq));
+        uint32_t shift = (irq % 4) * 8;
+        *reg = (*reg & ~(0xFF << shift)) | ((uint32_t)priority << shift);
+    }
+}
+
+void gic_set_affinity(uint32_t irq, uint8_t affinity)
+{
+    if (irq >= 32)
+        GICD_REG64(GICD_IROUTER(irq)) = (uint64_t)affinity;
 }
 
 uint32_t gic_acknowledge_irq(void)
 {
-    return GICC_REG(GICC_IAR);
+    return (uint32_t)read_sysreg(ICC_IAR1_EL1);
 }
 
 void gic_end_of_interrupt(uint32_t irq)
 {
-    GICC_REG(GICC_EOIR) = irq;
+    write_sysreg(ICC_EOIR1_EL1, irq);
 }
 
 void gic_send_sgi(uint32_t sgi_id, uint8_t target_list)
 {
-    /* GICD_SGIR: [23:16]=target list, [3:0]=SGI ID */
-    GICD_REG(GICD_SGIR) = ((uint32_t)target_list << 16) | (sgi_id & 0xF);
+    uint64_t val = ((uint64_t)target_list << 24) | (sgi_id & 0xF);
+    write_sysreg(ICC_SGI1R_EL1, val);
 }

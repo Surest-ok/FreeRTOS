@@ -1,79 +1,66 @@
 /*
  * Exception Vector Table for AArch64 EL1
- * Phase 2: QEMU virt GICv3 + Generic Timer
+ * GICv3 system register interface (ICC_IAR1_EL1 / ICC_EOIR1_EL1)
  *
- * ARMv8-A vector table layout (2048 bytes, 2KB aligned):
- *   Each exception level has 4 entry types (Sync/IRQ/FIQ/SError)
- *   x 2 SP modes (SP_EL0 / SP_ELx) = 8 groups x 4 entries = 16 entries
- *   Each entry is 128 bytes aligned
+ * Vector table layout: 16 entries, 2KB aligned, each entry 128 bytes.
+ * We use SP_EL1, so interrupts arrive at EL1h group (offset 0x200).
  */
 
 .section ".text.vectors", "ax", %progbits
-.align 11  /* 2048-byte alignment for VBAR_EL1 */
+.align 11
 
-.global vector_table
-
-/*
- * ventry macro: align to 128 bytes and branch to handler
- * Each vector slot is 0x80 (128) bytes
- */
 .macro ventry label
     .align 7
     b \label
 .endm
 
+.global vector_table
+
 vector_table:
-    /* Group 0: Current EL with SP_EL0 (we don't use SP_EL0, just trap) */
-    ventry  el1_sp0_stub         /* Synchronous */
-    ventry  el1_sp0_stub         /* IRQ */
-    ventry  el1_sp0_stub         /* FIQ */
-    ventry  el1_sp0_stub         /* SError */
+    /* Current EL with SP_EL0 */
+    ventry  sp0_stub           /* +0x000 Sync */
+    ventry  sp0_stub           /* +0x080 IRQ */
+    ventry  sp0_stub           /* +0x100 FIQ */
+    ventry  sp0_stub           /* +0x180 SError */
 
-    /* Group 1: Current EL with SP_ELx (SP_EL1) - THIS IS THE MAIN ONE */
-    ventry  el1h_sync_handler    /* Synchronous */
-    ventry  el1h_irq_handler     /* IRQ ← GICv3 interrupts arrive here */
-    ventry  el1h_fiq_stub        /* FIQ */
-    ventry  el1h_error_stub      /* SError */
+    /* Current EL with SP_ELx (SP_EL1) — main handlers */
+    ventry  el1h_sync          /* +0x200 Sync */
+    ventry  el1h_irq           /* +0x280 IRQ ← GICv3 */
+    ventry  el1h_fiq           /* +0x300 FIQ */
+    ventry  el1h_serror        /* +0x380 SError */
 
-    /* Group 2: Lower EL with AArch64 */
-    ventry  lower_el_sync_stub
-    ventry  lower_el_irq_stub
-    ventry  lower_el_fiq_stub
-    ventry  lower_el_error_stub
+    /* Lower EL AArch64 — unused */
+    ventry  lower_stub
+    ventry  lower_stub
+    ventry  lower_stub
+    ventry  lower_stub
 
-    /* Group 3: Lower EL with AArch32 */
-    ventry  lower_el_sync_stub
-    ventry  lower_el_irq_stub
-    ventry  lower_el_fiq_stub
-    ventry  lower_el_error_stub
-
-/* ============================================================
- * SP_EL0 stubs (we don't use SP_EL0, so these are just traps)
- * ============================================================ */
-el1_sp0_stub:
-    b panic_exception
+    /* Lower EL AArch32 — unused */
+    ventry  lower_stub
+    ventry  lower_stub
+    ventry  lower_stub
+    ventry  lower_stub
 
 /* ============================================================
- * EL1h handlers (SP_EL1) - our main exception handlers
+ * Stubs
  * ============================================================ */
+sp0_stub:
+lower_stub:
+    b panic_hang
 
-/* EL1h Synchronous Exception Handler */
-el1h_sync_handler:
+/* ============================================================
+ * EL1h Synchronous
+ * ============================================================ */
+el1h_sync:
     mrs x0, esr_el1
     mrs x1, elr_el1
-    b panic_exception
+    b panic_hang
 
-/* EL1h IRQ Handler - Main interrupt entry point
- *
- * Uses GICv2 memory-mapped CPU Interface:
- *   GICC_IAR (0x0801000C) to acknowledge interrupt
- *   GICC_EOIR (0x08010010) to signal end of interrupt
- *
- * C ABI: x0-x18 are caller-saved, x19-x30 are callee-saved.
- * We save ALL general registers to use C freely.
- */
-el1h_irq_handler:
-    /* Save context on stack (SP_EL1, which we set in startup.S) */
+/* ============================================================
+ * EL1h IRQ Handler — GICv3 system register interface
+ * ============================================================ */
+el1h_irq:
+    /* Save all general-purpose registers */
     stp x29, x30, [sp, #-16]!
     stp x27, x28, [sp, #-16]!
     stp x25, x26, [sp, #-16]!
@@ -91,23 +78,20 @@ el1h_irq_handler:
     stp x1, x2, [sp, #-16]!
     stp x0, x1, [sp, #-16]!
 
-    /* Read GICC_IAR to acknowledge the interrupt
-     * GICC base = 0x08010000, IAR offset = 0x0C
-     */
-    ldr x1, =0x0801000C
-    ldr w0, [x1]
+    /* Acknowledge interrupt: read ICC_IAR1_EL1 */
+    mrs x0, S3_0_C12_C12_0
 
-    /* Call C dispatcher: interrupt_dispatch(irq_id) */
+    /* Save IAR value in callee-saved register (x19 is already on stack) */
+    mov x19, x0
+
+    /* Call C dispatcher */
     bl interrupt_dispatch
 
-    /* Write GICC_EOIR to signal end of interrupt
-     * GICC base = 0x08010000, EOIR offset = 0x10
-     * x0 still contains the IRQ ID from the dispatcher return
-     */
-    ldr x1, =0x08010010
-    str w0, [x1]
+    /* End of interrupt: write ICC_EOIR1_EL1 with original IAR value */
+    mov x0, x19
+    msr S3_0_C12_C12_1, x0
 
-    /* Restore context */
+    /* Restore registers */
     ldp x0, x1, [sp], #16
     ldp x1, x2, [sp], #16
     ldp x3, x4, [sp], #16
@@ -124,28 +108,24 @@ el1h_irq_handler:
     ldp x25, x26, [sp], #16
     ldp x27, x28, [sp], #16
     ldp x29, x30, [sp], #16
-
     eret
 
-/* EL1h FIQ and SError stubs */
-el1h_fiq_stub:
-el1h_error_stub:
-    b panic_exception
-
-/* Lower EL stubs (we stay at EL1, so these shouldn't fire) */
-lower_el_sync_stub:
-lower_el_irq_stub:
-lower_el_fiq_stub:
-lower_el_error_stub:
-    b panic_exception
+/* ============================================================
+ * EL1h/EL2 FIQ Handler — Group 0 interrupts (timer via FMO)
+ * At EL2 with HCR_EL2.FMO=1, Group 0 interrupts arrive as FIQ.
+ * Use ICC_IAR0_EL1 for Group 0 acknowledge.
+ * ============================================================ */
+el1h_fiq:
 
 /* ============================================================
- * Panic handler - print exception info and hang
+ * SError — hang
  * ============================================================ */
-panic_exception:
-    /* At this point we're in exception context with SP_EL1.
-     * We can call C functions since the IRQ handler saved
-     * context properly, but for panic we just halt.
-     */
+el1h_serror:
+    b panic_hang
+
+/* ============================================================
+ * Panic — infinite WFE loop
+ * ============================================================ */
+panic_hang:
     wfe
-    b panic_exception
+    b panic_hang
