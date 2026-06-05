@@ -17,33 +17,27 @@
 #define UART_REG_READ(base, offset) \
     *(volatile uint32_t *)((base) + (offset))
 
-/* Initialize UART for 115200 baud */
+/* Initialize UART for QEMU virt PL011
+ * QEMU's emulated PL011 does not need baud rate configuration;
+ * it just passes characters through. We only need to enable it.
+ */
 void uart_init(void)
 {
-    uint32_t baud_divisor;
-
-    /* Disable UART */
+    /* Disable UART while configuring */
     UART_REG_WRITE(UART0_BASE, UART0_CR_OFFSET, 0);
-
-    /* Set baud rate divisor */
-    /* For 100MHz clock and 115200 baud: divisor = 100000000 / 115200 ≈ 868 */
-    baud_divisor = 868;
-    UART_REG_WRITE(UART0_BASE, UART0_IBRD_OFFSET, baud_divisor / 64);
-    UART_REG_WRITE(UART0_BASE, UART0_FBRD_OFFSET, baud_divisor % 64);
-
-    /* Configure 8-bit data, no parity, 1 stop bit */
-    UART_REG_WRITE(UART0_BASE, UART0_LCRH_OFFSET,
-                   (1 << 1) | (1 << 2) | (1 << 5) | (1 << 6));  // 8-bit, FIFO
-
-    /* Enable UART */
-    UART_REG_WRITE(UART0_BASE, UART0_CR_OFFSET,
-                   (1 << 0) | (1 << 8) | (1 << 9));  // UARTEN, TXE, RXE
 
     /* Clear any pending interrupts */
     UART_REG_WRITE(UART0_BASE, UART0_ICR_OFFSET, 0x7FF);
 
-    /* Enable FIFOs */
-    UART_REG_WRITE(UART0_BASE, UART0_IFLS_OFFSET, 0);
+    /* Configure 8-bit data, no parity, 1 stop bit, FIFOs enabled
+     * LCRH bits: FEN(bit4)=1 FIFO, WLEN(bits6:5)=11 8-bit
+     */
+    UART_REG_WRITE(UART0_BASE, UART0_LCRH_OFFSET,
+                   (1 << 4) | (3 << 5));
+
+    /* Enable UART: UARTEN(bit0) + TXE(bit8) + RXE(bit9) */
+    UART_REG_WRITE(UART0_BASE, UART0_CR_OFFSET,
+                   (1 << 0) | (1 << 8) | (1 << 9));
 }
 
 /* Write a single character to UART */
@@ -89,22 +83,28 @@ static int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                 i = va_arg(args, int);
                 if (i < 0) {
                     *p++ = '-';
+                    count++;
                     i = -i;
                 }
-                /* Convert to string (simplified) */
-                tmp = p;
-                do {
-                    *p++ = '0' + (i % 10);
-                    i /= 10;
-                    count++;
-                } while (i > 0 && count < (size - 1));
-                /* Reverse the digits */
-                while (tmp < p) {
-                    char c = *tmp;
-                    *tmp = *(p - 1);
-                    *(p - 1) = c;
-                    tmp++;
-                    p--;
+                /* Convert to string */
+                {
+                    char *end = p;
+                    tmp = p;
+                    do {
+                        *p++ = '0' + (i % 10);
+                        i /= 10;
+                        count++;
+                    } while (i > 0 && count < (int)(size - 1));
+                    /* Reverse the digits in-place */
+                    end = p;
+                    while (tmp < p) {
+                        char c = *tmp;
+                        *tmp = *(p - 1);
+                        *(p - 1) = c;
+                        tmp++;
+                        p--;
+                    }
+                    p = end;  /* Restore p to point past the digits */
                 }
                 break;
 
