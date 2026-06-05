@@ -110,9 +110,9 @@ $(IMAGE): $(TARGET)
 
 # Run in QEMU
 run: $(TARGET)
-	@echo "Running QEMU..."
+	@echo "Running QEMU (GICv3)..."
 	@timeout 10 qemu-system-aarch64 \
-	    -M virt \
+	    -machine virt,gic-version=3 \
 	    -cpu cortex-a53 \
 	    -smp 1 \
 	    -m 512 \

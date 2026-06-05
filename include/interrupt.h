@@ -1,6 +1,5 @@
 /*
- * Interrupt Framework for QEMU virt AArch64
- * ISR registration and dispatch (GICv2)
+ * Interrupt Framework for QEMU virt AArch64 (GICv3)
  */
 
 #ifndef __INTERRUPT_H__
@@ -13,7 +12,7 @@
 typedef void (*isr_handler_t)(void);
 
 void interrupt_install(uint32_t irq, isr_handler_t handler);
-uint32_t interrupt_dispatch(uint32_t iar);
+void interrupt_dispatch(uint32_t iar);
 void interrupt_init(void);
 
 #endif /* __INTERRUPT_H__ */

@@ -1,81 +1,89 @@
 /*
- * AArch64 startup code for QEMU virt platform
- * Handles EL drop from EL2/EL3 to EL1, secondary core parking
+ * AArch64 startup for QEMU virt with GICv3
+ *
+ * Supports:
+ *   -machine virt,gic-version=3           → starts at EL1
+ *   -machine virt,gic-version=3,secure=off → starts at EL1 (single NS state)
+ *   -machine virt,gic-version=3,virtualization=on → starts at EL2
+ *
+ * At EL2: enable ICC_SRE_EL2 for GICv3 sysregs, then stay at EL2.
+ * At EL1: proceed with normal init.
  */
 
 .section .text.entrypoint
 .global _start
 
 _start:
-    /* Save current MPIDR for boot core identification */
     mrs x5, MPIDR_EL1
+    and x6, x5, #0xFF
+    cbnz x6, park_secondary
 
-    /* We're already at EL1 (QEMU virt) */
-    /* Check if this is a secondary core */
-    and x6, x5, #0xFF   /* Get Aff0 (core ID) */
-    cbz x6, secondary_core_done
+    /* Detect current EL */
+    mrs x10, CurrentEL
+    lsr x10, x10, #2
+    and x10, x10, #3
 
-    /* Secondary core: park in WFE loop */
-    mov x8, #0
-    b park_secondary
+    cmp x10, #2
+    b.eq el2_setup
+    b el1_setup
 
-secondary_core_done:
+el2_setup:
+    /* At EL2: enable GICv3 system register access */
+    mrs x0, S3_4_C12_C9_5         /* ICC_SRE_EL2 */
+    orr x0, x0, #0x7
+    msr S3_4_C12_C9_5, x0
+    isb
 
-    /* Primary core: set up stack pointer */
-    /* Using stack from linker script, but initialize SP_EL1 */
-    msr spsel, #1      /* Use SP_EL1 instead of SP_EL0 */
-    ldr x20, =stack_top   /* Load stack base address */
-    add x20, x20, #4096   /* Stack grows down, SP = base + size */
-    mov sp, x20         /* Set stack pointer */
+    /* Stack at EL2 */
+    msr spsel, #1
+    ldr x20, =stack_top
+    add x20, x20, #4096
+    mov sp, x20
 
-    /* Enable FP/SIMD for EL1 */
     mrs x6, CPACR_EL1
-    orr x6, x6, #0x00F00000 /* CPACR_EL1: Enable CP10 and CP11 for EL1 */
+    orr x6, x6, #0x00F00000
     msr CPACR_EL1, x6
 
-    /* Configure SCTLR_EL1: MMU OFF, caches off, no alignment trap
-     * Set reserved bits: 0x30C50838 (bits that must be 1 per ARM spec)
-     * We do NOT set bit 0 (MMU) or bit 2 (D-cache) since we have
-     * no page tables configured yet.
-     */
+    ldr x6, =0x30C50838
+    msr SCTLR_EL1, x6
+    isb
+    b common_init
+
+el1_setup:
+    msr spsel, #1
+    ldr x20, =stack_top
+    add x20, x20, #4096
+    mov sp, x20
+
+    mrs x6, CPACR_EL1
+    orr x6, x6, #0x00F00000
+    msr CPACR_EL1, x6
+
     ldr x6, =0x30C50838
     msr SCTLR_EL1, x6
     isb
 
-    /* Clear BSS section */
+common_init:
+    /* Clear BSS */
     ldr x0, =__bss_start
     ldr x1, =__bss_end
     mov x2, #0
-    b clear_bss
-
 clear_bss:
     cmp x0, x1
-    b.ge bss_cleared
+    b.ge bss_done
     str x2, [x0], #8
     b clear_bss
+bss_done:
 
-bss_cleared:
-    /* Initialize timer frequency (optional) */
-    /* For now, assume CNTFRQ_EL0 is already set by QEMU */
-
-    /* Enable IRQ exceptions in DAIF register
-     * DAIF bits: bit7=D(Debug), bit6=A(SError), bit5=IRQ, bit4=FIQ
-     * Clearing bit 5 (IRQ) enables IRQ interrupts.
-     * We use msr daifclr to clear specific bits.
-     */
-    msr daifclr, #0x2   /* Clear IRQ mask (bit 1 = IRQ in daifclr encoding) */
-
-    /* Jump to C main */
+    /* Enable IRQ (clear DAIF.I bit) */
+    msr daifclr, #0x2
     bl main
 
 park_secondary:
-    /* Secondary cores wait for primary to wake them */
     wfe
-    /* When woken, fall through to the C entry point */
-    b secondary_cpu_entry
+    b park_secondary
 
-/* Stack definition (must be last in the file) */
 .section .bss.stack
 .global stack_top
 stack_top:
-    .space 4096    /* 4KB stack */
+    .space 4096
