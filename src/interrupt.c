@@ -35,7 +35,7 @@ void interrupt_dispatch(uint32_t iar)
 
 void interrupt_init(void)
 {
-    __asm__ volatile(
+    asm volatile(
         "ldr x0, =vector_table\n"
         "msr vbar_el1, x0\n"
         "isb\n"
