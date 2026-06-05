@@ -1,0 +1,26 @@
+# Build artifacts
+build/
+*.elf
+*.bin
+*.axf
+*.map
+
+# IDE files
+.vscode/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.o
+
+# Debug files
+*.gdbinit
+debug/
+logs/
