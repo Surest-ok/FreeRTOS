@@ -24,7 +24,8 @@ secondary_core_done:
     /* Primary core: set up stack pointer */
     /* Using stack from linker script, but initialize SP_EL1 */
     msr spsel, #1      /* Use SP_EL1 instead of SP_EL0 */
-    ldr x20, =stack_top   /* Load stack top address */
+    ldr x20, =stack_top   /* Load stack base address */
+    add x20, x20, #4096   /* Stack grows down, SP = base + size */
     mov sp, x20         /* Set stack pointer */
 
     /* Enable FP/SIMD for EL1 */
@@ -32,9 +33,14 @@ secondary_core_done:
     orr x6, x6, #0x00F00000 /* CPACR_EL1: Enable CP10 and CP11 for EL1 */
     msr CPACR_EL1, x6
 
-    /* Clear alignment traps in SCTLR_EL1 */
-    ldr x6, =0x30c5083f   /* SCTLR_EL1: Clear UCT, set others */
+    /* Configure SCTLR_EL1: MMU OFF, caches off, no alignment trap
+     * Set reserved bits: 0x30C50838 (bits that must be 1 per ARM spec)
+     * We do NOT set bit 0 (MMU) or bit 2 (D-cache) since we have
+     * no page tables configured yet.
+     */
+    ldr x6, =0x30C50838
     msr SCTLR_EL1, x6
+    isb
 
     /* Clear BSS section */
     ldr x0, =__bss_start
