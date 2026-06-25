@@ -1,0 +1,22 @@
+# Build artifacts
+build/
+.cache/
+.claude/
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled objects
+*.o
+*.a
+*.so
+*.elf
+*.bin
+*.hex
+
+# Temporary files
+*.tmp
+*.bak

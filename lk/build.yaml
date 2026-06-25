@@ -1,0 +1,216 @@
+project: lk_qemu_a53
+
+platforms:
+  $include: catboy/platforms/*.yaml
+
+targets:
+  lk_demo:
+    build:
+      type: luna_bsp
+      includes:
+        - arch/arm64/include
+        - arch/arm64
+        - arch/include
+        - kernel/include
+        - kernel
+        - platform/include
+        - platform/qemu-virt-arm/include
+        - platform/qemu-virt-arm/drivers/interrupt/arm_gicv3/include
+        - platform/qemu-virt-arm/drivers/uart/pl011/include
+        - platform/qemu-virt-arm/drivers/timer/arm_generic/include
+        - platform/qemu-virt-arm/drivers/power/psci/include
+        - lib/libc/include
+        - lib/heap/include
+        - lib/heap/cmpctmalloc/include
+        - lib/io/include
+        - lib/fixed_point/include
+        - lib/cbuf/include
+        - lib/console/include
+        - lib/debugcommands/include
+        - lib/version/include
+        - lib/elf/include
+        - lib/libcpp/include
+        - lib/iovec/include
+        - lib/pool/include
+        - lib/minip/include
+        - top/include
+        - app/include
+        - app/shell
+        - .
+
+      defines:
+        - ARCH_ARM64=1
+        - ARCH="arm64"
+        - ARM64_CPU_CORTEX_A53=1
+        - ARM_ISA_ARMV8=1
+        - IS_64BIT=1
+        - WITH_SMP=1
+        - SMP_MAX_CPUS=4
+        - WITH_KERNEL_VM=1
+        - ARCH_HAS_MMU=1
+        - MEMBASE=0x40000000
+        - MEMSIZE=0x08000000
+        - KERNEL_ASPACE_BASE=0xffff000000000000UL
+        - KERNEL_ASPACE_SIZE=0x0001000000000000UL
+        - KERNEL_BASE=0xffff000000000000UL
+        - KERNEL_LOAD_OFFSET=0x00100000
+        - USER_ASPACE_BASE=0x0000000001000000UL
+        - USER_ASPACE_SIZE=0x0000fffffe000000UL
+        - MMU_KERNEL_PAGE_TABLE_ENTRIES_TOP=512
+        - MMU_KERNEL_SIZE_SHIFT=48
+        - ARM64_PAGE_SIZE_SHIFT=12
+        - ARM64_PAGE_SIZE=4096
+        - ARCH_DEFAULT_STACK_SIZE=8192
+        - PLATFORM_QEMU_VIRT_ARM=1
+        - PLATFORM="qemu-virt-arm"
+        - TARGET="qemu-virt"
+        - PROJECT="lk_qemu_a53"
+        - ARM_WITH_GICV3=1
+        - WITH_DEV_INTERRUPT_ARM_GICV3=1
+        - WITH_LIB_CONSOLE=1
+        - ENABLE_PANIC_SHELL=1
+        - WITH_DEBUG_LINEBUFFER=1
+        - PAGE_SIZE_SHIFT=12
+        - USER_PAGE_SIZE_SHIFT=12
+        - KERNEL_ASPACE_BITS=25
+        - WITH_LIB_HEAP_CMPCTMALLOC=1
+        - WITH_APP_SHELL=1
+        - WITH_LIB_ELF=1
+        - WITH_ELF64=1
+        - WITH_CPP_SUPPORT=1
+        - WITH_LIB_CPP=1
+        - WITH_LIB_IOVEC=1
+        - WITH_LIB_POOL=1
+        - WITH_LIB_MINIP=1
+
+      flags:
+        c: -Wall -Wextra -Wno-unused-parameter -Werror=implicit-function-declaration -O2 -std=gnu11
+        cpp: -Wall -Wextra -Wno-unused-parameter -O2 -std=c++11 -fno-exceptions -fno-rtti
+
+      sources:
+        c:
+          # Kernel core
+          - kernel/thread.c
+          - kernel/semaphore.c
+          - kernel/mutex.c
+          - kernel/event.c
+          - kernel/timer.c
+          - kernel/mp.c
+          - kernel/init.c
+          - kernel/debug.c
+          - kernel/port.c
+
+          # VM subsystem
+          - kernel/vm/bootalloc.c
+          - kernel/vm/pmm.c
+          - kernel/vm/vm.c
+          - kernel/vm/vmm.c
+          - kernel/vm/page.c
+
+          # ARM64 architecture
+          - arch/arm64/arch.c
+          - arch/arm64/exceptions_c.c
+          - arch/arm64/fpu.c
+          - arch/arm64/mmu.c
+          - arch/arm64/mp.c
+          - arch/arm64/thread.c
+          - arch/arch.c
+
+          # Drivers
+          - platform/qemu-virt-arm/drivers/uart/pl011/uart.c
+          - platform/qemu-virt-arm/drivers/interrupt/arm_gicv3/arm_gicv3.c
+          - platform/qemu-virt-arm/drivers/timer/arm_generic/arm_generic_timer.c
+          - platform/qemu-virt-arm/drivers/power/psci/psci.c
+
+          # Platform
+          - platform/qemu-virt-arm/platform.c
+          - platform/qemu-virt-arm/debug.c
+          - platform/qemu-virt-arm/target/init.c
+
+          # Libraries - heap
+          - lib/heap/heap_wrapper.c
+          - lib/heap/cmpctmalloc/cmpctmalloc.c
+
+          # Libraries - libc
+          - lib/libc/string/memchr.c
+          - lib/libc/string/memcmp.c
+          - lib/libc/string/memcpy.c
+          - lib/libc/string/memmove.c
+          - lib/libc/string/memset.c
+          - lib/libc/string/strcat.c
+          - lib/libc/string/strchr.c
+          - lib/libc/string/strcmp.c
+          - lib/libc/string/strcpy.c
+          - lib/libc/string/strlcat.c
+          - lib/libc/string/strlcpy.c
+          - lib/libc/string/strlen.c
+          - lib/libc/string/strncmp.c
+          - lib/libc/string/strncpy.c
+          - lib/libc/string/strnlen.c
+          - lib/libc/string/strpbrk.c
+          - lib/libc/string/strrchr.c
+          - lib/libc/string/strstr.c
+          - lib/libc/string/strdup.c
+          - lib/libc/atoi.c
+          - lib/libc/bsearch.c
+          - lib/libc/ctype.c
+          - lib/libc/eabi.c
+          - lib/libc/printf.c
+          - lib/libc/stdio.c
+          - lib/libc/qsort.c
+          - lib/libc/rand.c
+          - lib/libc/atexit.c
+
+          # Libraries - io
+          - lib/io/console.c
+          - lib/io/io.c
+
+          # Libraries - misc
+          - lib/cbuf/cbuf.c
+          - lib/console/console.c
+          - lib/debugcommands/debugcommands.c
+          - lib/version/version.c
+          - lib/fixed_point/fixed_point.c
+          - lib/iovec/iovec.c
+          - lib/pool/pool.c
+
+          # Libraries - minip network stack
+          - lib/minip/arp.c
+          - lib/minip/chksum.c
+          - lib/minip/lk_console.c
+          - lib/minip/minip.c
+          - lib/minip/net_timer.c
+          - lib/minip/pktbuf.c
+          - lib/minip/tcp.c
+          - lib/minip/udp.c
+
+          # Top level
+          - top/main.c
+          - top/init.c
+          - top/debug.c
+          - top/mp.c
+
+          # Application
+          - app/app.c
+          - app/lk_smp_demo.c
+          - app/shell/shell.c
+
+          # Libraries - ELF loader
+          - lib/elf/elf.c
+
+        cpp:
+          # Libraries - libcpp
+          - lib/libcpp/new.cpp
+          - lib/libcpp/pure_virtual.cpp
+
+          # Libraries - minip DHCP (C++)
+          - lib/minip/dhcp.cpp
+
+        asm:
+          - arch/arm64/start.S
+          - arch/arm64/exceptions.S
+          - arch/arm64/spinlock.S
+          - arch/arm64/cache-ops.S
+          - arch/arm64/asm.S
+          - arch/arm64/atomics.S
+          - platform/qemu-virt-arm/drivers/power/psci/psci_asm.S

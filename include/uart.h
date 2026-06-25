@@ -19,5 +19,6 @@ void uart_puts(const char *str);
 
 /* Write formatted string to UART (simple implementation) */
 void uart_printf(const char *fmt, ...);
+void uart_log(int level, const char *tag, const char *fmt, ...);
 
 #endif /* __UART_H__ */

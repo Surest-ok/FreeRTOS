@@ -29,6 +29,6 @@ void gic_set_priority(uint32_t irq, uint8_t priority);
 void gic_set_affinity(uint32_t irq, uint8_t affinity);
 uint32_t gic_acknowledge_irq(void);
 void gic_end_of_interrupt(uint32_t irq);
-void gic_send_sgi(uint32_t sgi_id, uint8_t target_list);
+void gic_send_sgi(uint32_t sgi_id, uint32_t target_core);
 
 #endif /* __GIC_H__ */

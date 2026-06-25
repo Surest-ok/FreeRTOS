@@ -1,155 +1,120 @@
 #
-# Makefile for FreeRTOS on QEMU virt AArch64
-# Phase 3: FreeRTOS V11.x + GICv3 + Generic Timer
+# Top-level Makefile for FreeRTOS SMP on QEMU virt AArch64
+# Phase 4: kernel library + BSP
+#
+# Targets:
+#   make all     — build kernel library then BSP
+#   make kernel  — build libfreertos.a only
+#   make bsp     — build BSP (depends on kernel)
+#   make run     — build and run in QEMU (CORES cores, default 2)
+#   make sched-test — run local QEMU scheduler acceptance
+#   make clean   — clean all build artifacts
 #
 
-# Toolchain configuration
-CROSS := aarch64-linux-gnu-
-CC := $(CROSS)gcc
-AS := $(CROSS)gcc
-LD := $(CROSS)gcc
-OBJCOPY := $(CROSS)objcopy
-OBJDUMP := $(CROSS)objdump
-NM := $(CROSS)nm
+CORES ?= 2
+TIMEOUT ?= 30
+SCHED_MODE ?= full
+LOG_LEVEL ?= 6
+TICK_BROADCAST ?= 1
 
-# FreeRTOS kernel source directory
-FREERTOS_DIR := FreeRTOS-Kernel
+.PHONY: all kernel bsp run sched-test sched-full sched-cross sched-smp sched-matrix sched-cross-sem sched-cross-queue sched-cross-mutex sched-cross-spin lk-kernel lk-run lk-sched-test lk-sched-full lk-sched-cross lk-sched-smp threadx-kernel threadx-run threadx-sched-test threadx-sched-full threadx-sched-cross threadx-sched-smp arch-sched-matrix clean
 
-# Compiler flags
-CFLAGS := -mcpu=cortex-a53 \
-          -mgeneral-regs-only \
-          -ffreestanding \
-          -nostdlib \
-          -nostartfiles \
-          -g \
-          -Wall \
-          -Wextra \
-          -DGUEST \
-          -DQEMU \
-          -Iinclude \
-          -I$(FREERTOS_DIR)/include \
-          -I$(FREERTOS_DIR)/portable/GCC/ARM_AARCH64_SRE
+all: kernel bsp
 
-# Assembly flags
-ASFLAGS := -mcpu=cortex-a53 \
-           -g \
-           -DGUEST \
-           -DQEMU
+kernel:
+	@$(MAKE) -C kernel CORES=$(CORES) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST)
 
-# Linker flags
-LDFLAGS := -T linker.ld \
-           -nostdlib \
-           -lgcc
+bsp: kernel
+	@$(MAKE) -C bsp CORES=$(CORES) SCHED_MODE=$(SCHED_MODE) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST)
 
-# Directories
-BUILD_DIR := build
+run: bsp
+	@$(MAKE) -C bsp run CORES=$(CORES) SCHED_MODE=$(SCHED_MODE) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST)
 
-# ---------------------------------------------------------------
-# Source files
-# ---------------------------------------------------------------
+sched-test: bsp
+	@python3 tests/acceptance/accept_qemu_sched.py \
+	    --cores $(CORES) \
+	    --timeout $(TIMEOUT) \
+	    --mode $(SCHED_MODE) \
+	    --elf bsp/kernel-$(CORES)-$(SCHED_MODE)-log$(LOG_LEVEL)-tb$(TICK_BROADCAST).elf
 
-# Application assembly
-SRCS_S := src/startup.S \
-          src/freertos_vectors.S
+sched-full: SCHED_MODE=full
+sched-full: sched-test
 
-# FreeRTOS port assembly
-SRCS_S += $(FREERTOS_DIR)/portable/GCC/ARM_AARCH64_SRE/portASM.S
+sched-cross: SCHED_MODE=cross
+sched-cross: sched-test
 
-# Application C
-SRCS_C := src/main.c \
-          src/uart.c \
-          src/gic.c \
-          src/gtimer.c \
-          src/app_irq.c \
-          src/string.c
+sched-smp:
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST) SCHED_MODE=full sched-test
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST) SCHED_MODE=cross sched-test
 
-# FreeRTOS kernel C
-SRCS_C += $(FREERTOS_DIR)/tasks.c \
-          $(FREERTOS_DIR)/queue.c \
-          $(FREERTOS_DIR)/list.c \
-          $(FREERTOS_DIR)/timers.c \
-          $(FREERTOS_DIR)/event_groups.c \
-          $(FREERTOS_DIR)/stream_buffer.c \
-          $(FREERTOS_DIR)/portable/GCC/ARM_AARCH64_SRE/port.c \
-          $(FREERTOS_DIR)/portable/MemMang/heap_4.c
+sched-matrix: sched-smp
 
-# Object files — transform path: replace / with _ in build dir
-OBJS := $(patsubst %.S,$(BUILD_DIR)/%.S.o,$(SRCS_S)) \
-        $(patsubst %.c,$(BUILD_DIR)/%.c.o,$(SRCS_C))
+sched-cross-sem: SCHED_MODE=cross-sem
+sched-cross-sem: sched-test
 
-DEPS := $(OBJS:.o=.d)
+sched-cross-queue: SCHED_MODE=cross-queue
+sched-cross-queue: sched-test
 
-# Default target
-TARGET := kernel.elf
-IMAGE := kernel.bin
+sched-cross-mutex: SCHED_MODE=cross-mutex
+sched-cross-mutex: sched-test
 
-# Phony targets
-.PHONY: all clean run debug nm dump
+sched-cross-spin: SCHED_MODE=cross-spin
+sched-cross-spin: sched-test
 
-# Default target
-all: $(BUILD_DIR) $(TARGET) $(IMAGE)
+lk-kernel:
+	@$(MAKE) -C lk CORES=$(CORES)
 
-# Build directory
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+lk-run: lk-kernel
+	@$(MAKE) -C lk run CORES=$(CORES)
 
-# ---- Generic compilation rules ----
+lk-sched-test: lk-kernel
+	@python3 tests/acceptance/accept_qemu_sched.py \
+	    --cores $(CORES) \
+	    --timeout $(TIMEOUT) \
+	    --mode $(SCHED_MODE) \
+	    --elf lk/build-$(CORES)/lk.elf
 
-# Assembly files
-$(BUILD_DIR)/%.S.o: %.S | $(BUILD_DIR)
-	@mkdir -p $(dir $@)
-	@echo "AS  $<"
-	@$(CC) $(ASFLAGS) -c $< -o $@
+lk-sched-full: SCHED_MODE=full
+lk-sched-full: lk-sched-test
 
-# C files
-$(BUILD_DIR)/%.c.o: %.c | $(BUILD_DIR)
-	@mkdir -p $(dir $@)
-	@echo "CC  $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+lk-sched-cross: SCHED_MODE=cross
+lk-sched-cross: lk-sched-test
 
-# Link kernel
-$(TARGET): $(OBJS)
-	@echo "LD  $(TARGET)"
-	@$(LD) $(LDFLAGS) -o $@ $(OBJS)
+lk-sched-smp:
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=full lk-sched-test
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=cross lk-sched-test
 
-# Convert to binary image
-$(IMAGE): $(TARGET)
-	@echo "OBJCOPY $(IMAGE)"
-	@$(OBJCOPY) -O binary $(TARGET) $(IMAGE)
+threadx-kernel:
+	@$(MAKE) -C threadx CORES=$(CORES)
 
-# Run in QEMU
-run: $(TARGET)
-	@echo "Running QEMU (GICv3)..."
-	@timeout 10 qemu-system-aarch64 \
-	    -machine virt,gic-version=3 \
-	    -cpu cortex-a53 \
-	    -smp 1 \
-	    -m 512 \
-	    -kernel $(TARGET) \
-	    -nographic \
-	    -monitor none \
-	    -serial stdio 2>&1 || true
+threadx-run: threadx-kernel
+	@$(MAKE) -C threadx run CORES=$(CORES)
 
-# Debug mode (with GDB)
-debug: CFLAGS += -O0 -g3
-debug: $(TARGET)
-	@echo "QEMU with GDB debugging..."
-	@./scripts/run-qemu-debug.sh $(TARGET)
+threadx-sched-test: threadx-kernel
+	@python3 tests/acceptance/accept_qemu_sched.py \
+	    --cores $(CORES) \
+	    --timeout $(TIMEOUT) \
+	    --mode $(SCHED_MODE) \
+	    --elf threadx/build-$(CORES)/threadx.elf
 
-# Clean build artifacts
+threadx-sched-full: SCHED_MODE=full
+threadx-sched-full: threadx-sched-test
+
+threadx-sched-cross: SCHED_MODE=cross
+threadx-sched-cross: threadx-sched-test
+
+threadx-sched-smp:
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=full threadx-sched-test
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=cross threadx-sched-test
+
+arch-sched-matrix:
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST) sched-smp
+	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) lk-sched-smp
+	@$(MAKE) CORES=4 TIMEOUT=$(TIMEOUT) threadx-sched-smp
+
 clean:
-	@echo "Cleaning..."
-	@rm -rf $(BUILD_DIR) *.elf *.bin *.map
-
-# Show symbols
-nm: $(TARGET)
-	@echo "Symbols in $(TARGET):"
-	@$(NM) $(TARGET)
-
-# Disassemble
-dump: $(TARGET)
-	@echo "Disassembly of $(TARGET):"
-	@$(OBJDUMP) -D $(TARGET)
-
-# Include dependencies
--include $(DEPS)
+	@$(MAKE) -C kernel clean
+	@$(MAKE) -C bsp clean
+	@$(MAKE) -C lk clean
+	@$(MAKE) -C threadx clean
+	@echo "  CLEAN done"
