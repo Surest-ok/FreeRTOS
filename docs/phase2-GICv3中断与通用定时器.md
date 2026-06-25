@@ -526,7 +526,7 @@ int main(void)
 3. 再配置 Timer 并注册 ISR
 4. 最后解除 IRQ 屏蔽并启动定时器
 
-### 4.7 链接脚本 — linker.ld
+### 4.7 链接脚本 — bsp/linker.ld
 
 ```
 ENTRY(_start)
@@ -581,13 +581,13 @@ $ make clean && make
 Cleaning...
 mkdir -p build
 mkdir -p build/src
-AS  src/startup.S
-AS  src/vectors.S
-CC  src/main.c
-CC  src/uart.c
-CC  src/gic.c
-CC  src/gtimer.c
-CC  src/interrupt.c
+AS  bsp/src/startup.S
+AS  bsp/src/freertos_vectors.S
+CC  bsp/src/main.c
+CC  bsp/src/uart.c
+CC  bsp/src/gic.c
+CC  bsp/src/gtimer.c
+CC  bsp/src/app_irq.c
 LD  kernel.elf
 OBJCOPY kernel.bin
 ```
@@ -651,17 +651,17 @@ $ qemu-system-aarch64 \
 
 | 文件 | 说明 | 行数 |
 |------|------|------|
-| `src/startup.S` | 启动代码：EL2→EL1 降级、BSS 清零、IRQ 解屏蔽 | ~97 |
-| `src/vectors.S` | 异常向量表：16 入口、IRQ handler（GICv3 系统寄存器） | ~131 |
-| `src/gic.c` | GICv3 驱动：Distributor + Redistributor + CPU Interface | ~200 |
+| `bsp/src/startup.S` | 启动代码：EL2→EL1 降级、BSS 清零、IRQ 解屏蔽 | ~97 |
+| `bsp/src/freertos_vectors.S` | 异常向量表：16 入口、IRQ handler（GICv3 系统寄存器） | ~131 |
+| `bsp/src/gic.c` | GICv3 驱动：Distributor + Redistributor + CPU Interface | ~200 |
 | `include/gic.h` | GICv3 接口定义、INTID 常量 | ~34 |
-| `src/gtimer.c` | ARM Generic Timer 驱动：EL1 Physical Timer，100Hz | ~65 |
+| `bsp/src/gtimer.c` | ARM Generic Timer 驱动：EL1 Physical Timer，100Hz | ~65 |
 | `include/gtimer.h` | Timer 接口定义 | ~53 |
-| `src/interrupt.c` | ISR 注册表与分发 | ~46 |
+| `bsp/src/app_irq.c` | ISR 注册表与分发 | ~46 |
 | `include/interrupt.h` | 中断框架接口 | ~18 |
-| `src/main.c` | 主程序：初始化序列 | ~46 |
+| `bsp/src/main.c` | 主程序：初始化序列 | ~46 |
 | `include/platform.h` | 平台地址与寄存器定义 | ~113 |
-| `linker.ld` | 链接脚本：RAM 0x40000000 | ~41 |
+| `bsp/linker.ld` | 链接脚本：RAM 0x40000000 | ~41 |
 | `Makefile` | 构建系统 | ~146 |
 
 ---

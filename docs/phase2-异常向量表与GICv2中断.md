@@ -331,15 +331,15 @@ Core 0 at EL1
 
 | 文件 | 说明 |
 |------|------|
-| `src/vectors.S` | 异常向量表（16 入口，2KB 对齐） |
-| `src/gic.c` | GICv2 驱动（Distributor + CPU Interface） |
+| `bsp/src/freertos_vectors.S (Phase 2 original: vectors.S)` | 异常向量表（16 入口，2KB 对齐） |
+| `bsp/src/gic.c` | GICv2 驱动（Distributor + CPU Interface） |
 | `include/gic.h` | GICv2 接口定义 |
-| `src/gtimer.c` | ARM Generic Timer 驱动 |
+| `bsp/src/gtimer.c` | ARM Generic Timer 驱动 |
 | `include/gtimer.h` | Timer 接口定义 |
-| `src/interrupt.c` | ISR 注册表与中断分发 |
+| `bsp/src/app_irq.c (Phase 2 original: interrupt.c)` | ISR 注册表与中断分发 |
 | `include/interrupt.h` | 中断框架接口 |
-| `src/startup.S` | 修改：启用 IRQ (daifclr) |
-| `src/main.c` | 修改：初始化序列 |
+| `bsp/src/startup.S` | 修改：启用 IRQ (daifclr) |
+| `bsp/src/main.c` | 修改：初始化序列 |
 | `Makefile` | 修改：添加新源文件 |
 
 ---

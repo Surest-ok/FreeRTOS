@@ -1,0 +1,80 @@
+aarch64_lk:
+  toolchain:
+    # Assembler
+    assembler:
+      source_type: asm
+      path: aarch64-none-elf-gcc
+      flags: >-
+        -c -x assembler-with-cpp -gdwarf-2 -D__ASSEMBLY__ -DASSEMBLY
+        -march=armv8-a -mtune=cortex-a53 -mgeneral-regs-only
+        -ffixed-x18 -nostartfiles -fms-extensions
+        -ffunction-sections -fdata-sections -g
+
+    # C compiler
+    c-compiler:
+      source_type: c
+      path: aarch64-none-elf-gcc
+      flags: >-
+        -O2 -march=armv8-a -mtune=cortex-a53 -mgeneral-regs-only
+        -ffixed-x18 -fno-omit-frame-pointer
+        -fno-strict-aliasing -Wall -Wno-cpp -std=gnu11 -gdwarf-2
+        -nostdlib -fno-builtin -fms-extensions
+        -ffunction-sections -fdata-sections -g
+        -mno-outline-atomics
+
+    # C++ compiler
+    cpp-compiler:
+      source_type: cpp
+      path: aarch64-none-elf-g++
+      flags: >-
+        -O2 -march=armv8-a -mtune=cortex-a53 -mgeneral-regs-only
+        -ffixed-x18 -fno-omit-frame-pointer
+        -fno-strict-aliasing -Wall -Wno-cpp -std=c++11 -gdwarf-2
+        -nostdlib -fno-builtin -fms-extensions
+        -ffunction-sections -fdata-sections -g
+        -fno-exceptions -fno-rtti
+        -mno-outline-atomics
+
+    # Linker
+    linker:
+      tool_type: linker
+      path: aarch64-none-elf-gcc
+      flags: >-
+        -O2 -march=armv8-a -mtune=cortex-a53 -gdwarf-2
+        -fno-builtin -ffunction-sections -fdata-sections
+        -Wl,-Map=build/lk_demo/aarch64_lk/lk_demo.map,-cref,-u,_start
+        -T lk_qemu.ld -static
+        -Wl,--gc-sections,--build-id=none,--cref -nostartfiles
+        -nodefaultlibs -lgcc
+        -z max-page-size=4096
+
+    # Archiver
+    archiver:
+      tool_type: archiver
+      path: aarch64-none-elf-ar
+      flags: qc
+
+    # Ranlib
+    ranlib:
+      tool_type: ranlib
+      path: aarch64-none-elf-ranlib
+
+    # Object copy
+    objcopy:
+      tool_type: objcopy
+      path: aarch64-none-elf-objcopy
+
+    # Size
+    size:
+      tool_type: size
+      path: aarch64-none-elf-size
+
+    # Strip
+    strip:
+      tool_type: strip
+      path: aarch64-none-elf-strip
+
+    # Name mangler
+    nm:
+      tool_type: nm
+      path: aarch64-none-elf-nm
