@@ -1,9 +1,7 @@
 #ifndef ARCH_SPINLOCK_H
 #define ARCH_SPINLOCK_H
 
-#ifndef TX_PORT_H
 #include <stdint.h>
-#endif
 #include "arch_api/arch.h"
 #include "arch_api/irq.h"
 

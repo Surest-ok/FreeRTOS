@@ -1,14 +1,15 @@
 #
 # Top-level Makefile for FreeRTOS SMP on QEMU virt AArch64
-# Phase 4: kernel library + BSP
+# SCons Build System Frontend Wrapper
 #
 # Targets:
-#   make all     — build kernel library then BSP
-#   make kernel  — build libfreertos.a only
-#   make bsp     — build BSP (depends on kernel)
-#   make run     — build and run in QEMU (CORES cores, default 2)
-#   make sched-test — run local QEMU scheduler acceptance
-#   make clean   — clean all build artifacts
+#   make all         — build FreeRTOS SMP kernel and BSP image using SCons
+#   make run         — build and run simulation in QEMU
+#   make sched-test  — run QEMU scheduler acceptance test
+#   make sched-full  — run full acceptance suite
+#   make sched-cross — run cross-core synchronization stress suite
+#   make sched-smp   — run both full and cross acceptance suites
+#   make clean       — clean all build artifacts
 #
 
 CORES ?= 2
@@ -16,105 +17,51 @@ TIMEOUT ?= 30
 SCHED_MODE ?= full
 LOG_LEVEL ?= 6
 TICK_BROADCAST ?= 1
+SCONS ?= scons
 
-.PHONY: all kernel bsp run sched-test sched-full sched-cross sched-smp sched-matrix sched-cross-sem sched-cross-queue sched-cross-mutex sched-cross-spin lk-kernel lk-run lk-sched-test lk-sched-full lk-sched-cross lk-sched-smp threadx-kernel threadx-run threadx-sched-test threadx-sched-full threadx-sched-cross threadx-sched-smp arch-sched-matrix clean
+SCONS_FLAGS := CORES=$(CORES) \
+               SCHED_MODE=$(SCHED_MODE) \
+               LOG_LEVEL=$(LOG_LEVEL) \
+               TICK_BROADCAST=$(TICK_BROADCAST) \
+               TIMEOUT=$(TIMEOUT)
 
-all: kernel bsp
+.PHONY: all run sched-test sched-full sched-cross sched-smp sched-matrix \
+        sched-cross-sem sched-cross-queue sched-cross-mutex sched-cross-spin clean
 
-kernel:
-	@$(MAKE) -C kernel CORES=$(CORES) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST)
+all:
+	@$(SCONS) $(SCONS_FLAGS)
 
-bsp: kernel
-	@$(MAKE) -C bsp CORES=$(CORES) SCHED_MODE=$(SCHED_MODE) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST)
+run:
+	@$(SCONS) $(SCONS_FLAGS) run
 
-run: bsp
-	@$(MAKE) -C bsp run CORES=$(CORES) SCHED_MODE=$(SCHED_MODE) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST)
+sched-test:
+	@$(SCONS) $(SCONS_FLAGS) test
 
-sched-test: bsp
-	@python3 tests/acceptance/accept_qemu_sched.py \
-	    --cores $(CORES) \
-	    --timeout $(TIMEOUT) \
-	    --mode $(SCHED_MODE) \
-	    --elf bsp/kernel-$(CORES)-$(SCHED_MODE)-log$(LOG_LEVEL)-tb$(TICK_BROADCAST).elf
+sched-full:
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=full test
 
-sched-full: SCHED_MODE=full
-sched-full: sched-test
-
-sched-cross: SCHED_MODE=cross
-sched-cross: sched-test
+sched-cross:
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=cross test
 
 sched-smp:
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST) SCHED_MODE=full sched-test
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST) SCHED_MODE=cross sched-test
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=full test
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=cross test
 
 sched-matrix: sched-smp
 
-sched-cross-sem: SCHED_MODE=cross-sem
-sched-cross-sem: sched-test
+sched-cross-sem:
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=cross-sem test
 
-sched-cross-queue: SCHED_MODE=cross-queue
-sched-cross-queue: sched-test
+sched-cross-queue:
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=cross-queue test
 
-sched-cross-mutex: SCHED_MODE=cross-mutex
-sched-cross-mutex: sched-test
+sched-cross-mutex:
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=cross-mutex test
 
-sched-cross-spin: SCHED_MODE=cross-spin
-sched-cross-spin: sched-test
-
-lk-kernel:
-	@$(MAKE) -C lk CORES=$(CORES)
-
-lk-run: lk-kernel
-	@$(MAKE) -C lk run CORES=$(CORES)
-
-lk-sched-test: lk-kernel
-	@python3 tests/acceptance/accept_qemu_sched.py \
-	    --cores $(CORES) \
-	    --timeout $(TIMEOUT) \
-	    --mode $(SCHED_MODE) \
-	    --elf lk/build-$(CORES)/lk.elf
-
-lk-sched-full: SCHED_MODE=full
-lk-sched-full: lk-sched-test
-
-lk-sched-cross: SCHED_MODE=cross
-lk-sched-cross: lk-sched-test
-
-lk-sched-smp:
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=full lk-sched-test
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=cross lk-sched-test
-
-threadx-kernel:
-	@$(MAKE) -C threadx CORES=$(CORES)
-
-threadx-run: threadx-kernel
-	@$(MAKE) -C threadx run CORES=$(CORES)
-
-threadx-sched-test: threadx-kernel
-	@python3 tests/acceptance/accept_qemu_sched.py \
-	    --cores $(CORES) \
-	    --timeout $(TIMEOUT) \
-	    --mode $(SCHED_MODE) \
-	    --elf threadx/build-$(CORES)/threadx.elf
-
-threadx-sched-full: SCHED_MODE=full
-threadx-sched-full: threadx-sched-test
-
-threadx-sched-cross: SCHED_MODE=cross
-threadx-sched-cross: threadx-sched-test
-
-threadx-sched-smp:
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=full threadx-sched-test
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) SCHED_MODE=cross threadx-sched-test
-
-arch-sched-matrix:
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) LOG_LEVEL=$(LOG_LEVEL) TICK_BROADCAST=$(TICK_BROADCAST) sched-smp
-	@$(MAKE) CORES=$(CORES) TIMEOUT=$(TIMEOUT) lk-sched-smp
-	@$(MAKE) CORES=4 TIMEOUT=$(TIMEOUT) threadx-sched-smp
+sched-cross-spin:
+	@$(SCONS) $(SCONS_FLAGS) SCHED_MODE=cross-spin test
 
 clean:
-	@$(MAKE) -C kernel clean
-	@$(MAKE) -C bsp clean
-	@$(MAKE) -C lk clean
-	@$(MAKE) -C threadx clean
+	@$(SCONS) -c || true
+	@rm -rf build build-* *.elf *.bin .sconsign.dblite
 	@echo "  CLEAN done"

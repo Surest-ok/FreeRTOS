@@ -1,9 +1,7 @@
 #ifndef ARCH_IRQ_H
 #define ARCH_IRQ_H
 
-#ifndef TX_PORT_H
 #include <stdint.h>
-#endif
 #include "arch_api/barrier.h"
 
 typedef uint64_t arch_irq_flags_t;

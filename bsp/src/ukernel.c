@@ -6,7 +6,9 @@
 #include "gic.h"
 #include "gtimer.h"
 #include "ukernel.h"
+#include "arch_api/arch.h"
 
+extern void _start(void);
 extern void vPortSecondaryCoreEntry(void);
 extern void *secondary_entry[];
 
@@ -50,10 +52,22 @@ void ukernel_panic(const char *reason)
     }
 }
 
+static inline int psci_cpu_on(uint64_t mpidr, uint64_t entrypoint)
+{
+    register uint64_t x0 __asm__("x0") = 0xC4000003; /* PSCI CPU_ON 64-bit */
+    register uint64_t x1 __asm__("x1") = mpidr;
+    register uint64_t x2 __asm__("x2") = entrypoint;
+    register uint64_t x3 __asm__("x3") = 0;
+    __asm__ volatile("hvc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
+    return (int)x0;
+}
+
 void ukernel_wake_secondary_cores(void)
 {
     for (int i = 1; i < configNUMBER_OF_CORES; i++) {
         __atomic_store_n(&secondary_entry[i], vPortSecondaryCoreEntry, __ATOMIC_RELEASE);
+        uint64_t mpidr = arch_linear_cpu_to_mpidr((uint32_t)i);
+        (void)psci_cpu_on(mpidr, (uint64_t)_start);
     }
     __asm__ volatile("dmb sy\nsev" ::: "memory");
 }
