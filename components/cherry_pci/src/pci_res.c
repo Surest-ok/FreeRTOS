@@ -103,7 +103,8 @@ int pci_probe_bar(struct pci_dev *dev, int bar_idx)
         if (base == 0) {
             base = pci_alloc_resource(size, flags);
             if (base != 0) {
-                pci_write_config_dword(dev, reg, (uint32_t)base | PCI_BASE_ADDRESS_SPACE_IO);
+                uint32_t bus_addr = (uint32_t)(base >= PCIE_IO_BASE ? (base - PCIE_IO_BASE) : base);
+                pci_write_config_dword(dev, reg, bus_addr | PCI_BASE_ADDRESS_SPACE_IO);
             }
         }
 

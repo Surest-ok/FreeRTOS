@@ -71,6 +71,10 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         f"if=none,id=sd0,file={sd_img},format=raw",
         "-device",
         "sd-card,drive=sd0",
+        "-netdev",
+        "user,id=net0",
+        "-device",
+        "virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56",
         "-kernel",
         str(elf),
         "-nographic",
@@ -127,7 +131,7 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
-    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
+    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[net-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
         sys.stdout.write(line)
         sys.stdout.flush()
 

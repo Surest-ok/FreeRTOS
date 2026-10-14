@@ -24,6 +24,7 @@
 #include "ext4_test.h"
 #include "cherry_fstools.h"
 #include "fstools_test.h"
+#include "cherry_net.h"
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -597,6 +598,8 @@ static void scheduler_monitor(void *arg)
         cherry_ext4_run_tests();
         cherry_fstools_init();
         cherry_fstools_run_tests();
+        cherry_net_init();
+        cherry_net_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();

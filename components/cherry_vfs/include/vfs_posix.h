@@ -49,12 +49,16 @@ int     umount(const char *target);
 
 /* POSIX-compatible BSD Socket Calls */
 int     socket(int domain, int type, int protocol);
-int     bind(int sockfd, const void *addr, size_t addrlen);
-int     connect(int sockfd, const void *addr, size_t addrlen);
+int     bind(int sockfd, const void *addr, socklen_t addrlen);
+int     connect(int sockfd, const void *addr, socklen_t addrlen);
 int     listen(int sockfd, int backlog);
-int     accept(int sockfd, void *addr, size_t *addrlen);
+int     accept(int sockfd, void *addr, socklen_t *addrlen);
 ssize_t send(int sockfd, const void *buf, size_t len, int flags);
 ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const void *dest_addr, socklen_t addrlen);
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, void *src_addr, socklen_t *addrlen);
+int     setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+int     getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen);
 int     shutdown(int sockfd, int how);
 
 #ifdef __cplusplus
