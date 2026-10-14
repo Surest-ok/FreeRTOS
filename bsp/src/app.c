@@ -12,6 +12,10 @@
 #include "vfs_stress_test.h"
 #include "cherry_shell.h"
 #include "shell_test.h"
+#include "cherry_printk.h"
+#include "printk_test.h"
+#include "cherry_timer.h"
+#include "timer_test.h"
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -570,6 +574,10 @@ static void scheduler_monitor(void *arg)
     static int s_components_tested = 0;
     if (!s_components_tested) {
         s_components_tested = 1;
+        cherry_printk_init();
+        cherry_printk_run_tests();
+        cherry_timer_init();
+        cherry_timer_run_tests();
         cherry_vfs_init();
         cherry_vfs_run_tests();
         vfs_run_stress_tests(50);

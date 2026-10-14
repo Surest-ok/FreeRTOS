@@ -22,9 +22,9 @@ static int help_sym_cb(const struct cherry_shell_symbol *sym, void *user_data)
     if (sym->type == CHERRY_SHELL_SYM_CMD) type_str = "[CMD] ";
     else if (sym->type == CHERRY_SHELL_SYM_VAR) type_str = "[VAR] ";
 
-    kal_printf("  %-16s %s 0x%016lx %s\n",
-               sym->name ? sym->name : "?",
+    kal_printf("  [%s] %s (0x%016lx) - %s\n",
                type_str,
+               sym->name ? sym->name : "?",
                (unsigned long)sym->addr,
                sym->description ? sym->description : "");
     return 0;

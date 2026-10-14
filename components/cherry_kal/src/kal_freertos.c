@@ -16,7 +16,7 @@
 #include "uart.h"
 
 #define KTHREAD_DEFAULT_STACK_WORDS 2048
-#define KTHREAD_DEFAULT_PRIORITY    (tskIDLE_PRIORITY + 1)
+#define KTHREAD_DEFAULT_PRIORITY    (configMAX_PRIORITIES - 3)
 
 /* =========================================================================
  * 1. Memory Management
@@ -134,6 +134,22 @@ void spin_lock(spinlock_t *lock)
     }
     lock->owner_core = core;
     lock->nesting = 1;
+}
+
+int spin_trylock(spinlock_t *lock)
+{
+    if (!lock) return 0;
+    uint32_t core = smp_processor_id();
+    if (lock->owner_core == core) {
+        lock->nesting++;
+        return 1;
+    }
+    if (!__atomic_test_and_set(&lock->lock, __ATOMIC_ACQUIRE)) {
+        lock->owner_core = core;
+        lock->nesting = 1;
+        return 1;
+    }
+    return 0;
 }
 
 void spin_unlock(spinlock_t *lock)
@@ -353,7 +369,7 @@ uint64_t ktime_get_real_ns(void)
 /* =========================================================================
  * 7. Linux Standard Printk
  * ========================================================================= */
-int printk(const char *fmt, ...)
+__attribute__((weak)) int printk(const char *fmt, ...)
 {
     char buf[512];
     va_list ap;
