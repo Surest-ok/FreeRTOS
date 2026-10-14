@@ -21,6 +21,7 @@
 
 #define PPI_START        16
 #define SPI_START        32
+#define LPI_START        8192
 
 void gic_init(uint32_t core_id);
 void gic_enable_irq(uint32_t irq);

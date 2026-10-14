@@ -44,8 +44,8 @@ void vApplicationIRQHandler(uint32_t ulICCIAR)
     uint32_t irq = ulICCIAR;
     uint32_t cpu = arch_curr_cpu_id();
 
-    if (irq >= 1020) {
-        return;  /* Spurious */
+    if (irq >= 1020 && irq < 8192) {
+        return;  /* Spurious / reserved */
     }
 
     arch_irq_note_enter(irq, cpu);

@@ -6,7 +6,7 @@ Builds freertos_smp.elf and freertos_smp.bin
 from SCons.Script import *
 from arch.rules import setup_linker_rules
 
-Import('env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib')
+Import('env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib')
 
 bsp_env = env.Clone()
 
@@ -20,6 +20,10 @@ bsp_env.Append(CPPPATH=[
     '#components/cherry_printk/tests',
     '#components/cherry_timer/include',
     '#components/cherry_timer/tests',
+    '#components/cherry_pci/include',
+    '#components/cherry_pci/tests',
+    '#components/cherry_sdio/include',
+    '#components/cherry_sdio/tests',
     '#components/cherry_shell/include',
     '#components/cherry_shell/tests',
     '#components/cherry_kal/include',
@@ -51,7 +55,7 @@ bsp_objs = bsp_env.Object(bsp_sources)
 # cherry_shell -> cherry_vfs -> cherry_timer -> cherry_printk -> cherry_kal -> freertos kernel
 elf_target = bsp_env.Program(
     target='freertos_smp.elf',
-    source=bsp_objs + [cherry_shell_lib, cherry_vfs_lib, cherry_timer_lib, cherry_printk_lib, cherry_kal_lib, kernel_lib]
+    source=bsp_objs + [cherry_sdio_lib, cherry_pci_lib, cherry_shell_lib, cherry_vfs_lib, cherry_timer_lib, cherry_printk_lib, cherry_kal_lib, kernel_lib]
 )
 
 

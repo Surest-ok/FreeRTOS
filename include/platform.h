@@ -110,4 +110,15 @@
 #define PSR_MODE_EL2t       0x00000008    // EL2, Thumb
 #define PSR_MODE_EL2h       0x0000000C    // EL2, ARM
 
+
+/* GICv3 ITS (Interrupt Translation Service) */
+#define GITS_BASE           0x08080000ULL
+#define GITS_TRANSLATER     (GITS_BASE + 0x10040ULL)
+
+/* PCIe ECAM and MMIO addresses for QEMU virt */
+#define PCIE_ECAM_BASE_HIGH 0x4010000000ULL
+#define PCIE_ECAM_BASE_LOW  0x3F000000ULL
+#define PCIE_MMIO32_BASE    0x10000000ULL
+#define PCIE_MMIO32_SIZE    0x2EFF0000ULL
+
 #endif /* __PLATFORM_H__ */

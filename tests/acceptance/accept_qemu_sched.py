@@ -49,16 +49,28 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
     if not elf.exists():
         raise FileNotFoundError(elf)
 
+    sd_img = Path("build/test_sd.img")
+    sd_img.parent.mkdir(parents=True, exist_ok=True)
+    if not sd_img.exists() or sd_img.stat().st_size != 64 * 1024 * 1024:
+        with open(sd_img, "wb") as f:
+            f.truncate(64 * 1024 * 1024)
+
     return [
         "qemu-system-aarch64",
         "-machine",
-        "virt,gic-version=3",
+        "virt,gic-version=3,its=on",
         "-cpu",
         "cortex-a53",
         "-smp",
         str(args.cores),
         "-m",
         "512",
+        "-device",
+        "sdhci-pci,id=sdhci0",
+        "-drive",
+        f"if=none,id=sd0,file={sd_img},format=raw",
+        "-device",
+        "sd-card,drive=sd0",
         "-kernel",
         str(elf),
         "-nographic",
@@ -115,7 +127,7 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
-    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
+    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
         sys.stdout.write(line)
         sys.stdout.flush()
 

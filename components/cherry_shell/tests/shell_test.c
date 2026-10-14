@@ -120,8 +120,11 @@ int cherry_shell_run_tests(void)
     int c4 = cherry_shell_exec("mkdir /cherry_test_dir", NULL, 0);
     int c5 = cherry_shell_exec("touch /cherry_test_dir/file.log", NULL, 0);
     int c6 = cherry_shell_exec("ls /cherry_test_dir", NULL, 0);
+    int c7 = cherry_shell_exec("pci_ls", NULL, 0);
+    int c8 = cherry_shell_exec("its_info", NULL, 0);
+    int c9 = cherry_shell_exec("sd_info", NULL, 0);
 
-    if (c1 == 0 && c2 == 0 && c3 == 0 && c4 == 0 && c5 == 0 && c6 == 0) {
+    if (c1 == 0 && c2 == 0 && c3 == 0 && c4 == 0 && c5 == 0 && c6 == 0 && c7 == 0 && c8 == 0 && c9 == 0) {
         pass_cmds = 1;
     } else {
         kal_printf("<3>cherry_shell: cmds failed (c1=%d c2=%d c3=%d c4=%d c5=%d c6=%d)\n",

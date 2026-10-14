@@ -5,6 +5,8 @@
 #include "arch_api/vector.h"
 
 #define ARCH_IRQ_MAX_VECTORS 1024U
+#define ARCH_LPI_BASE        8192U
+#define ARCH_LPI_MAX_VECTORS 256U
 
 typedef struct arch_irq_entry {
     arch_irq_handler_t handler;
@@ -13,6 +15,7 @@ typedef struct arch_irq_entry {
 
 static arch_syscall_handler_t g_syscall_handler;
 static arch_irq_entry_t g_irq_table[ARCH_IRQ_MAX_VECTORS];
+static arch_irq_entry_t g_lpi_table[ARCH_LPI_MAX_VECTORS];
 static arch_irq_stats_t g_irq_stats;
 static arch_exception_stats_t g_exception_stats;
 
@@ -78,29 +81,40 @@ int arch_syscall_dispatch(arch_exception_frame_t *frame)
 
 int arch_irq_register(uint32_t vector, arch_irq_handler_t handler, void *arg)
 {
-    if (vector >= ARCH_IRQ_MAX_VECTORS) {
-        return -1;
+    if (vector < ARCH_IRQ_MAX_VECTORS) {
+        g_irq_table[vector].handler = handler;
+        g_irq_table[vector].arg = arg;
+        return 0;
     }
-
-    g_irq_table[vector].handler = handler;
-    g_irq_table[vector].arg = arg;
-    return 0;
+    if (vector >= ARCH_LPI_BASE && vector < (ARCH_LPI_BASE + ARCH_LPI_MAX_VECTORS)) {
+        uint32_t idx = vector - ARCH_LPI_BASE;
+        g_lpi_table[idx].handler = handler;
+        g_lpi_table[idx].arg = arg;
+        return 0;
+    }
+    return -1;
 }
 
 int arch_irq_dispatch(uint32_t vector)
 {
     arch_irq_entry_t *entry;
 
-    if (vector >= ARCH_IRQ_MAX_VECTORS) {
-        return 0;
+    if (vector < ARCH_IRQ_MAX_VECTORS) {
+        entry = &g_irq_table[vector];
+        if (entry->handler == 0) {
+            return 0;
+        }
+        return entry->handler(vector, entry->arg) != 0;
     }
-
-    entry = &g_irq_table[vector];
-    if (entry->handler == 0) {
-        return 0;
+    if (vector >= ARCH_LPI_BASE && vector < (ARCH_LPI_BASE + ARCH_LPI_MAX_VECTORS)) {
+        uint32_t idx = vector - ARCH_LPI_BASE;
+        entry = &g_lpi_table[idx];
+        if (entry->handler == 0) {
+            return 0;
+        }
+        return entry->handler(vector, entry->arg) != 0;
     }
-
-    return entry->handler(vector, entry->arg) != 0;
+    return 0;
 }
 
 void arch_irq_note_enter(uint32_t vector, uint32_t cpu)

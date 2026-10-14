@@ -16,6 +16,10 @@
 #include "printk_test.h"
 #include "cherry_timer.h"
 #include "timer_test.h"
+#include "cherry_pci.h"
+#include "pci_test.h"
+#include "cherry_sdio.h"
+#include "sdio_test.h" 
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -581,6 +585,10 @@ static void scheduler_monitor(void *arg)
         cherry_vfs_init();
         cherry_vfs_run_tests();
         vfs_run_stress_tests(50);
+        cherry_pci_init();
+        cherry_pci_run_tests();
+        cherry_sdio_init();
+        cherry_sdio_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();
