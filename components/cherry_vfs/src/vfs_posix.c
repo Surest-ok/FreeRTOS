@@ -356,7 +356,11 @@ int rmdir(const char *path)
     if (!parent->d_inode->i_ops || !parent->d_inode->i_ops->rmdir) {
         return -ENOSYS;
     }
-    return parent->d_inode->i_ops->rmdir(parent->d_inode, last_comp);
+    ret = parent->d_inode->i_ops->rmdir(parent->d_inode, last_comp);
+    if (ret == VFS_OK) {
+        vfs_dentry_drop(parent, last_comp);
+    }
+    return ret;
 }
 
 int unlink(const char *path)
@@ -370,14 +374,48 @@ int unlink(const char *path)
     if (!parent->d_inode->i_ops || !parent->d_inode->i_ops->unlink) {
         return -ENOSYS;
     }
-    return parent->d_inode->i_ops->unlink(parent->d_inode, last_comp);
+    ret = parent->d_inode->i_ops->unlink(parent->d_inode, last_comp);
+    if (ret == VFS_OK) {
+        vfs_dentry_drop(parent, last_comp);
+    }
+    return ret;
 }
 
 int rename(const char *oldpath, const char *newpath)
 {
-    (void)oldpath;
-    (void)newpath;
-    return -ENOSYS;
+    if (!oldpath || !newpath) return -EINVAL;
+    if (strcmp(oldpath, newpath) == 0) return 0;
+
+    int old_fd = open(oldpath, O_RDONLY);
+    if (old_fd < 0) return old_fd;
+
+    struct stat st;
+    if (fstat(old_fd, &st) < 0) {
+        close(old_fd);
+        return -EIO;
+    }
+
+    int new_fd = open(newpath, O_WRONLY | O_CREAT | O_TRUNC, st.st_mode);
+    if (new_fd < 0) {
+        close(old_fd);
+        return new_fd;
+    }
+
+    char buf[256];
+    ssize_t n;
+    while ((n = read(old_fd, buf, sizeof(buf))) > 0) {
+        if (write(new_fd, buf, n) != n) {
+            close(old_fd);
+            close(new_fd);
+            unlink(newpath);
+            return -EIO;
+        }
+    }
+
+    close(old_fd);
+    close(new_fd);
+    unlink(oldpath);
+    return 0;
 }
 
 /* =========================================================================

@@ -9,6 +9,7 @@
 #include "ukernel.h"
 #include "cherry_vfs.h"
 #include "vfs_test.h"
+#include "vfs_stress_test.h"
 #include "cherry_shell.h"
 #include "shell_test.h"
 
@@ -571,6 +572,7 @@ static void scheduler_monitor(void *arg)
         s_components_tested = 1;
         cherry_vfs_init();
         cherry_vfs_run_tests();
+        vfs_run_stress_tests(50);
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();

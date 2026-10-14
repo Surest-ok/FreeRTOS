@@ -1,10 +1,8 @@
 /*
- * CherryKAL - FreeRTOS SMP Implementation
+ * CherryKAL - FreeRTOS SMP Implementation (Pure Linux Kernel API Standard)
  *
  * Copyright (c) 2026 ForgeStitch
  * SPDX-License-Identifier: MIT
- *
- * Implements Linux-style KAL APIs on FreeRTOS V11 SMP
  */
 
 #include "cherry_kal.h"
@@ -15,46 +13,52 @@
 #include "task.h"
 #include "semphr.h"
 #include "port_smp.h"
+#include "uart.h"
 
-extern void uart_printf(const char *fmt, ...);
+#define KTHREAD_DEFAULT_STACK_WORDS 2048
+#define KTHREAD_DEFAULT_PRIORITY    (tskIDLE_PRIORITY + 1)
 
 /* =========================================================================
  * 1. Memory Management
  * ========================================================================= */
-void *kal_malloc(size_t size)
+void *kmalloc(size_t size, gfp_t flags)
 {
-    return pvPortMalloc(size);
-}
-
-void kal_free(void *ptr)
-{
-    if (ptr) {
-        vPortFree(ptr);
-    }
-}
-
-void *kal_calloc(size_t nmemb, size_t size)
-{
-    size_t total = nmemb * size;
-    void *ptr = pvPortMalloc(total);
-    if (ptr) {
-        memset(ptr, 0, total);
+    void *ptr = pvPortMalloc(size);
+    if (ptr && (flags & __GFP_ZERO)) {
+        memset(ptr, 0, size);
     }
     return ptr;
 }
 
-void *kal_realloc(void *ptr, size_t size)
+void kfree(const void *ptr)
 {
-    if (!ptr) return pvPortMalloc(size);
+    if (ptr) {
+        vPortFree((void *)ptr);
+    }
+}
+
+void *kzalloc(size_t size, gfp_t flags)
+{
+    return kmalloc(size, flags | __GFP_ZERO);
+}
+
+void *kcalloc(size_t nmemb, size_t size, gfp_t flags)
+{
+    size_t total = nmemb * size;
+    return kzalloc(total, flags);
+}
+
+void *krealloc(const void *ptr, size_t size, gfp_t flags)
+{
+    if (!ptr) return kmalloc(size, flags);
     if (size == 0) {
-        vPortFree(ptr);
+        kfree(ptr);
         return NULL;
     }
-    void *new_ptr = pvPortMalloc(size);
+    void *new_ptr = kmalloc(size, flags);
     if (new_ptr) {
-        /* Conservative copy; in real allocator heap_4 doesn't store chunk size */
         memcpy(new_ptr, ptr, size);
-        vPortFree(ptr);
+        kfree(ptr);
     }
     return new_ptr;
 }
@@ -62,69 +66,63 @@ void *kal_realloc(void *ptr, size_t size)
 /* =========================================================================
  * 2. Mutex Synchronization
  * ========================================================================= */
-int kal_mutex_init(kal_mutex_t *mutex)
+void mutex_init(struct mutex *lock)
 {
-    if (!mutex) return KAL_INVAL;
+    if (!lock) return;
     SemaphoreHandle_t sem = xSemaphoreCreateRecursiveMutex();
-    if (!sem) return KAL_NOMEM;
-    mutex->handle = (void *)sem;
-    return KAL_OK;
+    lock->handle = (void *)sem;
 }
 
-int kal_mutex_lock(kal_mutex_t *mutex)
+void mutex_lock(struct mutex *lock)
 {
-    if (!mutex || !mutex->handle) return KAL_INVAL;
+    if (!lock || !lock->handle) return;
     if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
-        return KAL_OK; /* Early boot bypass */
+        return;
     }
-    BaseType_t ret = xSemaphoreTakeRecursive((SemaphoreHandle_t)mutex->handle, portMAX_DELAY);
-    return (ret == pdTRUE) ? KAL_OK : KAL_ERROR;
+    xSemaphoreTakeRecursive((SemaphoreHandle_t)lock->handle, portMAX_DELAY);
 }
 
-int kal_mutex_trylock(kal_mutex_t *mutex)
+int mutex_trylock(struct mutex *lock)
 {
-    if (!mutex || !mutex->handle) return KAL_INVAL;
+    if (!lock || !lock->handle) return 0;
     if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
-        return KAL_OK;
+        return 1;
     }
-    BaseType_t ret = xSemaphoreTakeRecursive((SemaphoreHandle_t)mutex->handle, 0);
-    return (ret == pdTRUE) ? KAL_OK : KAL_BUSY;
+    BaseType_t ret = xSemaphoreTakeRecursive((SemaphoreHandle_t)lock->handle, 0);
+    return (ret == pdTRUE) ? 1 : 0;
 }
 
-int kal_mutex_unlock(kal_mutex_t *mutex)
+void mutex_unlock(struct mutex *lock)
 {
-    if (!mutex || !mutex->handle) return KAL_INVAL;
+    if (!lock || !lock->handle) return;
     if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
-        return KAL_OK;
+        return;
     }
-    BaseType_t ret = xSemaphoreGiveRecursive((SemaphoreHandle_t)mutex->handle);
-    return (ret == pdTRUE) ? KAL_OK : KAL_ERROR;
+    xSemaphoreGiveRecursive((SemaphoreHandle_t)lock->handle);
 }
 
-int kal_mutex_destroy(kal_mutex_t *mutex)
+void mutex_destroy(struct mutex *lock)
 {
-    if (!mutex || !mutex->handle) return KAL_INVAL;
-    vSemaphoreDelete((SemaphoreHandle_t)mutex->handle);
-    mutex->handle = NULL;
-    return KAL_OK;
+    if (!lock || !lock->handle) return;
+    vSemaphoreDelete((SemaphoreHandle_t)lock->handle);
+    lock->handle = NULL;
 }
 
 /* =========================================================================
  * 3. Spinlock (SMP safe)
  * ========================================================================= */
-int kal_spin_lock_init(kal_spinlock_t *lock)
+void spin_lock_init(spinlock_t *lock)
 {
-    if (!lock) return KAL_INVAL;
+    if (!lock) return;
     lock->lock = 0;
     lock->owner_core = 0xFFFFFFFFU;
     lock->nesting = 0;
-    return KAL_OK;
 }
 
-void kal_spin_lock(kal_spinlock_t *lock)
+void spin_lock(spinlock_t *lock)
 {
     if (!lock) return;
-    uint32_t core = kal_get_core_id();
+    uint32_t core = smp_processor_id();
 
     if (lock->owner_core == core) {
         lock->nesting++;
@@ -138,10 +136,10 @@ void kal_spin_lock(kal_spinlock_t *lock)
     lock->nesting = 1;
 }
 
-void kal_spin_unlock(kal_spinlock_t *lock)
+void spin_unlock(spinlock_t *lock)
 {
     if (!lock) return;
-    uint32_t core = kal_get_core_id();
+    uint32_t core = smp_processor_id();
     if (lock->owner_core == core) {
         if (--lock->nesting == 0) {
             lock->owner_core = 0xFFFFFFFFU;
@@ -150,183 +148,219 @@ void kal_spin_unlock(kal_spinlock_t *lock)
     }
 }
 
-unsigned long kal_spin_lock_irqsave(kal_spinlock_t *lock)
+unsigned long _spin_lock_irqsave(spinlock_t *lock)
 {
     unsigned long daif;
     __asm__ volatile("mrs %0, daif\nmsr daifset, #2" : "=r"(daif) :: "memory");
-    kal_spin_lock(lock);
+    spin_lock(lock);
     return daif;
 }
 
-void kal_spin_unlock_irqrestore(kal_spinlock_t *lock, unsigned long flags)
+void spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags)
 {
-    kal_spin_unlock(lock);
+    spin_unlock(lock);
     __asm__ volatile("msr daif, %0" :: "r"(flags) : "memory");
 }
 
 /* =========================================================================
  * 4. Semaphore Synchronization
  * ========================================================================= */
-int kal_sem_init(kal_sem_t *sem, unsigned int initial_count, unsigned int max_count)
+void sema_init(struct semaphore *sem, int val)
 {
-    if (!sem) return KAL_INVAL;
-    SemaphoreHandle_t h = xSemaphoreCreateCounting((UBaseType_t)max_count, (UBaseType_t)initial_count);
-    if (!h) return KAL_NOMEM;
+    if (!sem) return;
+    UBaseType_t max_cnt = (val > 1) ? (UBaseType_t)val : 1024U;
+    UBaseType_t init_cnt = (val > 0) ? (UBaseType_t)val : 0U;
+    SemaphoreHandle_t h = xSemaphoreCreateCounting(max_cnt, init_cnt);
     sem->handle = (void *)h;
-    return KAL_OK;
 }
 
-int kal_sem_wait(kal_sem_t *sem, uint32_t timeout_ms)
+void down(struct semaphore *sem)
 {
-    if (!sem || !sem->handle) return KAL_INVAL;
-    TickType_t ticks = (timeout_ms == KAL_WAIT_FOREVER) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
+    if (!sem || !sem->handle) return;
+    xSemaphoreTake((SemaphoreHandle_t)sem->handle, portMAX_DELAY);
+}
+
+int down_interruptible(struct semaphore *sem)
+{
+    if (!sem || !sem->handle) return -1;
+    BaseType_t ret = xSemaphoreTake((SemaphoreHandle_t)sem->handle, portMAX_DELAY);
+    return (ret == pdTRUE) ? 0 : -1;
+}
+
+int down_trylock(struct semaphore *sem)
+{
+    if (!sem || !sem->handle) return 1;
+    BaseType_t ret = xSemaphoreTake((SemaphoreHandle_t)sem->handle, 0);
+    return (ret == pdTRUE) ? 0 : 1;
+}
+
+int down_timeout(struct semaphore *sem, long timeout_ms)
+{
+    if (!sem || !sem->handle) return -1;
+    TickType_t ticks = (timeout_ms < 0) ? portMAX_DELAY : pdMS_TO_TICKS(timeout_ms);
     BaseType_t ret = xSemaphoreTake((SemaphoreHandle_t)sem->handle, ticks);
-    return (ret == pdTRUE) ? KAL_OK : KAL_TIMEOUT;
+    return (ret == pdTRUE) ? 0 : -1;
 }
 
-int kal_sem_post(kal_sem_t *sem)
+void up(struct semaphore *sem)
 {
-    if (!sem || !sem->handle) return KAL_INVAL;
-    BaseType_t ret = xSemaphoreGive((SemaphoreHandle_t)sem->handle);
-    return (ret == pdTRUE) ? KAL_OK : KAL_ERROR;
+    if (!sem || !sem->handle) return;
+    xSemaphoreGive((SemaphoreHandle_t)sem->handle);
 }
 
-int kal_sem_destroy(kal_sem_t *sem)
+void sema_destroy(struct semaphore *sem)
 {
-    if (!sem || !sem->handle) return KAL_INVAL;
+    if (!sem || !sem->handle) return;
     vSemaphoreDelete((SemaphoreHandle_t)sem->handle);
     sem->handle = NULL;
-    return KAL_OK;
 }
 
 /* =========================================================================
- * 5. Thread / Task Management
+ * 5. Threads & Scheduling
  * ========================================================================= */
-kal_thread_t kal_thread_create(const char *name,
-                               kal_thread_func_t func,
-                               void *arg,
-                               size_t stack_size,
-                               int priority)
-{
-    TaskHandle_t task = NULL;
-    uint32_t stack_words = (uint32_t)(stack_size / sizeof(StackType_t));
-    if (stack_words < configMINIMAL_STACK_SIZE) {
-        stack_words = configMINIMAL_STACK_SIZE;
-    }
+struct kthread_wrapper_arg {
+    kthread_fn_t fn;
+    void *data;
+    struct task_struct *ts;
+};
 
-    BaseType_t ret = xTaskCreate(func,
-                                 name ? name : "kal_th",
-                                 (configSTACK_DEPTH_TYPE)stack_words,
-                                 arg,
-                                 (UBaseType_t)priority,
-                                 &task);
-    if (ret != pdPASS) {
-        return NULL;
+static void kthread_wrapper(void *arg)
+{
+    struct kthread_wrapper_arg *karg = (struct kthread_wrapper_arg *)arg;
+    kthread_fn_t fn = karg->fn;
+    void *data = karg->data;
+    kfree(karg);
+
+    if (fn) {
+        fn(data);
     }
-    return (kal_thread_t)task;
+    vTaskDelete(NULL);
 }
 
-int kal_thread_set_affinity(kal_thread_t thread, uint32_t core_mask)
+struct task_struct *kthread_create(kthread_fn_t threadfn, void *data, const char *name)
 {
-    if (!thread) return KAL_INVAL;
+    struct task_struct *ts = (struct task_struct *)kmalloc(sizeof(struct task_struct), GFP_KERNEL);
+    if (!ts) return NULL;
+
+    struct kthread_wrapper_arg *karg = (struct kthread_wrapper_arg *)kmalloc(sizeof(*karg), GFP_KERNEL);
+    if (!karg) {
+        kfree(ts);
+        return NULL;
+    }
+    karg->fn = threadfn;
+    karg->data = data;
+    karg->ts = ts;
+
+    TaskHandle_t h = NULL;
+    BaseType_t ret = xTaskCreate(kthread_wrapper,
+                                 name ? name : "kthread",
+                                 (configSTACK_DEPTH_TYPE)KTHREAD_DEFAULT_STACK_WORDS,
+                                 karg,
+                                 (UBaseType_t)KTHREAD_DEFAULT_PRIORITY,
+                                 &h);
+    if (ret != pdPASS) {
+        kfree(karg);
+        kfree(ts);
+        return NULL;
+    }
+    ts->handle = (void *)h;
+    return ts;
+}
+
+struct task_struct *kthread_run(kthread_fn_t threadfn, void *data, const char *name)
+{
+    return kthread_create(threadfn, data, name);
+}
+
+int kthread_bind(struct task_struct *task, unsigned int cpu)
+{
+    if (!task || !task->handle) return -1;
 #if ( configUSE_CORE_AFFINITY == 1 )
-    vTaskCoreAffinitySet((TaskHandle_t)thread, (UBaseType_t)core_mask);
-    return KAL_OK;
+    UBaseType_t affinity = (1U << cpu);
+    vTaskCoreAffinitySet((TaskHandle_t)task->handle, affinity);
+    return 0;
 #else
-    (void)thread;
-    (void)core_mask;
-    return KAL_OK;
+    (void)task;
+    (void)cpu;
+    return 0;
 #endif
 }
 
-void kal_thread_sleep_ms(uint32_t ms)
+void schedule(void)
+{
+    taskYIELD();
+}
+
+void msleep(unsigned int msecs)
 {
     if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
-        vTaskDelay(pdMS_TO_TICKS(ms));
+        vTaskDelay(pdMS_TO_TICKS(msecs));
     } else {
-        for (volatile uint32_t i = 0; i < ms * 10000; i++) {
+        for (volatile uint32_t i = 0; i < msecs * 10000; i++) {
             __asm__ volatile("yield");
         }
     }
 }
 
-void kal_thread_yield(void)
+void usleep_range(unsigned long min, unsigned long max)
 {
-    taskYIELD();
+    (void)max;
+    unsigned int ms = (unsigned int)(min / 1000UL);
+    if (ms == 0) ms = 1;
+    msleep(ms);
 }
 
-void kal_thread_exit(void)
-{
-    vTaskDelete(NULL);
-}
-
-kal_thread_t kal_thread_self(void)
-{
-    return (kal_thread_t)xTaskGetCurrentTaskHandle();
-}
-
-uint32_t kal_get_core_id(void)
+unsigned int smp_processor_id(void)
 {
     uint64_t mpidr;
     __asm__ volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
-    return (uint32_t)((mpidr & 0xFFU) + (((mpidr >> 8) & 0xFFU) << 4));
+    return (unsigned int)((mpidr & 0xFFU) + (((mpidr >> 8) & 0xFFU) << 4));
 }
 
 /* =========================================================================
- * 6. Time and Ticks
+ * 6. Time and Jiffies
  * ========================================================================= */
-uint32_t kal_get_tick(void)
+unsigned long msecs_to_jiffies(const unsigned int m)
 {
-    return (uint32_t)xTaskGetTickCount();
+    return (unsigned long)pdMS_TO_TICKS(m);
 }
 
-uint32_t kal_tick_rate_hz(void)
+unsigned int jiffies_to_msecs(const unsigned long j)
 {
-    return (uint32_t)configTICK_RATE_HZ;
+    return (unsigned int)((j * 1000UL) / (unsigned long)configTICK_RATE_HZ);
 }
 
-uint64_t kal_get_time_ms(void)
-{
-    uint32_t ticks = kal_get_tick();
-    return (uint64_t)ticks * 1000ULL / (uint64_t)configTICK_RATE_HZ;
-}
-
-uint64_t kal_get_time_us(void)
+uint64_t ktime_get_ns(void)
 {
     uint64_t cnt;
     uint64_t frq;
     __asm__ volatile("mrs %0, cntpct_el0" : "=r"(cnt));
     __asm__ volatile("mrs %0, cntfrq_el0" : "=r"(frq));
     if (frq == 0) return 0;
-    return (cnt * 1000000ULL) / frq;
+    return (cnt * 1000000000ULL) / frq;
+}
+
+uint64_t ktime_get_ms(void)
+{
+    return ktime_get_ns() / 1000000ULL;
+}
+
+uint64_t ktime_get_real_ns(void)
+{
+    return ktime_get_ns();
 }
 
 /* =========================================================================
- * 7. Critical Sections
+ * 7. Linux Standard Printk
  * ========================================================================= */
-void kal_enter_critical(void)
+int printk(const char *fmt, ...)
 {
-    taskENTER_CRITICAL();
-}
-
-void kal_exit_critical(void)
-{
-    taskEXIT_CRITICAL();
-}
-
-/* =========================================================================
- * 8. Console Logging Output
- * ========================================================================= */
-extern int vsnprintf(char *str, size_t size, const char *format, va_list ap);
-extern void uart_puts(const char *str);
-
-void kal_printf(const char *fmt, ...)
-{
-    char buf[256];
+    char buf[512];
     va_list ap;
     va_start(ap, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, ap);
+    int len = vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    uart_puts(buf);
-}
 
+    uart_puts(buf);
+    return len;
+}

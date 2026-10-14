@@ -11,6 +11,7 @@
 #include <string.h>
 
 extern void uart_putc(char c);
+extern int  uart_getc_nonblock(void);
 
 static const struct platform_resource pl011_resources[] = {
     {
@@ -52,9 +53,18 @@ static int pl011_cdev_close(struct vfs_cdev *cdev)
 static ssize_t pl011_cdev_read(struct vfs_cdev *cdev, void *buf, size_t count)
 {
     (void)cdev;
-    (void)buf;
-    (void)count;
-    return 0;
+    if (!buf || count == 0) return 0;
+
+    char *p = (char *)buf;
+    size_t n = 0;
+    while (n < count) {
+        int c = uart_getc_nonblock();
+        if (c < 0) {
+            break;
+        }
+        p[n++] = (char)c;
+    }
+    return (ssize_t)n;
 }
 
 static ssize_t pl011_cdev_write(struct vfs_cdev *cdev, const void *buf, size_t count)
@@ -86,6 +96,14 @@ static struct vfs_cdev g_console_cdev = {
     .ops = &g_pl011_cdev_ops,
 };
 
+static struct vfs_cdev g_ttyS0_cdev = {
+    .ops = &g_pl011_cdev_ops,
+};
+
+static struct vfs_cdev g_tty_cdev = {
+    .ops = &g_pl011_cdev_ops,
+};
+
 static int pl011_driver_probe(struct platform_device *pdev)
 {
     const struct platform_resource *mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -98,9 +116,11 @@ static int pl011_driver_probe(struct platform_device *pdev)
         return -ENODEV;
     }
 
-    /* Register /dev/uart0 and /dev/console */
+    /* Register UART devices into /dev */
     vfs_cdev_register(&g_uart0_cdev, "uart0");
     vfs_cdev_register(&g_console_cdev, "console");
+    vfs_cdev_register(&g_ttyS0_cdev, "ttyS0");
+    vfs_cdev_register(&g_tty_cdev, "tty");
 
     return VFS_OK;
 }
@@ -108,6 +128,8 @@ static int pl011_driver_probe(struct platform_device *pdev)
 static int pl011_driver_remove(struct platform_device *pdev)
 {
     (void)pdev;
+    vfs_cdev_unregister(&g_tty_cdev);
+    vfs_cdev_unregister(&g_ttyS0_cdev);
     vfs_cdev_unregister(&g_console_cdev);
     vfs_cdev_unregister(&g_uart0_cdev);
     return VFS_OK;

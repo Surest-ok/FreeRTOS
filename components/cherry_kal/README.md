@@ -21,68 +21,106 @@
 
 ---
 
-## 📋 API 架构规范
+## 📋 100% Linux Kernel API 规范（Pure Linux Standard）
 
-### 1. 内存管理（Memory Management）
+`CherryKAL` 提供与 Linux 内核头文件完全一致的数据结构与函数命名规范，无需任何自定义前缀：
+
+### 1. 标准日志级别与 printk（Linux Printk & Log Levels）
 ```c
-void *kal_malloc(size_t size);
-void  kal_free(void *ptr);
-void *kal_calloc(size_t nmemb, size_t size);
-void *kal_realloc(void *ptr, size_t size);
+int printk(const char *fmt, ...);
+
+pr_emerg(fmt, ...);   /* <0> system is unusable */
+pr_alert(fmt, ...);   /* <1> action must be taken immediately */
+pr_crit(fmt, ...);    /* <2> critical conditions */
+pr_err(fmt, ...);     /* <3> error conditions */
+pr_warn(fmt, ...);    /* <4> warning conditions */
+pr_notice(fmt, ...);  /* <5> normal but significant condition */
+pr_info(fmt, ...);    /* <6> informational */
+pr_debug(fmt, ...);   /* <7> debug-level messages */
 ```
 
-### 2. 互斥锁（Recursive Mutex）
+### 2. 内存管理（Memory Management）
 ```c
-int kal_mutex_init(kal_mutex_t *mutex);
-int kal_mutex_lock(kal_mutex_t *mutex);
-int kal_mutex_trylock(kal_mutex_t *mutex);
-int kal_mutex_unlock(kal_mutex_t *mutex);
-int kal_mutex_destroy(kal_mutex_t *mutex);
+void *kmalloc(size_t size, gfp_t flags);
+void  kfree(const void *ptr);
+void *kzalloc(size_t size, gfp_t flags);
+void *kcalloc(size_t nmemb, size_t size, gfp_t flags);
+void *krealloc(const void *ptr, size_t size, gfp_t flags);
 ```
 
-### 3. SMP 自旋锁（Spinlock with IRQ Save/Restore）
+### 3. 互斥锁（struct mutex）
 ```c
-int           kal_spin_lock_init(kal_spinlock_t *lock);
-void          kal_spin_lock(kal_spinlock_t *lock);
-void          kal_spin_unlock(kal_spinlock_t *lock);
-unsigned long kal_spin_lock_irqsave(kal_spinlock_t *lock);
-void          kal_spin_unlock_irqrestore(kal_spinlock_t *lock, unsigned long flags);
+void mutex_init(struct mutex *lock);
+void mutex_lock(struct mutex *lock);
+int  mutex_trylock(struct mutex *lock);
+void mutex_unlock(struct mutex *lock);
+void mutex_destroy(struct mutex *lock);
 ```
 
-### 4. 信号量（Counting Semaphore）
+### 4. SMP 自旋锁（spinlock_t）
 ```c
-int kal_sem_init(kal_sem_t *sem, unsigned int initial_count, unsigned int max_count);
-int kal_sem_wait(kal_sem_t *sem, uint32_t timeout_ms);
-int kal_sem_post(kal_sem_t *sem);
-int kal_sem_destroy(kal_sem_t *sem);
+void          spin_lock_init(spinlock_t *lock);
+void          spin_lock(spinlock_t *lock);
+void          spin_unlock(spinlock_t *lock);
+unsigned long _spin_lock_irqsave(spinlock_t *lock);
+void          spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags);
+
+#define spin_lock_irqsave(lock, flags) \
+    do { (flags) = _spin_lock_irqsave(lock); } while (0)
 ```
 
-### 5. 线程与亲和性（Thread & Core Affinity）
+### 5. 信号量（struct semaphore）
 ```c
-kal_thread_t kal_thread_create(const char *name,
-                               kal_thread_func_t func,
-                               void *arg,
-                               size_t stack_size,
-                               int priority);
-int          kal_thread_set_affinity(kal_thread_t thread, uint32_t core_mask);
-void         kal_thread_sleep_ms(uint32_t ms);
-void         kal_thread_yield(void);
-void         kal_thread_exit(void);
-kal_thread_t kal_thread_self(void);
-uint32_t     kal_get_core_id(void);
+void sema_init(struct semaphore *sem, int val);
+void down(struct semaphore *sem);
+int  down_interruptible(struct semaphore *sem);
+int  down_trylock(struct semaphore *sem);
+int  down_timeout(struct semaphore *sem, long timeout_ms);
+void up(struct semaphore *sem);
+void sema_destroy(struct semaphore *sem);
 ```
 
-### 6. 时间基准与内存屏障（Time & Barriers）
+### 6. 内核线程与调度（kthread & Scheduling）
 ```c
-uint64_t kal_get_time_ms(void);
-uint64_t kal_get_time_us(void);
-uint32_t kal_get_tick(void);
-uint32_t kal_tick_rate_hz(void);
-
-void kal_mb(void);   /* Data Memory Barrier full */
-void kal_rmb(void);  /* Data Memory Barrier read */
-void kal_wmb(void);  /* Data Memory Barrier write */
+struct task_struct *kthread_create(kthread_fn_t threadfn, void *data, const char *name);
+struct task_struct *kthread_run(kthread_fn_t threadfn, void *data, const char *name);
+int                 kthread_bind(struct task_struct *task, unsigned int cpu);
+void                schedule(void);
+void                msleep(unsigned int msecs);
+void                usleep_range(unsigned long min, unsigned long max);
+unsigned int        smp_processor_id(void);
 ```
+
+### 7. 时钟与 Jiffies（Time & Jiffies）
+```c
+#define HZ 1000U
+extern volatile unsigned long jiffies;
+
+unsigned long msecs_to_jiffies(const unsigned int m);
+unsigned int  jiffies_to_msecs(const unsigned long j);
+uint64_t      ktime_get_ns(void);
+uint64_t      ktime_get_ms(void);
+```
+
+### 8. 原子操作与内存屏障（Atomics & Memory Barriers）
+```c
+atomic_t v = ATOMIC_INIT(0);
+int  atomic_read(const atomic_t *v);
+void atomic_set(atomic_t *v, int i);
+void atomic_add(int i, atomic_t *v);
+void atomic_sub(int i, atomic_t *v);
+void atomic_inc(atomic_t *v);
+void atomic_dec(atomic_t *v);
+int  atomic_inc_return(atomic_t *v);
+int  atomic_dec_return(atomic_t *v);
+
+mb();       /* Full memory barrier */
+rmb();      /* Read memory barrier */
+wmb();      /* Write memory barrier */
+smp_mb();   smp_rmb();   smp_wmb();
+```
+
+*(注：同时提供 `kal_*` 宏作为向后兼容映射。)*
 
 ---
 

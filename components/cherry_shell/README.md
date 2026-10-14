@@ -70,8 +70,17 @@ CHERRY_SHELL_EXPORT_VAR(g_system_ticks, g_ticks, "Global system tick counter");
 
 ### 4. 运行期动态符号注册（Runtime Dynamic Registration）
 ```c
-cherry_shell_register_symbol("my_driver_ioctl", (uintptr_t)drv_ioctl, CHERRY_SHELL_SYM_FUNC, "Driver ioctl");
+cherry_shell_register_symbol("kmalloc", (uintptr_t)kmalloc, CHERRY_SHELL_SYM_FUNC, "Allocate memory from heap: kmalloc(size, flags)");
+cherry_shell_register_symbol("kfree", (uintptr_t)kfree, CHERRY_SHELL_SYM_FUNC, "Free heap memory: kfree(ptr)");
+cherry_shell_register_symbol("ktime_get_ms", (uintptr_t)ktime_get_ms, CHERRY_SHELL_SYM_FUNC, "Get uptime in ms: ktime_get_ms()");
 ```
+
+### 5. 标准 VFS 字符设备终端重定向（VFS `/dev/console` Terminal I/O）
+`CherryShell` 交互式终端与底层的物理串口驱动完全解耦，通过标准 `CherryVFS` 字符设备接口运行：
+- Shell 启动时，自动通过 POSIX `open("/dev/console", O_RDWR)`（或 `/dev/ttyS0`）打开串口字符设备；
+- 所有交互式控制台输出统一通过 `write(tty_fd, ...)` 写入字符设备；
+- 所有按键输入、行编辑与换行捕获均通过 `read(tty_fd, ...)` 读取；
+- Shell 线程生命周期由 Linux 风格 `kthread_run()` 与 `kthread_bind()` 管理。
 
 ---
 

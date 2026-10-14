@@ -46,6 +46,7 @@ void vfs_inode_put(struct vfs_inode *inode);
 struct vfs_dentry *vfs_dentry_alloc(const char *name, struct vfs_dentry *parent);
 void vfs_dentry_ref(struct vfs_dentry *dentry);
 void vfs_dentry_put(struct vfs_dentry *dentry);
+void vfs_dentry_drop(struct vfs_dentry *parent, const char *name);
 
 /* Path Resolution (Look up dentry corresponding to absolute or relative path) */
 int vfs_path_lookup(const char *path, int flags, struct vfs_dentry **res_dentry);

@@ -27,6 +27,7 @@ def setup_arch_toolchain(env, cross_prefix='aarch64-linux-gnu-', cpu='cortex-a53
     # -ffreestanding, -nostdlib, -nostartfiles: bare-metal standalone environment
     arch_flags = [
         f'-mcpu={cpu}',
+        '-mstrict-align',
         '-mgeneral-regs-only',
         '-mno-outline-atomics',
         '-ffreestanding',

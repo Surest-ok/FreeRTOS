@@ -14,15 +14,12 @@
 extern int cherry_shell_sym_init(void);
 
 /* Forward declare external functions registered into shell symbol table */
-extern void *kal_malloc(size_t size);
-extern void  kal_free(void *ptr);
-extern uint64_t kal_get_time_ms(void);
 extern void uart_printf(const char *fmt, ...);
 extern void uart_puts(const char *str);
 extern int vfs_init(void);
 extern int cherry_vfs_init(void);
 
-static kal_thread_t g_shell_thread = NULL;
+static struct task_struct *g_shell_thread = NULL;
 
 int cherry_shell_init(void)
 {
@@ -34,10 +31,10 @@ int cherry_shell_init(void)
 
     cherry_shell_sym_init();
 
-    /* Batch register essential OSAL, VFS and System APIs for C-command execution & addr2sym */
-    cherry_shell_register_symbol("kal_malloc", (uintptr_t)kal_malloc, CHERRY_SHELL_SYM_FUNC, "Allocate memory from heap: kal_malloc(size)");
-    cherry_shell_register_symbol("kal_free", (uintptr_t)kal_free, CHERRY_SHELL_SYM_FUNC, "Free heap memory: kal_free(ptr)");
-    cherry_shell_register_symbol("kal_get_time_ms", (uintptr_t)kal_get_time_ms, CHERRY_SHELL_SYM_FUNC, "Get uptime in ms: kal_get_time_ms()");
+    /* Batch register essential Linux OSAL, VFS and System APIs for C-command execution & addr2sym */
+    cherry_shell_register_symbol("kmalloc", (uintptr_t)kmalloc, CHERRY_SHELL_SYM_FUNC, "Allocate memory from heap: kmalloc(size, flags)");
+    cherry_shell_register_symbol("kfree", (uintptr_t)kfree, CHERRY_SHELL_SYM_FUNC, "Free heap memory: kfree(ptr)");
+    cherry_shell_register_symbol("ktime_get_ms", (uintptr_t)ktime_get_ms, CHERRY_SHELL_SYM_FUNC, "Get uptime in ms: ktime_get_ms()");
     cherry_shell_register_symbol("uart_printf", (uintptr_t)uart_printf, CHERRY_SHELL_SYM_FUNC, "Print formatted string to console");
     cherry_shell_register_symbol("vfs_init", (uintptr_t)vfs_init, CHERRY_SHELL_SYM_FUNC, "Initialize VFS core");
     cherry_shell_register_symbol("cherry_vfs_init", (uintptr_t)cherry_vfs_init, CHERRY_SHELL_SYM_FUNC, "Initialize complete CherryVFS subsystem");
@@ -47,59 +44,95 @@ int cherry_shell_init(void)
     extern void _start(void);
     cherry_shell_register_symbol("_start", (uintptr_t)_start, CHERRY_SHELL_SYM_FUNC, "System boot entrypoint");
 
-    kal_printf("<6>cherry_shell: initialized with VxWorks C-function call & addr2sym engine\n");
+    pr_info("cherry_shell: initialized with VxWorks C-function call & addr2sym engine\n");
     return CHERRY_SHELL_OK;
 }
 
-static void cherry_shell_task(void *arg)
+static void shell_puts(int fd, const char *str)
+{
+    if (!str) return;
+    if (fd >= 0) {
+        write(fd, str, strlen(str));
+    } else {
+        uart_puts(str);
+    }
+}
+
+static void shell_putc(int fd, char c)
+{
+    if (fd >= 0) {
+        write(fd, &c, 1);
+    } else {
+        uart_putc(c);
+    }
+}
+
+static int cherry_shell_task(void *arg)
 {
     (void)arg;
     char line[128];
     size_t pos = 0;
 
-    kal_printf("\n");
-    kal_printf("=================================================================\n");
-    kal_printf("   _____ _                         _____ _          _ _          \n");
-    kal_printf("  / ____| |                       / ____| |        | | |         \n");
-    kal_printf(" | |    | |__   ___ _ __ _ __ _   | (___ | |__   ___| | |         \n");
-    kal_printf(" | |    | '_ \\ / _ \\ '__| '__| | | \\___ \\| '_ \\ / _ \\ | |         \n");
-    kal_printf(" | |____| | | |  __/ |  | |  | |_| |___) | | | |  __/ | |         \n");
-    kal_printf("  \\_____|_| |_|\\___|_|  |_|   \\__, |_____/|_| |_|\\___|_|_|         \n");
-    kal_printf("                               __/ |                             \n");
-    kal_printf("                              |___/   VxWorks-style C Shell      \n");
-    kal_printf("=================================================================\n");
-    kal_printf("Type 'help' for commands, or invoke C functions directly, e.g. test_add(10, 20)\n\n");
+    int tty_fd = open("/dev/console", O_RDWR);
+    if (tty_fd < 0) {
+        tty_fd = open("/dev/ttyS0", O_RDWR);
+    }
 
-    kal_printf("cherry> ");
+    shell_puts(tty_fd, "\n");
+    shell_puts(tty_fd, "=================================================================\n");
+    shell_puts(tty_fd, "   _____ _                         _____ _          _ _          \n");
+    shell_puts(tty_fd, "  / ____| |                       / ____| |        | | |         \n");
+    shell_puts(tty_fd, " | |    | |__   ___ _ __ _ __ _   | (___ | |__   ___| | |         \n");
+    shell_puts(tty_fd, " | |    | '_ \\ / _ \\ '__| '__| | | \\___ \\| '_ \\ / _ \\ | |         \n");
+    shell_puts(tty_fd, " | |____| | | |  __/ |  | |  | |_| |___) | | | |  __/ | |         \n");
+    shell_puts(tty_fd, "  \\_____|_| |_|\\___|_|  |_|   \\__, |_____/|_| |_|\\___|_|_|         \n");
+    shell_puts(tty_fd, "                               __/ |                             \n");
+    shell_puts(tty_fd, "                              |___/   VxWorks-style C Shell      \n");
+    shell_puts(tty_fd, "=================================================================\n");
+    shell_puts(tty_fd, "Terminal: /dev/console (PL011 Character Device via CherryVFS)\n");
+    shell_puts(tty_fd, "Type 'help' for commands, or invoke C functions directly, e.g. test_add(10, 20)\n\n");
+
+    shell_puts(tty_fd, "cherry> ");
 
     for (;;) {
-        int c = uart_getc_nonblock();
-        if (c < 0) {
-            kal_thread_sleep_ms(10);
+        char c = 0;
+        ssize_t n = 0;
+        if (tty_fd >= 0) {
+            n = read(tty_fd, &c, 1);
+        } else {
+            int ch = uart_getc_nonblock();
+            if (ch >= 0) {
+                c = (char)ch;
+                n = 1;
+            }
+        }
+
+        if (n <= 0) {
+            msleep(10);
             continue;
         }
 
         if (c == '\r' || c == '\n') {
-            uart_putc('\r');
-            uart_putc('\n');
+            shell_puts(tty_fd, "\r\n");
             line[pos] = '\0';
             if (pos > 0) {
                 cherry_shell_exec(line, NULL, 0);
                 pos = 0;
             }
-            kal_printf("cherry> ");
+            shell_puts(tty_fd, "cherry> ");
         } else if (c == '\b' || c == 0x7F) {
             if (pos > 0) {
                 pos--;
-                uart_puts("\b \b");
+                shell_puts(tty_fd, "\b \b");
             }
         } else if (c >= 32 && c <= 126) {
             if (pos < sizeof(line) - 1) {
-                line[pos++] = (char)c;
-                uart_putc((char)c);
+                line[pos++] = c;
+                shell_putc(tty_fd, c);
             }
         }
     }
+    return 0;
 }
 
 int cherry_shell_start(void)
@@ -107,12 +140,12 @@ int cherry_shell_start(void)
     cherry_shell_init();
 
     if (g_shell_thread == NULL) {
-        g_shell_thread = kal_thread_create("tShell", cherry_shell_task, NULL, 4096, 1);
+        g_shell_thread = kthread_run((kthread_fn_t)cherry_shell_task, NULL, "tShell");
         if (!g_shell_thread) {
-            kal_printf("<3>cherry_shell: failed to create shell thread\n");
+            pr_err("cherry_shell: failed to create shell thread\n");
             return CHERRY_SHELL_ERR_NOMEM;
         }
-        kal_thread_set_affinity(g_shell_thread, 1);
+        kthread_bind(g_shell_thread, 0);
     }
     return CHERRY_SHELL_OK;
 }
