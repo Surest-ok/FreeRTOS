@@ -19,9 +19,15 @@ extern "C" {
 #endif
 
 /* Platform Resource Flags */
+#ifndef IORESOURCE_MEM
 #define IORESOURCE_MEM          0x00000001  /* Memory-mapped I/O resource */
+#endif
+#ifndef IORESOURCE_IRQ
 #define IORESOURCE_IRQ          0x00000002  /* Interrupt line resource */
+#endif
+#ifndef IORESOURCE_DMA
 #define IORESOURCE_DMA          0x00000004  /* DMA channel resource */
+#endif
 
 struct platform_resource {
     uint32_t                    flags;      /* Resource type (IORESOURCE_*) */

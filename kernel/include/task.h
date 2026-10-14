@@ -3716,6 +3716,8 @@ void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut ) PRIVILEGED_FUNC
  */
 #if ( configNUMBER_OF_CORES > 1 )
     void vTaskYieldWithinAPI( void );
+    UBaseType_t uxTaskGetCriticalNestingForCore( BaseType_t xCoreID );
+    void vTaskSetYieldPending( BaseType_t xCoreID );
 #endif
 
 /*

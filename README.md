@@ -174,6 +174,25 @@
       - **双栈 IPv4 / IPv6 支持**：完整支持 IPv4 与 ARP 缓存协议、IPv6 与 NDP 邻居发现协议（NS/NA、EUI-64 链路本地地址计算）。
       - **标准 BSD Socket 接口**：与 CherryVFS sockdev 统一绑定，支持 `socket`, `bind`, `connect`, `listen`, `accept`, `send`, `recv`, `sendto`, `recvfrom`, `setsockopt`, `getsockopt`, `shutdown`。
       - **iperf2 高性能基准测试与网络工具**：线兼容 iperf2 客户端/服务端吞吐测试（报告 Mbits/sec）、支持 IPv4 与 IPv6 的 `ping` 往返时延测量、`ifconfig` 接口信息工具。
+    - [**`CherryNVMe`**](components/cherry_nvme/README.md) (PCIe NVMe 1.4+ High-Performance Solid State Storage Subsystem)：
+      - **NVMe 1.4+ 规范支持**：规范解析 Controller Capabilities (`CAP`)、动态计算 Doorbell Stride (`dstrd`)，管理 Admin Queue (SQ/CQ) 与独立的 I/O Queue (SQ/CQ)。
+      - **PCIe 设备自动枚举与绑定**：基于 `struct pci_driver` 与 Class Code `0x010802` 自动匹配驱动，映射 64 位 Non-prefetchable BAR0 MMIO 空间。
+      - **全套命令与无锁轮询引擎**：支持 `Identify Controller`、`Create I/O CQ/SQ`、`Identify Namespace`、`Read`、`Write`、`Flush`，严格保证 PRP 页面对齐边界，通过 Phase Tag 完成位轮询配合 `dmb sy` 确保零竞争。
+      - **CherryVFS 块设备无缝对接**：注册 `/dev/nvme0n1` 与别名 `/dev/nvme0`，对接 `vfs_bdev_ops`。
+      - **Shell 诊断指令**：导出 `nvme_info`、`nvme_read`、`nvme_write`。
+    - [**`CherryAHCI`**](components/cherry_ahci/README.md) (Serial ATA AHCI 1.3+ Controller & Disk Subsystem)：
+      - **AHCI 1.3+ 标准协议**：支持 Generic Host Control (GHC) 空间，自动启用 AHCI 模式 (`GHC.AE = 1`)，扫描端口位图 (`PI`) 与检测连接状态 (`PxSSTS.DET == 3`)。
+      - **内存重基址 (Rebase Engine)**：1KB 对齐的 Command List、256 字节对齐的 Received FIS 与 128 字节对齐的 Command Table (PRDT)。
+      - **ATA DMA 命令引擎**：`ATA IDENTIFY DEVICE (0xEC)` 解析型号/序列号/48位LBA容量，`ATA READ DMA EXT (0x25)`、`WRITE DMA EXT (0x35)`、`FLUSH CACHE EXT (0xEA)`。
+      - **CherryVFS 块设备无缝对接**：注册 `/dev/sda` 与别名 `/dev/sata0`。
+      - **Shell 诊断指令**：导出 `ahci_info`、`ahci_read`、`ahci_write`。
+    - [**`CherryUSBD`**](components/cherry_usbd/README.md) (USB 2.0 / 3.0 Device Protocol Stack & Virtual UDC)：
+      - **标准 Chapter 9 设备框架**：完整实现 `GET_DESCRIPTOR` (Device, Config, Strings, HID Report)、`SET_ADDRESS`、`SET_CONFIGURATION`，维护 `DEFAULT` -> `ADDRESSED` -> `CONFIGURED` 规范状态机。
+      - **虚拟 UDC (Virtual UDC Loopback Driver)**：在缺乏物理 UDC 的 QEMU 环境中提供内核态环回端点驱动，支持完整的控制/批量/中断事务仿真验证。
+      - **CDC-ACM 虚拟串口**：响应 `SET/GET_LINE_CODING` (支持 921600 波特率) 与控制线状态，自动向 CherryVFS 注册字符设备 `/dev/ttyUSB0`。
+      - **MSC 块存储 (BOT / SCSI)**：规范处理 31 字节 CBW 与 13 字节 CSW，内置 SCSI-2 命令引擎 (`INQUIRY`, `TEST_UNIT_READY`, `READ_CAPACITY_10`, `READ_10`, `WRITE_10`) 并桥接块设备。
+      - **HID 人机交互设备**：标准 63 字节键盘报告描述符，支持键盘与鼠标事件打包发送。
+      - **Shell 诊断指令**：导出 `usb_info`、`usb_cdc_echo`。
 
 ---
 
@@ -228,11 +247,26 @@ freertos-workspace/
 │   │   ├── src/                # MBR 读写、/dev/mmcblk0p1 子块设备虚拟化、mount/umount、ls/cat/cp/mv/rm/mkdir/echo
 │   │   ├── tests/              # 分区、挂载、文件操作验收测试套件 (fstools_test.c)
 │   │   └── SConscript          # libcherry_fstools.a 构建规则
-│   └── cherry_net/             # 现代多核多队列 TCP/IP 协议栈与 VirtIO-Net 驱动
-│       ├── include/            # BSD Socket (sys/socket.h), VirtIO (net_virtio.h), iperf2 (net_iperf2.h)
-│       ├── src/                # MQ-RSS 引擎, VirtIO 驱动, IPv4/ARP, IPv6/NDP, ICMP, UDP, TCP, ifconfig/ping/iperf
-│       ├── tests/              # 10 点自动化网络验收测试套件 (net_test.c)
-│       └── SConscript          # libcherry_net.a 构建规则
+│   ├── cherry_net/             # 现代多核多队列 TCP/IP 协议栈与 VirtIO-Net 驱动
+│   │   ├── include/            # BSD Socket (sys/socket.h), VirtIO (net_virtio.h), iperf2 (net_iperf2.h)
+│   │   ├── src/                # MQ-RSS 引擎, VirtIO 驱动, IPv4/ARP, IPv6/NDP, ICMP, UDP, TCP, ifconfig/ping/iperf
+│   │   ├── tests/              # 10 点自动化网络验收测试套件 (net_test.c)
+│   │   └── SConscript          # libcherry_net.a 构建规则
+│   ├── cherry_nvme/            # PCIe NVMe 1.4+ 存储子系统与块设备驱动
+│   │   ├── include/            # NVMe 规范 (nvme_spec.h), 子系统 API (cherry_nvme.h)
+│   │   ├── src/                # Admin/IO 命令引擎, PRP 页面对齐, 门铃/Phase 轮询, /dev/nvme0n1 桥接, Shell
+│   │   ├── tests/              # 8 点 NVMe 自动化验收测试套件 (nvme_test.c)
+│   │   └── SConscript          # libcherry_nvme.a 构建规则
+│   ├── cherry_ahci/            # Serial ATA AHCI 1.3+ 控制器与磁盘子系统
+│   │   ├── include/            # AHCI 1.3+ 规范 (ahci_spec.h), 子系统 API (cherry_ahci.h)
+│   │   ├── src/                # GHC/端口扫描, 内存重基址, ATA DMA (Read/Write/Flush), /dev/sda 桥接, Shell
+│   │   ├── tests/              # 8 点 AHCI 自动化验收测试套件 (ahci_test.c)
+│   │   └── SConscript          # libcherry_ahci.a 构建规则
+│   └── cherry_usbd/            # USB 2.0/3.0 设备协议栈与类驱动
+│       ├── include/            # USB 规范 (usb_spec.h), CDC, MSC, HID, 子系统 API (cherry_usbd.h)
+│       ├── src/                # Chapter 9 状态机, CDC-ACM (/dev/ttyUSB0), MSC BOT/SCSI, HID, VUDC, Shell
+│       ├── tests/              # 8 点 USB 设备协议栈自动化验收测试套件 (usbd_test.c)
+│       └── SConscript          # libcherry_usbd.a 构建规则
 ├── arch/                       # 体系结构抽象层
 │   ├── rules.py                # 通用 AArch64 编译规则与工具链初始化
 │   ├── SConscript              # arch 静态对象构建脚本
@@ -401,9 +435,13 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.194767] [6:cpu0:sched-mon:60111] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
 [    0.376756] [6:cpu0:sched-mon:64207] cherry_ext4: [ext4-verify] mkfs=pass fsck=pass mount=pass file_io=pass dir_ops=pass journal=pass umount=pass all=pass
 [    0.570997] [6:cpu0:sched-mon:64207] cherry_fstools: [fstools-verify] fdisk=pass part_bdev=pass mkfs=pass mount=pass echo_cat=pass cp_mv=pass ls_rm=pass umount=pass all=pass
-[    0.571926] [6:cpu0:sched-mon:64207] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.620411] [6:cpu0:sched-mon:64207] cherry_net: [net-verify] virtio=pass ifconfig=pass mq_rss=pass ipv4_arp=pass ipv6_ndp=pass ping=pass udp=pass tcp=pass iperf2=pass all=pass
+[    0.630743] [6:cpu0:sched-mon:64207] cherry_nvme: [nvme-verify] probe=pass ctrl=pass queues=pass ns=pass single_io=pass multi_io=pass bdev=pass flush=pass all=pass
+[    0.640909] [6:cpu0:sched-mon:64207] cherry_ahci: [ahci-verify] probe=pass port_scan=pass rebase=pass identify=pass single_io=pass multi_io=pass bdev=pass flush=pass all=pass
+[    0.646013] [6:cpu0:sched-mon:64207] cherry_usbd: [usbd-verify] init=pass enum_desc=pass set_addr_cfg=pass cdc_acm=pass cdc_vfs=pass msc_inquiry=pass msc_rw=pass hid_report=pass all=pass
+[    0.646637] [6:cpu0:sched-mon:64207] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.215410] [6:cpu0:sched-mon:60111] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
-[    0.216483] [6:cpu0:sched-mon:60111] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=173
+[    0.216483] [6:cpu0:sched-mon:60111] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=575
 [SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
 scons: done building targets.
 ```

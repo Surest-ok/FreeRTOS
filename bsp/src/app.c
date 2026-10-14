@@ -25,6 +25,9 @@
 #include "cherry_fstools.h"
 #include "fstools_test.h"
 #include "cherry_net.h"
+#include "cherry_nvme.h"
+#include "cherry_ahci.h"
+#include "cherry_usbd.h"
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -600,6 +603,12 @@ static void scheduler_monitor(void *arg)
         cherry_fstools_run_tests();
         cherry_net_init();
         cherry_net_run_tests();
+        cherry_nvme_init();
+        cherry_nvme_run_tests();
+        cherry_ahci_init();
+        cherry_ahci_run_tests();
+        cherry_usbd_init();
+        cherry_usbd_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();

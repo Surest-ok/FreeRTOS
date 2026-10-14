@@ -2455,6 +2455,14 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         return uxReturn;
     }
 
+    void vTaskSetYieldPending( BaseType_t xCoreID )
+    {
+        if( ( xCoreID >= ( BaseType_t ) 0 ) && ( xCoreID < ( BaseType_t ) configNUMBER_OF_CORES ) )
+        {
+            xYieldPendings[ xCoreID ] = pdTRUE;
+        }
+    }
+
 #endif /* #if ( configNUMBER_OF_CORES > 1 ) */
 
 /*-----------------------------------------------------------*/

@@ -130,6 +130,29 @@ void SGI_Yield_Handler(void)
     __atomic_fetch_add(&ullPortYieldIPIReceives[c], 1ULL, __ATOMIC_RELAXED);
     ulPortYieldRequireds[c] = 1;
 }
+
+BaseType_t xPortCheckAndResetYield(uint32_t core_id)
+{
+    if (core_id >= (uint32_t)configNUMBER_OF_CORES) {
+        return pdFALSE;
+    }
+    if (ulPortYieldRequireds[core_id] == 0) {
+        return pdFALSE;
+    }
+
+    if (uxTaskGetCriticalNestingForCore((BaseType_t)core_id) > 0U) {
+        vTaskSetYieldPending((BaseType_t)core_id);
+        ulPortYieldRequireds[core_id] = 0;
+        return pdFALSE;
+    }
+
+    ulPortYieldRequireds[core_id] = 0;
+#if ( configPORT_SMP_DIAGNOSTICS == 1 )
+    ullPortIrqSwitches[core_id]++;
+#endif
+    return pdTRUE;
+}
+
 extern void vPortRestoreTaskContext(void);
 void vPortSecondaryCoreEntry(void) {
     BaseType_t core_id = portGET_CORE_ID();

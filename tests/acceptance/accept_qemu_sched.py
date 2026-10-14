@@ -55,6 +55,16 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         with open(sd_img, "wb") as f:
             f.truncate(64 * 1024 * 1024)
 
+    nvme_img = Path("build/test_nvme.img")
+    if not nvme_img.exists() or nvme_img.stat().st_size != 64 * 1024 * 1024:
+        with open(nvme_img, "wb") as f:
+            f.truncate(64 * 1024 * 1024)
+
+    sata_img = Path("build/test_sata.img")
+    if not sata_img.exists() or sata_img.stat().st_size != 64 * 1024 * 1024:
+        with open(sata_img, "wb") as f:
+            f.truncate(64 * 1024 * 1024)
+
     return [
         "qemu-system-aarch64",
         "-machine",
@@ -75,6 +85,16 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         "user,id=net0",
         "-device",
         "virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56",
+        "-drive",
+        f"if=none,id=nvme0,file={nvme_img},format=raw",
+        "-device",
+        "nvme,drive=nvme0,serial=nvme_disk_0",
+        "-device",
+        "ich9-ahci,id=ahci0",
+        "-drive",
+        f"if=none,id=sata0,file={sata_img},format=raw",
+        "-device",
+        "ide-hd,drive=sata0,bus=ahci0.0",
         "-kernel",
         str(elf),
         "-nographic",
@@ -131,7 +151,7 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
-    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[net-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
+    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[net-verify]" in line or "[nvme-verify]" in line or "[ahci-verify]" in line or "[usbd-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
         sys.stdout.write(line)
         sys.stdout.flush()
 
