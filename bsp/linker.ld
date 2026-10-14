@@ -3,6 +3,12 @@ SECTIONS
 {
     . = 0x40000000;
     .text.entrypoint : { KEEP(*(.text.entrypoint)) *(.text*) *(.rodata*) }
+    .cherry_shell_sym : {
+        . = ALIGN(8);
+        __cherry_shell_sym_start = .;
+        KEEP(*(SORT(.cherry_shell_sym*)))
+        __cherry_shell_sym_end = .;
+    }
     .data : { *(.data*) }
     .bss : {
         __bss_start = .;

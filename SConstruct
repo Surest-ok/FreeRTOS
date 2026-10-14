@@ -101,7 +101,15 @@ kernel_lib = env.SConscript(
     exports=['env', 'arch_objs']
 )
 
-# 3. CherryVFS Component (Virtual File System & Device Driver Framework)
+# 3. CherryKAL Component (Kernel Abstraction Layer / OSAL)
+cherry_kal_lib = env.SConscript(
+    'components/cherry_kal/SConscript',
+    variant_dir=f'{build_dir}/cherry_kal',
+    duplicate=0,
+    exports='env'
+)
+
+# 4. CherryVFS Component (Virtual File System & Device Driver Framework)
 cherry_vfs_lib = env.SConscript(
     'components/cherry_vfs/SConscript',
     variant_dir=f'{build_dir}/cherry_vfs',
@@ -109,12 +117,20 @@ cherry_vfs_lib = env.SConscript(
     exports='env'
 )
 
-# 4. BSP and Target Binary
+# 5. CherryShell Component (VxWorks-style Dynamic Shell & Symbol Engine)
+cherry_shell_lib = env.SConscript(
+    'components/cherry_shell/SConscript',
+    variant_dir=f'{build_dir}/cherry_shell',
+    duplicate=0,
+    exports='env'
+)
+
+# 6. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_vfs_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib']
 )
 
 

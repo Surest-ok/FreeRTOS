@@ -144,3 +144,18 @@ char *strrchr(const char *s, int c)
     } while (*s++);
     return (char *)last;
 }
+
+char *strstr(const char *haystack, const char *needle)
+{
+    if (!haystack || !needle) return NULL;
+    if (*needle == '\0') return (char *)haystack;
+
+    size_t needle_len = strlen(needle);
+    while (*haystack) {
+        if (*haystack == *needle && strncmp(haystack, needle, needle_len) == 0) {
+            return (char *)haystack;
+        }
+        haystack++;
+    }
+    return NULL;
+}

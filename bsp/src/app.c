@@ -9,6 +9,8 @@
 #include "ukernel.h"
 #include "cherry_vfs.h"
 #include "vfs_test.h"
+#include "cherry_shell.h"
+#include "shell_test.h"
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -560,18 +562,21 @@ static void scheduler_monitor(void *arg)
     uint64_t last_hb0 = 0;
     uint64_t expected = expected_core_mask(boot->cores);
 
-    static int s_vfs_tested = 0;
-    if (!s_vfs_tested) {
-        s_vfs_tested = 1;
+    if (__atomic_exchange_n(&g_secondary_cores_woken, 1U, __ATOMIC_ACQ_REL) == 0U) {
+        ukernel_wake_secondary_cores();
+    }
+
+    static int s_components_tested = 0;
+    if (!s_components_tested) {
+        s_components_tested = 1;
         cherry_vfs_init();
         cherry_vfs_run_tests();
+        cherry_shell_init();
+        cherry_shell_run_tests();
+        cherry_shell_start();
     }
 
     for (;;) {
-
-        if (__atomic_exchange_n(&g_secondary_cores_woken, 1U, __ATOMIC_ACQ_REL) == 0U) {
-            ukernel_wake_secondary_cores();
-        }
 
         ukernel_note_core_alive(0);
 

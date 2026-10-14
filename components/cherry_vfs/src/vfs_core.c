@@ -10,44 +10,42 @@
 #include "cherry_vfs.h"
 #include <string.h>
 
-/* FreeRTOS includes for memory allocation and synchronization */
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "task.h"
+/* Kernel Abstraction Layer (KAL) for memory and synchronization */
+#include "cherry_kal.h"
 
 /* Static state */
 static struct vfs_filesystem_type *g_fs_list = NULL;
 static struct vfs_superblock      *g_mount_list = NULL;
 static struct vfs_superblock      *g_root_sb = NULL;
 static struct vfs_file            *g_fd_table[VFS_MAX_FD] = {0};
-static SemaphoreHandle_t           g_vfs_mutex = NULL;
+static kal_mutex_t                 g_vfs_mutex;
+static int                         g_vfs_mutex_inited = 0;
 static uint32_t                    g_next_inode_num = 1;
 
 void *vfs_malloc(size_t size)
 {
-    return pvPortMalloc(size);
+    return kal_malloc(size);
 }
 
 void vfs_free(void *ptr)
 {
-    if (ptr) {
-        vPortFree(ptr);
-    }
+    kal_free(ptr);
 }
 
 void vfs_lock(void)
 {
-    if (g_vfs_mutex != NULL && xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
-        xSemaphoreTakeRecursive(g_vfs_mutex, portMAX_DELAY);
+    if (g_vfs_mutex_inited) {
+        kal_mutex_lock(&g_vfs_mutex);
     }
 }
 
 void vfs_unlock(void)
 {
-    if (g_vfs_mutex != NULL && xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
-        xSemaphoreGiveRecursive(g_vfs_mutex);
+    if (g_vfs_mutex_inited) {
+        kal_mutex_unlock(&g_vfs_mutex);
     }
 }
+
 
 ino_t vfs_next_ino(void)
 {
@@ -516,8 +514,10 @@ void vfs_file_put(struct vfs_file *file)
  * ========================================================================= */
 int vfs_init(void)
 {
-    if (g_vfs_mutex == NULL) {
-        g_vfs_mutex = xSemaphoreCreateRecursiveMutex();
+    if (!g_vfs_mutex_inited) {
+        if (kal_mutex_init(&g_vfs_mutex) == KAL_OK) {
+            g_vfs_mutex_inited = 1;
+        }
     }
     return VFS_OK;
 }
