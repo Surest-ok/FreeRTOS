@@ -173,13 +173,22 @@ cherry_fstools_lib = env.SConscript(
     exports='env'
 )
 
-# 12. BSP and Target Binary
+# 12. CherryNet Component (Multi-Core Multi-Queue TCP/IP Stack & VirtIO Driver)
+cherry_net_lib = env.SConscript(
+    'components/cherry_net/SConscript',
+    variant_dir=f'{build_dir}/cherry_net',
+    duplicate=0,
+    exports='env'
+)
+
+# 13. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib']
 )
+
 
 
 # Default build targets
@@ -199,6 +208,8 @@ qemu_cmd = (
     f"-device sdhci-pci,id=sdhci0 "
     f"-drive if=none,id=sd0,file=build/test_sd.img,format=raw "
     f"-device sd-card,drive=sd0 "
+    f"-netdev user,id=net0 "
+    f"-device virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56 "
     f"-kernel {elf_target[0].abspath} "
     f"-nographic -monitor none -serial stdio"
 )

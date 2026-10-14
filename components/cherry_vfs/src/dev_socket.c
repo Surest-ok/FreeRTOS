@@ -92,7 +92,7 @@ static void *loopback_socket(int domain, int type, int protocol)
     return ctx;
 }
 
-static int loopback_bind(void *sock, const void *addr, size_t addrlen)
+static int loopback_bind(void *sock, const void *addr, socklen_t addrlen)
 {
     (void)addr;
     (void)addrlen;
@@ -102,7 +102,7 @@ static int loopback_bind(void *sock, const void *addr, size_t addrlen)
     return VFS_OK;
 }
 
-static int loopback_connect(void *sock, const void *addr, size_t addrlen)
+static int loopback_connect(void *sock, const void *addr, socklen_t addrlen)
 {
     (void)addr;
     (void)addrlen;
@@ -121,7 +121,7 @@ static int loopback_listen(void *sock, int backlog)
     return VFS_OK;
 }
 
-static void *loopback_accept(void *sock, void *addr, size_t *addrlen)
+static void *loopback_accept(void *sock, void *addr, socklen_t *addrlen)
 {
     (void)addr;
     (void)addrlen;
@@ -198,6 +198,25 @@ static struct vfs_sockdev g_loopback_sockdev = {
     .ops = &g_loopback_sock_ops,
 };
 
+static struct vfs_sockdev *s_default_sockdev = NULL;
+
+void vfs_sockdev_set_default(struct vfs_sockdev *sdev)
+{
+    s_default_sockdev = sdev;
+}
+
+struct vfs_sockdev *vfs_sockdev_get_default(void)
+{
+    if (s_default_sockdev) {
+        return s_default_sockdev;
+    }
+    struct vfs_sockdev *s = vfs_sockdev_find("cherry_net_sock");
+    if (s) {
+        return s;
+    }
+    return vfs_sockdev_find("loopback_sock");
+}
+
 int dev_socket_init(void)
 {
     return vfs_sockdev_register(&g_loopback_sockdev, "loopback_sock");
@@ -208,7 +227,7 @@ int dev_socket_init(void)
  * ========================================================================= */
 int socket(int domain, int type, int protocol)
 {
-    struct vfs_sockdev *sdev = vfs_sockdev_find("loopback_sock");
+    struct vfs_sockdev *sdev = vfs_sockdev_get_default();
     if (!sdev || !sdev->ops || !sdev->ops->socket) {
         return -ENODEV;
     }
@@ -248,7 +267,7 @@ int socket(int domain, int type, int protocol)
     return fd;
 }
 
-int bind(int sockfd, const void *addr, size_t addrlen)
+int bind(int sockfd, const void *addr, socklen_t addrlen)
 {
     struct vfs_file *file = vfs_file_get(sockfd);
     if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
@@ -263,7 +282,7 @@ int bind(int sockfd, const void *addr, size_t addrlen)
     return ret;
 }
 
-int connect(int sockfd, const void *addr, size_t addrlen)
+int connect(int sockfd, const void *addr, socklen_t addrlen)
 {
     struct vfs_file *file = vfs_file_get(sockfd);
     if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
@@ -293,7 +312,7 @@ int listen(int sockfd, int backlog)
     return ret;
 }
 
-int accept(int sockfd, void *addr, size_t *addrlen)
+int accept(int sockfd, void *addr, socklen_t *addrlen)
 {
     struct vfs_file *file = vfs_file_get(sockfd);
     if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
@@ -386,3 +405,68 @@ int shutdown(int sockfd, int how)
     vfs_file_put(file);
     return ret;
 }
+
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const void *dest_addr, socklen_t addrlen)
+{
+    struct vfs_file *file = vfs_file_get(sockfd);
+    if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
+        return -EBADF;
+    }
+    struct vfs_sockdev *sdev = (struct vfs_sockdev *)file->f_inode->i_private;
+    ssize_t ret = -ENOSYS;
+    if (sdev->ops && sdev->ops->sendto) {
+        ret = sdev->ops->sendto(file->f_private, buf, len, flags, dest_addr, addrlen);
+    } else if (sdev->ops && sdev->ops->send) {
+        ret = sdev->ops->send(file->f_private, buf, len, flags);
+    }
+    vfs_file_put(file);
+    return ret;
+}
+
+ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, void *src_addr, socklen_t *addrlen)
+{
+    struct vfs_file *file = vfs_file_get(sockfd);
+    if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
+        return -EBADF;
+    }
+    struct vfs_sockdev *sdev = (struct vfs_sockdev *)file->f_inode->i_private;
+    ssize_t ret = -ENOSYS;
+    if (sdev->ops && sdev->ops->recvfrom) {
+        ret = sdev->ops->recvfrom(file->f_private, buf, len, flags, src_addr, addrlen);
+    } else if (sdev->ops && sdev->ops->recv) {
+        ret = sdev->ops->recv(file->f_private, buf, len, flags);
+    }
+    vfs_file_put(file);
+    return ret;
+}
+
+int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
+{
+    struct vfs_file *file = vfs_file_get(sockfd);
+    if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
+        return -EBADF;
+    }
+    struct vfs_sockdev *sdev = (struct vfs_sockdev *)file->f_inode->i_private;
+    int ret = -ENOSYS;
+    if (sdev->ops && sdev->ops->setsockopt) {
+        ret = sdev->ops->setsockopt(file->f_private, level, optname, optval, optlen);
+    }
+    vfs_file_put(file);
+    return ret;
+}
+
+int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen)
+{
+    struct vfs_file *file = vfs_file_get(sockfd);
+    if (!file || !file->f_inode || !file->f_inode->i_private || !file->f_private) {
+        return -EBADF;
+    }
+    struct vfs_sockdev *sdev = (struct vfs_sockdev *)file->f_inode->i_private;
+    int ret = -ENOSYS;
+    if (sdev->ops && sdev->ops->getsockopt) {
+        ret = sdev->ops->getsockopt(file->f_private, level, optname, optval, optlen);
+    }
+    vfs_file_put(file);
+    return ret;
+}
+

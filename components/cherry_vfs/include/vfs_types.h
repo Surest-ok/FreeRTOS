@@ -27,6 +27,11 @@ typedef uint32_t        uid_t;
 typedef uint32_t        gid_t;
 typedef int32_t         pid_t;
 
+#ifndef _SOCKLEN_T_DECLARED
+#define _SOCKLEN_T_DECLARED
+typedef uint32_t        socklen_t;
+#endif
+
 #define VFS_NAME_MAX    64
 #define VFS_PATH_MAX    256
 #define VFS_MAX_FD      64

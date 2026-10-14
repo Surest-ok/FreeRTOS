@@ -106,12 +106,16 @@ struct vfs_sockdev;
 
 struct vfs_sock_ops {
     void   *(*socket)(int domain, int type, int protocol);
-    int     (*bind)(void *sock, const void *addr, size_t addrlen);
-    int     (*connect)(void *sock, const void *addr, size_t addrlen);
+    int     (*bind)(void *sock, const void *addr, socklen_t addrlen);
+    int     (*connect)(void *sock, const void *addr, socklen_t addrlen);
     int     (*listen)(void *sock, int backlog);
-    void   *(*accept)(void *sock, void *addr, size_t *addrlen);
+    void   *(*accept)(void *sock, void *addr, socklen_t *addrlen);
     ssize_t (*send)(void *sock, const void *buf, size_t len, int flags);
     ssize_t (*recv)(void *sock, void *buf, size_t len, int flags);
+    ssize_t (*sendto)(void *sock, const void *buf, size_t len, int flags, const void *dest_addr, socklen_t addrlen);
+    ssize_t (*recvfrom)(void *sock, void *buf, size_t len, int flags, void *src_addr, socklen_t *addrlen);
+    int     (*setsockopt)(void *sock, int level, int optname, const void *optval, socklen_t optlen);
+    int     (*getsockopt)(void *sock, int level, int optname, void *optval, socklen_t *optlen);
     int     (*shutdown)(void *sock, int how);
     int     (*close)(void *sock);
 };
@@ -124,6 +128,8 @@ struct vfs_sockdev {
 int vfs_sockdev_register(struct vfs_sockdev *sdev, const char *name);
 int vfs_sockdev_unregister(struct vfs_sockdev *sdev);
 struct vfs_sockdev *vfs_sockdev_find(const char *name);
+void vfs_sockdev_set_default(struct vfs_sockdev *sdev);
+struct vfs_sockdev *vfs_sockdev_get_default(void);
 
 /* Generic Device Enumeration and Traversal */
 int vfs_device_register(struct vfs_device *dev);

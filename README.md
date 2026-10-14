@@ -168,6 +168,12 @@
      - **分区子块设备虚拟化**：自动将分区映射并注册为独立虚拟块设备（如 `/dev/mmcblk0p1`），提供 LBA 偏置重定向与严格边界越界防护。
      - **挂载与卸载引擎**：提供 `mount` 与 `umount` 标准文件系统挂载管理器。
      - **Linux 风格核心文件实用工具**：提供 `ls`（带类型、Inode与名称格式化输出）、`cat`、`cp`、`mv`、`rm`（文件与目录自适应）、`mkdir`（内置 `mkdior` 别名）、`echo`（原生支持 `>` 覆盖与 `>>` 追加重定向）、`mkfs` 与 `fsck` 命令行工具及 C API。
+    - [**`CherryNet`**](components/cherry_net/README.md) (High-Performance Multi-Core Multi-Queue TCP/IP Stack & VirtIO Driver)：
+      - **现代多核多队列架构 (MQ-RSS)**：Per-Core 独立工作线程（`net_worker_0`, `net_worker_1`），基于 4 元组哈希（FNV-1a）实现 RSS 流导向，消除核间锁竞争。
+      - **VirtIO-Net PCI 硬件加速驱动**：基于 PCIe ECAM 自动匹配驱动，支持 legacy/modern PCI virtio 接口，管理 4KB 对齐的 RX/TX 双环虚拟队列（vrings），自动探测 MAC 地址。
+      - **双栈 IPv4 / IPv6 支持**：完整支持 IPv4 与 ARP 缓存协议、IPv6 与 NDP 邻居发现协议（NS/NA、EUI-64 链路本地地址计算）。
+      - **标准 BSD Socket 接口**：与 CherryVFS sockdev 统一绑定，支持 `socket`, `bind`, `connect`, `listen`, `accept`, `send`, `recv`, `sendto`, `recvfrom`, `setsockopt`, `getsockopt`, `shutdown`。
+      - **iperf2 高性能基准测试与网络工具**：线兼容 iperf2 客户端/服务端吞吐测试（报告 Mbits/sec）、支持 IPv4 与 IPv6 的 `ping` 往返时延测量、`ifconfig` 接口信息工具。
 
 ---
 
@@ -217,11 +223,16 @@ freertos-workspace/
 │   │   ├── src/                # 磁盘超级块、位图分配器、Extents 树、目录解析、JBD2 事务、mkfs、fsck、VFS 驱动
 │   │   ├── tests/              # Ext4 读写、事务与自检自动化测试套件 (ext4_test.c)
 │   │   └── SConscript          # libcherry_ext4.a 构建规则
-│   └── cherry_fstools/         # MBR 磁盘分区工具、挂载管理与核心文件命令集
-│       ├── include/            # MBR 规范 (mbr.h)、分区抽象 (fdisk.h)
-│       ├── src/                # MBR 读写、/dev/mmcblk0p1 子块设备虚拟化、mount/umount、ls/cat/cp/mv/rm/mkdir/echo
-│       ├── tests/              # 分区、挂载、文件操作验收测试套件 (fstools_test.c)
-│       └── SConscript          # libcherry_fstools.a 构建规则
+│   ├── cherry_fstools/         # MBR 磁盘分区工具、挂载管理与核心文件命令集
+│   │   ├── include/            # MBR 规范 (mbr.h)、分区抽象 (fdisk.h)
+│   │   ├── src/                # MBR 读写、/dev/mmcblk0p1 子块设备虚拟化、mount/umount、ls/cat/cp/mv/rm/mkdir/echo
+│   │   ├── tests/              # 分区、挂载、文件操作验收测试套件 (fstools_test.c)
+│   │   └── SConscript          # libcherry_fstools.a 构建规则
+│   └── cherry_net/             # 现代多核多队列 TCP/IP 协议栈与 VirtIO-Net 驱动
+│       ├── include/            # BSD Socket (sys/socket.h), VirtIO (net_virtio.h), iperf2 (net_iperf2.h)
+│       ├── src/                # MQ-RSS 引擎, VirtIO 驱动, IPv4/ARP, IPv6/NDP, ICMP, UDP, TCP, ifconfig/ping/iperf
+│       ├── tests/              # 10 点自动化网络验收测试套件 (net_test.c)
+│       └── SConscript          # libcherry_net.a 构建规则
 ├── arch/                       # 体系结构抽象层
 │   ├── rules.py                # 通用 AArch64 编译规则与工具链初始化
 │   ├── SConscript              # arch 静态对象构建脚本

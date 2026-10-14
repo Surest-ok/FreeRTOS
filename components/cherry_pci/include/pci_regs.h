@@ -77,10 +77,18 @@
 #define PCI_BASE_ADDRESS_IO_MASK        (~0x03ULL)
 
 /* Linux-style Resource Flags */
+#ifndef IORESOURCE_IO
 #define IORESOURCE_IO           0x00000100  /* Resource is I/O space */
+#endif
+#ifndef IORESOURCE_MEM
 #define IORESOURCE_MEM          0x00000200  /* Resource is Memory space */
+#endif
+#ifndef IORESOURCE_PREFETCH
 #define IORESOURCE_PREFETCH     0x00002000  /* Resource is prefetchable */
+#endif
+#ifndef IORESOURCE_MEM_64
 #define IORESOURCE_MEM_64       0x00100000  /* 64-bit Memory space */
+#endif
 
 /* Subsystem registers */
 #define PCI_SUBSYSTEM_VENDOR_ID 0x2C
