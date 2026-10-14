@@ -188,11 +188,39 @@ closedir(dirp);
 ---
 
 ## 5. 自动化验收断言
-
+ 
 测试套件内置于 `components/cherry_vfs/tests/vfs_test.c`，在 QEMU 启动阶段自动运行并打印标准化断言探针：
 
 ```text
 <6>cherry_vfs: ==> Starting CherryVFS Acceptance Test Suite...
 <6>cherry_vfs: [/dev/console] POSIX write through cdev successful
 <6>cherry_vfs: [vfs-verify] pdev=PASS cdev=PASS bdev=PASS ramfs=PASS sock=PASS all=PASS
+```
+
+---
+
+## 6. 大规模文件操作自动化压力测试（VFS Stress Test Suite）
+
+针对嵌入式文件系统易发的内存泄漏、深层递归栈溢出、Dentry 悬空与多核并发竞争，`CherryVFS` 提供了专属的大规模压力测试套件（`components/cherry_vfs/tests/vfs_stress_test.c`）：
+
+```c
+int vfs_run_stress_tests(int file_count);
+```
+
+### 压力测试阶段覆盖：
+1. **深层目录树遍历（Deep Hierarchy）**：
+   递归创建 `/stress/lvl1/lvl2/lvl3/lvl4` 极深目录并在叶子节点创建校验文件，验证路径解析深度与 `stat`、`opendir`、`readdir`。
+2. **海量批量文件操作（Massive Batch Files）**：
+   单批次连续创建 50~100 个文件，写入独立 Magic 校验数据，完整读取并进行字节级一致性校验，校验 `stat` 尺寸后依次 `unlink`，最后 `rmdir` 检验目录完全清理。
+3. **大文件跨块 Seek 寻道与截断（Large Seek & Ftruncate）**：
+   连续写入 8KB 以上跨块文件数据，`lseek(SEEK_SET)` 随机跳转至中间块写入标记并回读验证，`lseek(SEEK_END)` 追加尾部数据，并使用 `ftruncate()` 将大文件尺寸下调收缩至 4096 字节，通过 `fstat()` 验证元数据准确性。
+4. **文件移动与原子重命名（Atomic Rename）**：
+   调用 `rename(src, dst)` 将源文件重命名至目标路径，验证源文件路径已被完全注销与 Dentry 回收（`open(src)` 返回 `-ENOENT`），同时验证目标路径数据完整性。
+5. **多核 SMP 高并发读写竞争（Concurrent Multi-Core File Stress）**：
+   使用 Linux 风格 `kthread_run()` 与 `kthread_bind()` 分别在 Core 0 与 Core 1 派生并发 Worker 线程，两核并发执行 50 次文件创建、写入、读取、比对与注销循环，通过标准 `struct semaphore` 进行两核任务汇合同步。
+
+### 自动化测试探针输出：
+```text
+<6>[vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
+<6>[vfs-stress] hierarchy=PASS batch_files=PASS large_seek_trunc=PASS rename=PASS concurrent_smp=PASS all=PASS
 ```

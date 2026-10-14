@@ -4,7 +4,9 @@
  * Copyright (c) 2026 ForgeStitch
  * SPDX-License-Identifier: MIT
  *
- * Standard Linux-style Abstraction for RTOS / Baremetal / SMP
+ * 100% Linux Kernel API Standard (No Custom Prefix)
+ * Provides standard Linux mutex, spinlock, semaphore, kmalloc, kthread,
+ * printk, jiffies, atomics, and memory barriers across RTOS/baremetal platforms.
  */
 
 #ifndef _CHERRY_KAL_H_
@@ -13,121 +15,204 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define KAL_WAIT_FOREVER    0xFFFFFFFFU
-#define KAL_NO_WAIT         0x00000000U
+/* =========================================================================
+ * 1. Linux Standard Log Levels & Printk
+ * ========================================================================= */
+#define KERN_EMERG   "<0>"  /* system is unusable */
+#define KERN_ALERT   "<1>"  /* action must be taken immediately */
+#define KERN_CRIT    "<2>"  /* critical conditions */
+#define KERN_ERR     "<3>"  /* error conditions */
+#define KERN_WARNING "<4>"  /* warning conditions */
+#define KERN_NOTICE  "<5>"  /* normal but significant condition */
+#define KERN_INFO    "<6>"  /* informational */
+#define KERN_DEBUG   "<7>"  /* debug-level messages */
 
-#define KAL_OK              0
-#define KAL_ERROR          -1
-#define KAL_TIMEOUT        -2
-#define KAL_BUSY           -3
-#define KAL_NOMEM          -4
-#define KAL_INVAL          -5
+int printk(const char *fmt, ...);
+
+#define pr_emerg(fmt, ...)   printk(KERN_EMERG fmt, ##__VA_ARGS__)
+#define pr_alert(fmt, ...)   printk(KERN_ALERT fmt, ##__VA_ARGS__)
+#define pr_crit(fmt, ...)    printk(KERN_CRIT fmt, ##__VA_ARGS__)
+#define pr_err(fmt, ...)     printk(KERN_ERR fmt, ##__VA_ARGS__)
+#define pr_warn(fmt, ...)    printk(KERN_WARNING fmt, ##__VA_ARGS__)
+#define pr_warning           pr_warn
+#define pr_notice(fmt, ...)  printk(KERN_NOTICE fmt, ##__VA_ARGS__)
+#define pr_info(fmt, ...)    printk(KERN_INFO fmt, ##__VA_ARGS__)
+#define pr_debug(fmt, ...)   printk(KERN_DEBUG fmt, ##__VA_ARGS__)
 
 /* =========================================================================
- * 1. Memory Management
+ * 2. Memory Management (kmalloc, kfree, kzalloc, krealloc)
  * ========================================================================= */
-void *kal_malloc(size_t size);
-void  kal_free(void *ptr);
-void *kal_calloc(size_t nmemb, size_t size);
-void *kal_realloc(void *ptr, size_t size);
+typedef unsigned int gfp_t;
+#define GFP_KERNEL 0x00U
+#define GFP_ATOMIC 0x01U
+#define GFP_NOWAIT 0x02U
+#define __GFP_ZERO 0x04U
+
+void *kmalloc(size_t size, gfp_t flags);
+void  kfree(const void *ptr);
+void *kzalloc(size_t size, gfp_t flags);
+void *kcalloc(size_t nmemb, size_t size, gfp_t flags);
+void *krealloc(const void *ptr, size_t size, gfp_t flags);
 
 /* =========================================================================
- * 2. Mutex Synchronization (Linux mutex_lock / mutex_unlock semantics)
+ * 3. Mutex (struct mutex, mutex_init, mutex_lock, mutex_unlock)
  * ========================================================================= */
-typedef struct kal_mutex {
+struct mutex {
     void *handle;
-} kal_mutex_t;
+};
 
-int kal_mutex_init(kal_mutex_t *mutex);
-int kal_mutex_lock(kal_mutex_t *mutex);
-int kal_mutex_trylock(kal_mutex_t *mutex);
-int kal_mutex_unlock(kal_mutex_t *mutex);
-int kal_mutex_destroy(kal_mutex_t *mutex);
+void mutex_init(struct mutex *lock);
+void mutex_lock(struct mutex *lock);
+int  mutex_trylock(struct mutex *lock);
+void mutex_unlock(struct mutex *lock);
+void mutex_destroy(struct mutex *lock);
 
 /* =========================================================================
- * 3. Spinlock (SMP safe, with IRQ save/restore)
+ * 4. Spinlock (spinlock_t, spin_lock, spin_unlock, spin_lock_irqsave)
  * ========================================================================= */
-typedef struct kal_spinlock {
+typedef struct spinlock {
     volatile uint32_t lock;
     uint32_t          owner_core;
     uint32_t          nesting;
-} kal_spinlock_t;
+} spinlock_t;
 
-int  kal_spin_lock_init(kal_spinlock_t *lock);
-void kal_spin_lock(kal_spinlock_t *lock);
-void kal_spin_unlock(kal_spinlock_t *lock);
-unsigned long kal_spin_lock_irqsave(kal_spinlock_t *lock);
-void kal_spin_unlock_irqrestore(kal_spinlock_t *lock, unsigned long flags);
+#define SPIN_LOCK_UNLOCKED (spinlock_t){ 0, 0xFFFFFFFFU, 0 }
+
+void spin_lock_init(spinlock_t *lock);
+void spin_lock(spinlock_t *lock);
+void spin_unlock(spinlock_t *lock);
+unsigned long _spin_lock_irqsave(spinlock_t *lock);
+void spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags);
+
+#define spin_lock_irqsave(lock, flags) \
+    do { (flags) = _spin_lock_irqsave(lock); } while (0)
 
 /* =========================================================================
- * 4. Semaphore Synchronization
+ * 5. Semaphore (struct semaphore, sema_init, down, up)
  * ========================================================================= */
-typedef struct kal_sem {
+struct semaphore {
     void *handle;
-} kal_sem_t;
+};
 
-int kal_sem_init(kal_sem_t *sem, unsigned int initial_count, unsigned int max_count);
-int kal_sem_wait(kal_sem_t *sem, uint32_t timeout_ms);
-int kal_sem_post(kal_sem_t *sem);
-int kal_sem_destroy(kal_sem_t *sem);
-
-/* =========================================================================
- * 5. Thread / Task Management
- * ========================================================================= */
-typedef void *kal_thread_t;
-typedef void (*kal_thread_func_t)(void *arg);
-
-kal_thread_t kal_thread_create(const char *name,
-                               kal_thread_func_t func,
-                               void *arg,
-                               size_t stack_size,
-                               int priority);
-
-int  kal_thread_set_affinity(kal_thread_t thread, uint32_t core_mask);
-void kal_thread_sleep_ms(uint32_t ms);
-void kal_thread_yield(void);
-void kal_thread_exit(void);
-kal_thread_t kal_thread_self(void);
-uint32_t kal_get_core_id(void);
+void sema_init(struct semaphore *sem, int val);
+void down(struct semaphore *sem);
+int  down_interruptible(struct semaphore *sem);
+int  down_trylock(struct semaphore *sem);
+int  down_timeout(struct semaphore *sem, long timeout_ms);
+void up(struct semaphore *sem);
+void sema_destroy(struct semaphore *sem);
 
 /* =========================================================================
- * 6. Time and Ticks
+ * 6. Threads and Scheduling (kthread_create, kthread_run, schedule, msleep)
  * ========================================================================= */
-uint64_t kal_get_time_ms(void);
-uint64_t kal_get_time_us(void);
-uint32_t kal_get_tick(void);
-uint32_t kal_tick_rate_hz(void);
+struct task_struct {
+    void *handle;
+};
+
+typedef int (*kthread_fn_t)(void *data);
+
+struct task_struct *kthread_create(kthread_fn_t threadfn, void *data, const char *name);
+struct task_struct *kthread_run(kthread_fn_t threadfn, void *data, const char *name);
+int  kthread_bind(struct task_struct *task, unsigned int cpu);
+void schedule(void);
+void msleep(unsigned int msecs);
+void usleep_range(unsigned long min, unsigned long max);
+unsigned int smp_processor_id(void);
 
 /* =========================================================================
- * 7. Critical Sections & Memory Barriers
+ * 7. Time and Jiffies
  * ========================================================================= */
-void kal_enter_critical(void);
-void kal_exit_critical(void);
+#define HZ 1000U
+extern volatile unsigned long jiffies;
 
-static inline void kal_mb(void)
-{
-    __asm__ volatile("dmb sy" ::: "memory");
-}
-
-static inline void kal_rmb(void)
-{
-    __asm__ volatile("dmb ld" ::: "memory");
-}
-
-static inline void kal_wmb(void)
-{
-    __asm__ volatile("dmb st" ::: "memory");
-}
+unsigned long msecs_to_jiffies(const unsigned int m);
+unsigned int  jiffies_to_msecs(const unsigned long j);
+uint64_t ktime_get_ns(void);
+uint64_t ktime_get_ms(void);
+uint64_t ktime_get_real_ns(void);
 
 /* =========================================================================
- * 8. Formatted Console Logging Output
+ * 8. Memory Barriers & Atomics
  * ========================================================================= */
-void kal_printf(const char *fmt, ...);
+#define mb()     __asm__ volatile("dmb sy" ::: "memory")
+#define rmb()    __asm__ volatile("dmb ld" ::: "memory")
+#define wmb()    __asm__ volatile("dmb st" ::: "memory")
+#define smp_mb()  mb()
+#define smp_rmb() rmb()
+#define smp_wmb() wmb()
+
+typedef struct {
+    volatile int counter;
+} atomic_t;
+
+#define ATOMIC_INIT(i) { (i) }
+
+static inline int  atomic_read(const atomic_t *v) { return __atomic_load_n(&v->counter, __ATOMIC_SEQ_CST); }
+static inline void atomic_set(atomic_t *v, int i) { __atomic_store_n(&v->counter, i, __ATOMIC_SEQ_CST); }
+static inline void atomic_add(int i, atomic_t *v) { __atomic_add_fetch(&v->counter, i, __ATOMIC_SEQ_CST); }
+static inline void atomic_sub(int i, atomic_t *v) { __atomic_sub_fetch(&v->counter, i, __ATOMIC_SEQ_CST); }
+static inline void atomic_inc(atomic_t *v)        { __atomic_add_fetch(&v->counter, 1, __ATOMIC_SEQ_CST); }
+static inline void atomic_dec(atomic_t *v)        { __atomic_sub_fetch(&v->counter, 1, __ATOMIC_SEQ_CST); }
+static inline int  atomic_inc_return(atomic_t *v) { return __atomic_add_fetch(&v->counter, 1, __ATOMIC_SEQ_CST); }
+static inline int  atomic_dec_return(atomic_t *v) { return __atomic_sub_fetch(&v->counter, 1, __ATOMIC_SEQ_CST); }
+
+/* =========================================================================
+ * 9. Kernel Utility Macros (container_of)
+ * ========================================================================= */
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER) ((size_t)&((TYPE *)0)->MEMBER)
+#endif
+
+#ifndef container_of
+#define container_of(ptr, type, member) ({                      \
+    const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+    (type *)( (char *)__mptr - offsetof(type,member) );})
+#endif
+
+/* =========================================================================
+ * 10. Backward Compatibility Aliases for kal_*
+ * ========================================================================= */
+#define kal_malloc(size)                kmalloc(size, GFP_KERNEL)
+#define kal_free(ptr)                   kfree(ptr)
+#define kal_calloc(n, s)                kcalloc(n, s, GFP_KERNEL)
+#define kal_realloc(p, s)               krealloc(p, s, GFP_KERNEL)
+#define kal_mutex_t                     struct mutex
+#define kal_mutex_init(m)               mutex_init(m)
+#define kal_mutex_lock(m)               mutex_lock(m)
+#define kal_mutex_trylock(m)            mutex_trylock(m)
+#define kal_mutex_unlock(m)             mutex_unlock(m)
+#define kal_mutex_destroy(m)            mutex_destroy(m)
+#define kal_spinlock_t                  spinlock_t
+#define kal_spin_lock_init(l)           spin_lock_init(l)
+#define kal_spin_lock(l)                spin_lock(l)
+#define kal_spin_unlock(l)              spin_unlock(l)
+#define kal_spin_lock_irqsave(l)        _spin_lock_irqsave(l)
+#define kal_spin_unlock_irqrestore(l,f) spin_unlock_irqrestore(l, f)
+#define kal_sem_t                       struct semaphore
+#define kal_sem_init(s, init, max)      sema_init(s, init)
+#define kal_sem_wait(s, t)              down_timeout(s, t)
+#define kal_sem_post(s)                 up(s)
+#define kal_sem_destroy(s)              sema_destroy(s)
+#define kal_thread_t                    struct task_struct *
+#define kal_thread_create(n, f, a, s, p) kthread_run((kthread_fn_t)(f), a, n)
+#define kal_thread_set_affinity(t, m)   kthread_bind(t, (m == 2 ? 1 : 0))
+#define kal_thread_sleep_ms(ms)         msleep(ms)
+#define kal_thread_yield()              schedule()
+#define kal_get_core_id()               smp_processor_id()
+#define kal_get_time_ms()               ktime_get_ms()
+#define kal_get_time_us()               (ktime_get_ns() / 1000ULL)
+#define kal_get_tick()                  ((uint32_t)jiffies)
+#define kal_tick_rate_hz()              HZ
+#define kal_printf(fmt, ...)            printk(fmt, ##__VA_ARGS__)
+
+#define KAL_OK     0
+#define KAL_ERROR -1
 
 #ifdef __cplusplus
 }

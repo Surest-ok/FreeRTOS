@@ -338,6 +338,9 @@ static int ramfs_rmdir(struct vfs_inode *dir, const char *name)
                 return -ENOTEMPTY;
             }
             *curr = target->next_sibling;
+            if (target->inode) {
+                target->inode->i_private = NULL;
+            }
             ramfs_free_node(target);
             return VFS_OK;
         }
@@ -360,6 +363,9 @@ static int ramfs_unlink(struct vfs_inode *dir, const char *name)
                 return -EISDIR;
             }
             *curr = target->next_sibling;
+            if (target->inode) {
+                target->inode->i_private = NULL;
+            }
             ramfs_free_node(target);
             return VFS_OK;
         }

@@ -35,6 +35,7 @@ vfs_sources = [
     'src/dev_pl011.c',
     'src/cherry_vfs.c',
     'tests/vfs_test.c',
+    'tests/vfs_stress_test.c',
 ]
 
 vfs_objs = vfs_env.Object(vfs_sources)

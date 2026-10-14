@@ -18,31 +18,31 @@ static struct vfs_filesystem_type *g_fs_list = NULL;
 static struct vfs_superblock      *g_mount_list = NULL;
 static struct vfs_superblock      *g_root_sb = NULL;
 static struct vfs_file            *g_fd_table[VFS_MAX_FD] = {0};
-static kal_mutex_t                 g_vfs_mutex;
+static struct mutex                g_vfs_mutex;
 static int                         g_vfs_mutex_inited = 0;
 static uint32_t                    g_next_inode_num = 1;
 
 void *vfs_malloc(size_t size)
 {
-    return kal_malloc(size);
+    return kmalloc(size, GFP_KERNEL);
 }
 
 void vfs_free(void *ptr)
 {
-    kal_free(ptr);
+    kfree(ptr);
 }
 
 void vfs_lock(void)
 {
     if (g_vfs_mutex_inited) {
-        kal_mutex_lock(&g_vfs_mutex);
+        mutex_lock(&g_vfs_mutex);
     }
 }
 
 void vfs_unlock(void)
 {
     if (g_vfs_mutex_inited) {
-        kal_mutex_unlock(&g_vfs_mutex);
+        mutex_unlock(&g_vfs_mutex);
     }
 }
 
@@ -150,6 +150,28 @@ void vfs_dentry_put(struct vfs_dentry *dentry)
             dentry->d_inode = NULL;
         }
         vfs_free(dentry);
+    }
+    vfs_unlock();
+}
+
+void vfs_dentry_drop(struct vfs_dentry *parent, const char *name)
+{
+    if (!parent || !name) return;
+
+    vfs_lock();
+    struct vfs_dentry **curr = &parent->d_children;
+    while (*curr) {
+        if (strcmp((*curr)->d_name, name) == 0) {
+            struct vfs_dentry *victim = *curr;
+            *curr = victim->d_next_sibling;
+            victim->d_next_sibling = NULL;
+            victim->d_parent = NULL;
+            vfs_unlock();
+
+            vfs_dentry_put(victim);
+            return;
+        }
+        curr = &(*curr)->d_next_sibling;
     }
     vfs_unlock();
 }
@@ -515,9 +537,8 @@ void vfs_file_put(struct vfs_file *file)
 int vfs_init(void)
 {
     if (!g_vfs_mutex_inited) {
-        if (kal_mutex_init(&g_vfs_mutex) == KAL_OK) {
-            g_vfs_mutex_inited = 1;
-        }
+        mutex_init(&g_vfs_mutex);
+        g_vfs_mutex_inited = 1;
     }
     return VFS_OK;
 }

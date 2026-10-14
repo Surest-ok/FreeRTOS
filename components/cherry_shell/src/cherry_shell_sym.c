@@ -19,29 +19,28 @@ extern const struct cherry_shell_symbol __cherry_shell_sym_end[];
 
 static struct cherry_shell_symbol g_dyn_syms[CHERRY_SHELL_MAX_DYNAMIC_SYMS];
 static size_t g_dyn_sym_count = 0;
-static kal_mutex_t g_sym_mutex;
+static struct mutex g_sym_mutex;
 static int g_sym_mutex_inited = 0;
 
 static void sym_lock(void)
 {
     if (g_sym_mutex_inited) {
-        kal_mutex_lock(&g_sym_mutex);
+        mutex_lock(&g_sym_mutex);
     }
 }
 
 static void sym_unlock(void)
 {
     if (g_sym_mutex_inited) {
-        kal_mutex_unlock(&g_sym_mutex);
+        mutex_unlock(&g_sym_mutex);
     }
 }
 
 int cherry_shell_sym_init(void)
 {
     if (!g_sym_mutex_inited) {
-        if (kal_mutex_init(&g_sym_mutex) == KAL_OK) {
-            g_sym_mutex_inited = 1;
-        }
+        mutex_init(&g_sym_mutex);
+        g_sym_mutex_inited = 1;
     }
     return CHERRY_SHELL_OK;
 }

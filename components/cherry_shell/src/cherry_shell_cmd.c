@@ -221,6 +221,29 @@ static int cmd_echo(int argc, char **argv)
 }
 CHERRY_SHELL_EXPORT_CMD(echo, cmd_echo, "Echo text to console");
 
+extern int vfs_run_stress_tests(int file_count);
+
+static int cmd_vfs_stress(int argc, char **argv)
+{
+    int count = 50;
+    if (argc > 1) {
+        const char *p = argv[1];
+        int val = 0;
+        while (*p >= '0' && *p <= '9') {
+            val = val * 10 + (*p++ - '0');
+        }
+        if (val > 0) count = val;
+    }
+    return vfs_run_stress_tests(count);
+}
+CHERRY_SHELL_EXPORT_CMD(vfs_stress, cmd_vfs_stress, "Run massive file operations stress test: vfs_stress [count]");
+
+uintptr_t test_vfs_stress(uintptr_t count)
+{
+    return (uintptr_t)vfs_run_stress_tests((int)count);
+}
+CHERRY_SHELL_EXPORT_SYM(test_vfs_stress, test_vfs_stress, "Run VFS stress test as C function: test_vfs_stress(count)");
+
 /* =========================================================================
  * 2. Callable C Functions (VxWorks-style invocation & acceptance tests)
  * ========================================================================= */
