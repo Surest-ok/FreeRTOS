@@ -179,11 +179,21 @@ freertos-workspace/
 │   │   ├── src/                # Inode 管理、DevFS、RamFS、PL011/Null/Zero/Ramdisk/Socket 驱动
 │   │   ├── tests/              # VFS 自动化验收测试套件 (vfs_test.c)
 │   │   └── SConscript          # libcherry_vfs.a 构建规则
-│   └── cherry_shell/           # VxWorks 风格动态 C 表达式命令行与符号引擎
-│       ├── include/            # CherryShell、符号表、解析器 API
-│       ├── src/                # 符号解析 (addr2sym), AAPCS64 动态调用, 内置指令集, 交互式终端
-│       ├── tests/              # 符号、C 函数调用与指令集测试套件 (shell_test.c)
-│       └── SConscript          # libcherry_shell.a 构建规则
+│   ├── cherry_shell/           # VxWorks 风格动态 C 表达式命令行与符号引擎
+│   │   ├── include/            # CherryShell、符号表、解析器 API
+│   │   ├── src/                # 符号解析 (addr2sym), AAPCS64 动态调用, 内置指令集, 交互式终端
+│   │   ├── tests/              # 符号、C 函数调用与指令集测试套件 (shell_test.c)
+│   │   └── SConscript          # libcherry_shell.a 构建规则
+│   ├── cherry_pci/             # Linux 风格 PCIe 子系统与 ARM GICv3 ITS MSI 支持
+│   │   ├── include/            # PCIe ECAM、GICv3 ITS (cherry_its.h)、标准寄存器 (pci_regs.h)
+│   │   ├── src/                # 总线扫描、BAR 分配器、ITS 命令队列驱动、MSI 绑定、pci_ls 指令
+│   │   ├── tests/              # PCIe 自动化验收测试套件 (pci_test.c)
+│   │   └── SConscript          # libcherry_pci.a 构建规则
+│   └── cherry_sdio/            # SD / SDIO / MMC / eMMC 协议栈与 CherryVFS 块设备
+│       ├── include/            # SDHCI 寄存器、SD 协议规范头文件
+│       ├── src/                # SDHCI 主机驱动、卡识别状态机、PCI 驱动适配、/dev/mmcblk0 桥接
+│       ├── tests/              # SD/eMMC 读写自动化验收测试套件 (sdio_test.c)
+│       └── SConscript          # libcherry_sdio.a 构建规则
 ├── arch/                       # 体系结构抽象层
 │   ├── rules.py                # 通用 AArch64 编译规则与工具链初始化
 │   ├── SConscript              # arch 静态对象构建脚本
@@ -335,18 +345,24 @@ make sched-test
 **测试输出示例**：
 ```text
 ==> Running Scheduler Acceptance Test (cores=2, mode=full)...
-[    0.095444] [6:cpu0:sched-mon:20920] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
-[    0.146771] [6:cpu0:sched-mon:20920] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
-[    0.175497] [6:cpu0:sched-mon:20920] cherry_vfs: ==> starting cherryvfs acceptance test suite...
+[    0.027849] [6:cpu0:sched-mon:60111] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
+[    0.061194] [6:cpu0:sched-mon:60111] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
+[    0.065649] [6:cpu0:sched-mon:60111] cherry_vfs: ==> starting cherryvfs acceptance test suite...
 cherry_vfs: [/dev/console] posix write through cdev successful
-[    0.204259] [6:cpu0:sched-mon:20920] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
-[    0.204763] [6:cpu0:sched-mon:20920] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
-[    0.315926] [6:cpu0:sched-mon:20920] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
-[    0.316911] [6:cpu0:sched-mon:20920] cherry_shell: initialized with vxworks c-function call & addr2sym engine
-[    0.317146] [6:cpu0:sched-mon:20920] cherry_shell: starting verification test suite...
-[    0.330134] [6:cpu0:sched-mon:20920]   [[func]] cherry_vfs_init (0x000000004000a044) - initialize complete cherryvfs subsystem
-[    0.335866] [6:cpu0:sched-mon:20920] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
-[    0.336898] [6:cpu0:sched-mon:20920] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=112
+[    0.082868] [6:cpu0:sched-mon:60111] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
+[    0.083756] [6:cpu0:sched-mon:60111] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
+[    0.178185] [6:cpu0:sched-mon:60111] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
+[    0.180757] [6:cpu0:sched-mon:60111] cherry_pci: gicv3 its engine initialized (cbaser=0xa80000004004040f, translater=0x8090040, pta=0)
+[    0.181324] [6:cpu0:sched-mon:60111] cherry_pci: pcie ecam host bridge detected at 0x4010000000
+[    0.184568] [6:cpu0:sched-mon:60111] cherry_pci: pcie bus scan completed, 3 devices enumerated
+[    0.185747] [6:cpu0:sched-mon:60111] cherry_pci: [pci-verify] ecam=pass bus_scan=pass dev_found=pass bar_alloc=pass its_msi=pass all=pass
+[    0.188675] [6:cpu0:sched-mon:60111] cherry_sdio: detected sd specification v2.0+ card
+[    0.189699] [6:cpu0:sched-mon:60111] cherry_sdio: csd parsed: capacity=64 mb, sectors=131072, blksize=512
+[    0.190117] [6:cpu0:sched-mon:60111] cherry_sdio: registered block device /dev/mmcblk0 (131072 sectors, 512b/sector)
+[    0.194767] [6:cpu0:sched-mon:60111] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
+[    0.195332] [6:cpu0:sched-mon:60111] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.215410] [6:cpu0:sched-mon:60111] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
+[    0.216483] [6:cpu0:sched-mon:60111] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=173
 [SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
 scons: done building targets.
 ```
@@ -363,16 +379,23 @@ make sched-cross
 **测试输出示例**：
 ```text
 ==> Running Scheduler Acceptance Test (cores=2, mode=cross)...
-[    0.033590] [6:cpu0:sched-mon:19685] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
-[    0.066896] [6:cpu0:sched-mon:19685] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
-[    0.072394] [6:cpu0:sched-mon:19685] cherry_vfs: ==> starting cherryvfs acceptance test suite...
+[    0.030843] [6:cpu0:sched-mon:58869] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
+[    0.063757] [6:cpu0:sched-mon:58869] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
+[    0.074100] [6:cpu0:sched-mon:58869] cherry_vfs: ==> starting cherryvfs acceptance test suite...
 cherry_vfs: [/dev/console] posix write through cdev successful
-[    0.083317] [6:cpu0:sched-mon:19685] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
-[    0.083523] [6:cpu0:sched-mon:19685] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
-[    0.173758] [6:cpu0:sched-mon:19685] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
-[    0.174648] [6:cpu0:sched-mon:19685] cherry_shell: initialized with vxworks c-function call & addr2sym engine
-[    0.189784] [6:cpu0:sched-mon:19685] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
-[    0.191072] [6:cpu0:sched-mon:19685] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
+[    0.097956] [6:cpu0:sched-mon:58869] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
+[    0.099242] [6:cpu0:sched-mon:58869] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
+[    0.188765] [6:cpu0:sched-mon:58869] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
+[    0.191431] [6:cpu0:sched-mon:58869] cherry_pci: gicv3 its engine initialized (cbaser=0xa80000004004040f, translater=0x8090040, pta=0)
+[    0.192344] [6:cpu0:sched-mon:58869] cherry_pci: pcie ecam host bridge detected at 0x4010000000
+[    0.196787] [6:cpu0:sched-mon:58869] cherry_pci: [pci-verify] ecam=pass bus_scan=pass dev_found=pass bar_alloc=pass its_msi=pass all=pass
+[    0.199429] [6:cpu0:sched-mon:58869] cherry_sdio: detected sd specification v2.0+ card
+[    0.200213] [6:cpu0:sched-mon:58869] cherry_sdio: csd parsed: capacity=64 mb, sectors=131072, blksize=512
+[    0.200897] [6:cpu0:sched-mon:58869] cherry_sdio: registered block device /dev/mmcblk0 (131072 sectors, 512b/sector)
+[    0.205436] [6:cpu0:sched-mon:58869] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
+[    0.206180] [6:cpu0:sched-mon:58869] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.221261] [6:cpu0:sched-mon:58869] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
+[    0.222377] [6:cpu0:sched-mon:58869] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
 [SCHED-TEST] SUMMARY result=pass mode=cross cores=2 markers=1
 scons: done building targets.
 ```

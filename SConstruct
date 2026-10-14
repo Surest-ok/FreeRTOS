@@ -141,12 +141,28 @@ cherry_timer_lib = env.SConscript(
     exports='env'
 )
 
+# 8. CherryPCI Component (PCIe ECAM Subsystem & GICv3 ITS / MSI)
+cherry_pci_lib = env.SConscript(
+    'components/cherry_pci/SConscript',
+    variant_dir=f'{build_dir}/cherry_pci',
+    duplicate=0,
+    exports='env'
+)
+
+# 9. CherrySDIO Component (SD / SDIO / MMC / eMMC Stack & Block Device)
+cherry_sdio_lib = env.SConscript(
+    'components/cherry_sdio/SConscript',
+    variant_dir=f'{build_dir}/cherry_sdio',
+    duplicate=0,
+    exports='env'
+)
+
 # 8. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib']
 )
 
 
@@ -158,11 +174,15 @@ env.Alias('all', [elf_target, bin_target])
 # ==============================================================================
 # QEMU Execution
 qemu_cmd = (
+    f"truncate -s 64M build/test_sd.img 2>/dev/null || true && "
     f"qemu-system-aarch64 "
-    f"-machine virt,gic-version=3 "
+    f"-machine virt,gic-version=3,its=on "
     f"-cpu cortex-a53 "
     f"-smp {cores} "
     f"-m 512 "
+    f"-device sdhci-pci,id=sdhci0 "
+    f"-drive if=none,id=sd0,file=build/test_sd.img,format=raw "
+    f"-device sd-card,drive=sd0 "
     f"-kernel {elf_target[0].abspath} "
     f"-nographic -monitor none -serial stdio"
 )
