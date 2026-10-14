@@ -342,12 +342,12 @@ int vfs_run_stress_tests(int file_count)
     bool all_ok = (p1 && p2 && p3 && p4 && p5);
 
     pr_info("[vfs-stress] hierarchy=%s batch_files=%s large_seek_trunc=%s rename=%s concurrent_smp=%s all=%s\n",
-            p1 ? "PASS" : "FAIL",
-            p2 ? "PASS" : "FAIL",
-            p3 ? "PASS" : "FAIL",
-            p4 ? "PASS" : "FAIL",
-            p5 ? "PASS" : "FAIL",
-            all_ok ? "PASS" : "FAIL");
+            p1 ? "pass" : "fail",
+            p2 ? "pass" : "fail",
+            p3 ? "pass" : "fail",
+            p4 ? "pass" : "fail",
+            p5 ? "pass" : "fail",
+            all_ok ? "pass" : "fail");
 
     return all_ok ? 0 : -1;
 }

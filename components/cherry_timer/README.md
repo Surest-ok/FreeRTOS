@@ -57,6 +57,6 @@ ktime_t ktime_set(const int64_t secs, const unsigned long nsecs);
 
 在系统启动阶段自动运行 `cherry_timer_run_tests()`，覆盖单次标准定时、纳秒 hrtimer、多核并发定时、周期性自动重启与定时器取消：
 ```text
-<6>[    0.015000] [CPU0:sched-mon:1] ==> Starting CherryTimer Multi-Core Acceptance Test Suite...
-<6>[    0.025000] [CPU0:sched-mon:1] [timer-verify] standard=PASS hrtimer=PASS multi_core=PASS restart=PASS cancel=PASS all=PASS
+[    0.015000] [6:cpu0:sched-mon:1] ==> starting cherrytimer multi-core acceptance test suite...
+[    0.025000] [6:cpu0:sched-mon:1] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
 ```

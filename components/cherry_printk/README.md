@@ -14,13 +14,12 @@
 ### 1. 100% Linux 内核 Dmesg 日志规范
 每条日志均包含 Linux 标准日志级别、纳秒级硬件时间戳、CPU 核心编号以及线程信息：
 ```text
-<6>[    0.012345] [CPU0:sched-mon:1] cherry_vfs: registered /dev/console
-<3>[    0.015678] [CPU1:pr_w1:2] disk_driver: read timeout
+[    0.012345] [6:cpu0:sched-mon:1] cherry_vfs: registered /dev/console
+[    0.015678] [3:cpu1:pr_w1:2] disk_driver: read timeout
 ```
-- `<level>`：保留标准 Linux 日志等级 `<0>`~`<7>`；
-- `[seconds.microseconds]`：由硬件通用定时器（ARM Generic Timer `cntpct_el0`）直接驱动，微秒/纳秒级精准时间对齐；
-- `[CPUx:task_name:tid]`：自动捕获执行打印的 CPU 核心、FreeRTOS 任务名称（或 `swapper`、`irq`）及任务 ID；
-- 消息内容：自动过滤多余换行符并规整输出。
+- `[seconds.microseconds]`：时间放到最前边，由硬件通用定时器（ARM Generic Timer `cntpct_el0`）直接驱动，启动后硬件严格单调递增；
+- `[level:cpux:task_name:tid]`：打印等级与 CPU 核心、任务名称（或 `swapper`、`irq`）及任务 ID 统一组合，全小写无错乱；
+- 消息内容：全小写规整输出。
 
 ### 2. 多核并发打印无错乱（Multi-Core Non-Interleaved Logging）
 在多核并发环境下，传统的逐字符 UART 输出会导致不同核心的字符交织错乱。`CherryPrintk` 引入结构化环形记录缓冲区（Record Ring Buffer）：
@@ -53,6 +52,6 @@ pr_debug(fmt, ...);
 
 在系统启动时，`CherryPrintk` 自动进行基准测试与多核并发压力测试：
 ```text
-<6>[    0.001200] [CPU0:sched-mon:1] ==> Starting CherryPrintk Multi-Core Acceptance Test Suite...
-<6>[    0.002340] [CPU0:sched-mon:1] [printk-verify] basic=PASS multicore=PASS irq_safe=PASS all=PASS
+[    0.001200] [6:cpu0:sched-mon:1] ==> starting cherryprintk multi-core acceptance test suite...
+[    0.002340] [6:cpu0:sched-mon:1] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
 ```

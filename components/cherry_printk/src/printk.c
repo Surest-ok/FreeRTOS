@@ -54,14 +54,20 @@ static void console_drain(void)
         uint64_t usec = (rem * 1000000ULL) / freq;
 
         snprintf(line_buf, sizeof(line_buf),
-                 "<%u>[%5lu.%06lu] [CPU%u:%s:%u] %s\n",
-                 (unsigned int)rec.level,
+                 "[%5lu.%06lu] [%u:cpu%u:%s:%u] %s\n",
                  (unsigned long)sec,
                  (unsigned long)usec,
+                 (unsigned int)rec.level,
                  (unsigned int)rec.cpu_id,
                  rec.thread_name,
                  (unsigned int)rec.thread_id,
                  rec.text);
+
+        for (char *c = line_buf; *c; c++) {
+            if (*c >= 'A' && *c <= 'Z') {
+                *c = (char)(*c + ('a' - 'A'));
+            }
+        }
 
         uart_puts(line_buf);
     }
@@ -111,10 +117,7 @@ int vprintk(const char *fmt, va_list args)
     }
     rec.len = (uint16_t)len;
 
-    /* 2. Read hardware timestamp from BSP Generic Timer (1 CPU instruction) */
-    rec.timestamp_cnt = gtimer_get_counter();
-
-    /* 3. Read current CPU and thread metadata */
+    /* 2. Read current CPU and thread metadata */
     uint32_t cpu = smp_processor_id();
     rec.cpu_id = cpu;
 

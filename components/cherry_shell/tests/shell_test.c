@@ -131,13 +131,13 @@ int cherry_shell_run_tests(void)
     /* Summary report */
     bool all_pass = (pass_syms && pass_addr2sym && pass_c_func && pass_sum8 && pass_str && pass_cmds);
     kal_printf("<6>cherry_shell: [shell-verify] syms=%s addr2sym=%s c_func=%s sum8=%s str=%s cmds=%s all=%s\n",
-               pass_syms ? "PASS" : "FAIL",
-               pass_addr2sym ? "PASS" : "FAIL",
-               pass_c_func ? "PASS" : "FAIL",
-               pass_sum8 ? "PASS" : "FAIL",
-               pass_str ? "PASS" : "FAIL",
-               pass_cmds ? "PASS" : "FAIL",
-               all_pass ? "PASS" : "FAIL");
+               pass_syms ? "pass" : "fail",
+               pass_addr2sym ? "pass" : "fail",
+               pass_c_func ? "pass" : "fail",
+               pass_sum8 ? "pass" : "fail",
+               pass_str ? "pass" : "fail",
+               pass_cmds ? "pass" : "fail",
+               all_pass ? "pass" : "fail");
 
     return all_pass ? 0 : -1;
 }

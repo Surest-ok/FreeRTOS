@@ -11,12 +11,12 @@
 #include "vfs_test.h"
 #include <string.h>
 
-extern void uart_printf(const char *fmt, ...);
+extern int printk(const char *fmt, ...);
 
 #define TEST_ASSERT(cond, msg) \
     do { \
         if (!(cond)) { \
-            uart_printf("[VFS-FAIL] %s:%d: %s\n", __FILE__, __LINE__, msg); \
+            printk("<3>[vfs-fail] %s:%d: %s\n", __FILE__, __LINE__, msg); \
             return -1; \
         } \
     } while (0)
@@ -76,7 +76,7 @@ static int test_cdev_uart_console(void)
     int fd = open("/dev/console", O_WRONLY);
     TEST_ASSERT(fd >= 0, "open /dev/console");
 
-    static const char msg[] = "<6>cherry_vfs: [/dev/console] POSIX write through cdev successful\n";
+    static const char msg[] = "cherry_vfs: [/dev/console] posix write through cdev successful\n";
     ssize_t w = write(fd, msg, strlen(msg));
     TEST_ASSERT(w == (ssize_t)strlen(msg), "write to /dev/console");
     close(fd);
@@ -207,7 +207,7 @@ static int test_socket_abstraction(void)
 
 int cherry_vfs_run_tests(void)
 {
-    uart_printf("<6>cherry_vfs: ==> Starting CherryVFS Acceptance Test Suite...\n");
+    printk("<6>cherry_vfs: ==> starting cherryvfs acceptance test suite...\n");
 
     int pdev_ok = (test_platform_bus() == 0);
     int cdev_null_ok = (test_cdev_null_zero() == 0);
@@ -219,13 +219,13 @@ int cherry_vfs_run_tests(void)
     int cdev_ok = (cdev_null_ok && cdev_uart_ok);
     int all_ok = (pdev_ok && cdev_ok && bdev_ok && ramfs_ok && sock_ok);
 
-    uart_printf("<6>cherry_vfs: [vfs-verify] pdev=%s cdev=%s bdev=%s ramfs=%s sock=%s all=%s\n",
-                pdev_ok ? "PASS" : "FAIL",
-                cdev_ok ? "PASS" : "FAIL",
-                bdev_ok ? "PASS" : "FAIL",
-                ramfs_ok ? "PASS" : "FAIL",
-                sock_ok ? "PASS" : "FAIL",
-                all_ok ? "PASS" : "FAIL");
+    printk("<6>cherry_vfs: [vfs-verify] pdev=%s cdev=%s bdev=%s ramfs=%s sock=%s all=%s\n",
+           pdev_ok ? "pass" : "fail",
+           cdev_ok ? "pass" : "fail",
+           bdev_ok ? "pass" : "fail",
+           ramfs_ok ? "pass" : "fail",
+           sock_ok ? "pass" : "fail",
+           all_ok ? "pass" : "fail");
 
     return all_ok ? 0 : -1;
 }

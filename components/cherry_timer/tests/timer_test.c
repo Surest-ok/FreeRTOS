@@ -155,7 +155,7 @@ static bool test_cancel(void)
 
 int cherry_timer_run_tests(void)
 {
-    pr_info("==> Starting CherryTimer Multi-Core Acceptance Test Suite...");
+    pr_info("==> starting cherrytimer multi-core acceptance test suite...");
 
     bool p1 = test_standard_timer();
     bool p2 = test_hrtimer();
@@ -165,12 +165,12 @@ int cherry_timer_run_tests(void)
 
     bool all_ok = (p1 && p2 && p3 && p4 && p5);
     pr_info("[timer-verify] standard=%s hrtimer=%s multi_core=%s restart=%s cancel=%s all=%s",
-            p1 ? "PASS" : "FAIL",
-            p2 ? "PASS" : "FAIL",
-            p3 ? "PASS" : "FAIL",
-            p4 ? "PASS" : "FAIL",
-            p5 ? "PASS" : "FAIL",
-            all_ok ? "PASS" : "FAIL");
+            p1 ? "pass" : "fail",
+            p2 ? "pass" : "fail",
+            p3 ? "pass" : "fail",
+            p4 ? "pass" : "fail",
+            p5 ? "pass" : "fail",
+            all_ok ? "pass" : "fail");
 
     return all_ok ? 0 : -1;
 }

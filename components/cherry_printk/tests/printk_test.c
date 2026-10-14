@@ -28,7 +28,7 @@ static int printk_test_worker(void *data)
 
 int cherry_printk_run_tests(void)
 {
-    pr_info("==> Starting CherryPrintk Multi-Core Acceptance Test Suite...");
+    pr_info("==> starting cherryprintk multi-core acceptance test suite...");
 
     /* 1. Basic formatting test across log levels */
     pr_debug("test debug message (level 7)");
@@ -61,10 +61,10 @@ int cherry_printk_run_tests(void)
 
     bool all_ok = (p1 && p2 && p3);
     pr_info("[printk-verify] basic=%s multicore=%s irq_safe=%s all=%s",
-            p1 ? "PASS" : "FAIL",
-            p2 ? "PASS" : "FAIL",
-            p3 ? "PASS" : "FAIL",
-            all_ok ? "PASS" : "FAIL");
+            p1 ? "pass" : "fail",
+            p2 ? "pass" : "fail",
+            p3 ? "pass" : "fail",
+            all_ok ? "pass" : "fail");
 
     return all_ok ? 0 : -1;
 }

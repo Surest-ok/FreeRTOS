@@ -29,7 +29,10 @@ void printk_rb_init(void)
     s_rb_inited = true;
 }
 
-bool printk_rb_write(const struct printk_record *rec)
+extern uint64_t gtimer_get_counter(void);
+static uint64_t s_last_timestamp = 0;
+
+bool printk_rb_write(struct printk_record *rec)
 {
     if (!rec) return false;
     if (!s_rb_inited) {
@@ -38,6 +41,13 @@ bool printk_rb_write(const struct printk_record *rec)
 
     unsigned long flags = 0;
     spin_lock_irqsave(&s_rb_lock, flags);
+
+    uint64_t now = gtimer_get_counter();
+    if (now <= s_last_timestamp) {
+        now = s_last_timestamp + 1;
+    }
+    s_last_timestamp = now;
+    rec->timestamp_cnt = now;
 
     uint32_t idx = s_head % PRINTK_RING_ENTRIES;
     s_ring[idx] = *rec;

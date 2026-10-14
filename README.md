@@ -131,7 +131,7 @@
      - 统一抽象字符设备（Char Dev，如 PL011 UART、`/dev/null`、`/dev/zero`）、块设备（Block Dev，如 `/dev/ramdisk0`）、网络套接字设备（Socket Dev，BSD Socket 映射）。
      - 提供标准的平台总线（Platform Bus）与驱动枚举绑定体系（`vfs_platform_device_register`, `vfs_platform_driver_register`, `probe`/`remove`）。
    - **`CherryPrintk` (High-Performance Multi-Core Linux-Style Logging Engine)**：
-     - **100% Linux 内核 Dmesg 规范**：格式对齐 `<level>[seconds.usec] [CPUx:task:tid] msg`，支持 `pr_info`, `pr_err`, `pr_warn`, `pr_debug` 等标准日志级别。
+     - **100% Linux 内核 Dmesg 规范**：格式对齐 `[seconds.usec] [level:cpux:task:tid] msg`，支持 `pr_info`, `pr_err`, `pr_warn`, `pr_debug` 等标准日志级别，全小写规整输出。
      - **多核并发原子行输出**：结构化环形记录缓冲区（Record Ring Buffer），避免跨核字符交错（Non-Interleaving）。
      - **极短关中断时间（< 100ns）**：入队仅占用微秒级以下自旋锁，慢速 UART 打印完全在开中断状态下异步 Drain，绝不影响硬件定时器中断。
    - **`CherryTimer` (Multi-Core High-Precision Linux Timer Subsystem)**：
@@ -328,8 +328,8 @@ make sched-test
 **测试输出示例**：
 ```text
 ==> Running Scheduler Acceptance Test (cores=2, mode=full)...
-<6>[    0.000000] freertos: [sched-verify] active=PASS idle=PASS affinity=PASS coverage=PASS progress=PASS prio=PASS rr=PASS sem=PASS queue=PASS mutex=PASS spin=PASS cores=2 seen=0x00000003 missing=0x00000000 hb0=2 hb1=106
-[SCHED-TEST] SUMMARY result=PASS mode=full cores=2 markers=2
+[    0.168315] [6:cpu0:sched-mon:20920] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=138
+[SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=2
 scons: done building targets.
 ```
 
@@ -345,22 +345,22 @@ make sched-cross
 **测试输出示例**：
 ```text
 ==> Running Scheduler Acceptance Test (cores=2, mode=cross)...
-<6>[    0.000000] freertos: [xsync-verify] sem=PASS queue=PASS mutex=PASS spin=PASS sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
-[SCHED-TEST] SUMMARY result=PASS mode=cross cores=2 markers=2
+[    0.190308] [6:cpu0:sched-mon:19697] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
+[SCHED-TEST] SUMMARY result=pass mode=cross cores=2 markers=2
 scons: done building targets.
 ```
 
 ### 7.4 验证指标说明
 
 在 `[sched-verify]` 标志中，各项测试代表的含义如下：
-- `active=PASS`：所有配置的 CPU 核心均已通过 PSCI 唤醒并在线注册。
-- `idle=PASS`：核心空闲任务状态与预期一致。
-- `affinity=PASS`：工作任务的 CPU 核心亲和性约束未发生越界违规。
-- `coverage=PASS`：所有核心均已执行过应用级任务。
-- `progress=PASS`：心跳计数（Heartbeat）平稳持续增长。
-- `prio=PASS`：高优先级任务抢占低优先级任务时序严格正确。
-- `rr=PASS`：同优先级任务在时间片轮转（Round-Robin）调度下公平分发。
-- `sem / queue / mutex / spin=PASS`：跨核同步与 IPC 原语安全可靠，无死锁、无竞态。
+- `active=pass`：所有配置的 CPU 核心均已通过 PSCI 唤醒并在线注册。
+- `idle=pass`：核心空闲任务状态与预期一致。
+- `affinity=pass`：工作任务的 CPU 核心亲和性约束未发生越界违规。
+- `coverage=pass`：所有核心均已执行过应用级任务。
+- `progress=pass`：心跳计数（Heartbeat）平稳持续增长。
+- `prio=pass`：高优先级任务抢占低优先级任务时序严格正确。
+- `rr=pass`：同优先级任务在时间片轮转（Round-Robin）调度下公平分发。
+- `sem / queue / mutex / spin=pass`：跨核同步与 IPC 原语安全可靠，无死锁、无竞态。
 
 ---
 
