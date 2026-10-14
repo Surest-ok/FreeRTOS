@@ -20,6 +20,8 @@ sources = [
     'src/cherry_pci.c',
     'src/pci_ecam.c',
     'src/pci_bus.c',
+    'src/pci_res.c',
+    'src/pci_cap.c',
     'src/pci_driver.c',
     'src/pci_its.c',
     'src/pci_msi.c',
