@@ -26,7 +26,7 @@ struct printk_record {
 };
 
 void printk_rb_init(void);
-bool printk_rb_write(const struct printk_record *rec);
+bool printk_rb_write(struct printk_record *rec);
 bool printk_rb_read(struct printk_record *out_rec);
 bool printk_rb_has_pending(void);
 uint32_t printk_rb_pending_count(void);

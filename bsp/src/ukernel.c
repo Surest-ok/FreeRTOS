@@ -72,10 +72,13 @@ void ukernel_wake_secondary_cores(void)
     __asm__ volatile("dmb sy\nsev" ::: "memory");
 }
 
+extern void cherry_printk_init(void);
+
 void ukernel_start(void)
 {
     uart_init();
-    uart_log(6, "freertos", "FreeRTOS SMP unikernel boot\r\n");
+    cherry_printk_init();
+    uart_log(6, "freertos", "freertos smp unikernel boot\r\n");
 
     gic_init(0);
     gtimer_init();
@@ -83,7 +86,7 @@ void ukernel_start(void)
     g_boot_info.cores = (uint32_t)configNUMBER_OF_CORES;
     g_boot_info.timer_hz = gtimer_get_frequency();
 
-    uart_log(6, "freertos", "[boot] cores=%d timer=%dHz\r\n",
+    uart_log(6, "freertos", "[boot] cores=%d timer=%dhz\r\n",
              (int)g_boot_info.cores,
              (int)g_boot_info.timer_hz);
 

@@ -149,7 +149,7 @@ static uint64_t expected_core_mask(uint32_t cores)
 
 static const char *passfail(int ok)
 {
-    return ok ? "PASS" : "FAIL";
+    return ok ? "pass" : "fail";
 }
 
 #if APP_ENABLE_SMP_DIAG

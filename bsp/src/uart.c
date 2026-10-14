@@ -285,6 +285,8 @@ void uart_printf(const char *fmt, ...)
     uart_lock_release();
 }
 
+extern int printk(const char *fmt, ...);
+
 void uart_log(int level, const char *tag, const char *fmt, ...)
 {
     char buf[224];
@@ -305,13 +307,10 @@ void uart_log(int level, const char *tag, const char *fmt, ...)
     va_start(args, fmt);
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
-
-    uart_lock_acquire();
-    uart_putc('<');
-    uart_putc((char)('0' + level));
-    uart_puts(">[    0.000000] ");
-    uart_puts(tag);
-    uart_puts(": ");
-    uart_puts(buf);
-    uart_lock_release();
+    static const char * const lvl_prefix[8] = {
+        "<0>", "<1>", "<2>", "<3>", "<4>", "<5>", "<6>", "<7>"
+    };
+    char full_fmt[64];
+    snprintf(full_fmt, sizeof(full_fmt), "%s%s: %%s", lvl_prefix[level], tag);
+    printk(full_fmt, buf);
 }

@@ -18,11 +18,11 @@
 static int help_sym_cb(const struct cherry_shell_symbol *sym, void *user_data)
 {
     (void)user_data;
-    const char *type_str = "[FUNC]";
-    if (sym->type == CHERRY_SHELL_SYM_CMD) type_str = "[CMD] ";
-    else if (sym->type == CHERRY_SHELL_SYM_VAR) type_str = "[VAR] ";
+    const char *type_str = "func";
+    if (sym->type == CHERRY_SHELL_SYM_CMD) type_str = "cmd";
+    else if (sym->type == CHERRY_SHELL_SYM_VAR) type_str = "var";
 
-    kal_printf("  [%s] %s (0x%016lx) - %s\n",
+    kal_printf("  [[%s]] %s (0x%016lx) - %s\n",
                type_str,
                sym->name ? sym->name : "?",
                (unsigned long)sym->addr,

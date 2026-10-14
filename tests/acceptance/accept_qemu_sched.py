@@ -86,7 +86,7 @@ def marker_passes(fields: dict[str, str], mode: str) -> bool:
             "cross-spin": ("spin",),
         }
         required = required_by_mode[mode]
-        return all(fields.get(key) == "PASS" for key in required)
+        return all(fields.get(key) in ("PASS", "pass") for key in required)
 
     required = ("active", "idle", "affinity")
     if mode == "full":
@@ -101,7 +101,7 @@ def marker_passes(fields: dict[str, str], mode: str) -> bool:
             "spin",
         )
 
-    return all(fields.get(key) == "PASS" for key in required)
+    return all(fields.get(key) in ("PASS", "pass") for key in required)
 
 
 def process_line(
