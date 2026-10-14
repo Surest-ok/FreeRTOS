@@ -122,6 +122,20 @@
    - 标准 PSCI 多核启动：主核（Core 0）通过 ARM 标准 PSCI `CPU_ON`（`0xC4000003`）接口唤醒副核，彻底兼容 QEMU virt 虚拟化规范。
    - 硬件驱动：PL011 UART 驱动（含轻量级 `vsnprintf` 与 Linux 风格格式化日志）、ARM Generic Timer 物理定时器（1000Hz SysTick）。
 
+4. **CherryOS 现代化组件生态 (`components/`)**：
+   - **`CherryKAL` (Kernel Abstraction Layer / OSAL)**：
+     - 采用严格 Linux 内核接口语义（`kal_mutex_*`, `kal_sem_*`, `kal_spin_*`, `kal_thread_*`, `kal_malloc`/`free`, `kal_atomic_*`）。
+     - 将上层组件与具体底层 RTOS 100% 隔离解耦，使每个 Cherry 组件均可独立剥离给任意第三方嵌入式开发者使用。
+   - **`CherryVFS` (Virtual File System & Device Driver Framework)**：
+     - 与主流 Linux 高度兼容的 Inode / Dentry 虚拟文件系统抽象，提供标准 POSIX 文件操作接口（`open`, `close`, `read`, `write`, `opendir`, `readdir`, `mkdir`, `mount`）。
+     - 统一抽象字符设备（Char Dev，如 PL011 UART、`/dev/null`、`/dev/zero`）、块设备（Block Dev，如 `/dev/ramdisk0`）、网络套接字设备（Socket Dev，BSD Socket 映射）。
+     - 提供标准的平台总线（Platform Bus）与驱动枚举绑定体系（`vfs_platform_device_register`, `vfs_platform_driver_register`, `probe`/`remove`）。
+   - **`CherryShell` (VxWorks-style Dynamic C Interpreter & Symbol Engine)**：
+     - **C 函数即命令（Functions as Commands）**：终端直接以 C 语法调用任意函数并传递参数，实时打印返回值（`value = <dec> = 0x<hex>`）。基于 AAPCS64 实现最高 8 参数（`x0`~`x7`）无缝寄存器调用。
+     - **符号与地址双向解析（`addr2sym`）**：运行时支持从内存或异常 PC 指针反查最近符号名称及偏移（如 `vfs_open + 0x18`）。
+     - **编译期段导出与动态注册**：支持 `CHERRY_SHELL_EXPORT_SYM` / `CMD` / `VAR` 零侵入宏导出，亦支持运行时动态注册。
+     - 内置丰富的系统级指令：`help`, `syms`, `addr2sym`, `ls`, `cat`, `mkdir`, `touch`, `ps`, `echo`。
+
 ---
 
 ## 4. 目录结构
@@ -132,6 +146,21 @@ freertos-workspace/
 ├── SConstruct                  # SCons 顶层构建脚本（选项配置、构建流编排、QEMU与测试目标）
 ├── Makefile                    # 命令行友好型 Makefile 前端包装器
 ├── .gitignore                  # Git 忽略规则（已自动排除 docx、中间生成物与调试文件）
+├── components/                 # CherryOS 现代化操作系统组件库 (全解耦设计)
+│   ├── cherry_kal/             # 内核抽象层 (Linux 接口标准 OSAL: mutex, sem, spinlock, thread, malloc)
+│   │   ├── include/cherry_kal.h
+│   │   ├── src/kal_freertos.c  # 基于 FreeRTOS V11 SMP + AArch64 的适配层
+│   │   └── SConscript          # libcherry_kal.a 构建规则
+│   ├── cherry_vfs/             # 虚拟文件系统与统一设备驱动框架
+│   │   ├── include/            # VFS、Inode、POSIX、Device、Driver、Platform 头文件
+│   │   ├── src/                # Inode 管理、DevFS、RamFS、PL011/Null/Zero/Ramdisk/Socket 驱动
+│   │   ├── tests/              # VFS 自动化验收测试套件 (vfs_test.c)
+│   │   └── SConscript          # libcherry_vfs.a 构建规则
+│   └── cherry_shell/           # VxWorks 风格动态 C 表达式命令行与符号引擎
+│       ├── include/            # CherryShell、符号表、解析器 API
+│       ├── src/                # 符号解析 (addr2sym), AAPCS64 动态调用, 内置指令集, 交互式终端
+│       ├── tests/              # 符号、C 函数调用与指令集测试套件 (shell_test.c)
+│       └── SConscript          # libcherry_shell.a 构建规则
 ├── arch/                       # 体系结构抽象层
 │   ├── rules.py                # 通用 AArch64 编译规则与工具链初始化
 │   ├── SConscript              # arch 静态对象构建脚本
@@ -144,13 +173,13 @@ freertos-workspace/
 │   └── port/                   # AArch64 SMP 汇编与 C 端口实现 (port.c, port_smp.c, portASM.S)
 ├── bsp/                        # 板级支持包与目标可执行镜像
 │   ├── SConscript              # BSP 对象编译与目标链接脚本 (生成 freertos_smp.elf / .bin)
-│   ├── linker.ld               # AArch64 链接脚本 (RAM 基址 0x40000000)
+│   ├── linker.ld               # AArch64 链接脚本 (.cherry_shell_sym 符号段, RAM 基址 0x40000000)
 │   ├── include/                # 板级驱动头文件
 │   └── src/                    # 启动代码 (startup.S), 中断向量 (freertos_vectors.S), 
 │                               #   GICv3 (gic.c), Timer (gtimer.c), UART (uart.c), 测试探针 (app.c)
 ├── include/                    # 全局与 FreeRTOS 配置头文件 (FreeRTOSConfig.h, portmacro.h...)
 ├── tests/                      # 自动化测试套件
-│   └── acceptance/             # QEMU 调度器验收测试脚本 (accept_qemu_sched.py)
+│   └── acceptance/             # QEMU 调度器与组件验收测试脚本 (accept_qemu_sched.py)
 ├── docs/                       # 完整技术博客与架构设计连载文档（Markdown 格式，排除 docx）
 │   ├── phase1-AArch64裸机引导与UART输出.md
 │   ├── phase2-异常向量表与GICv2中断.md

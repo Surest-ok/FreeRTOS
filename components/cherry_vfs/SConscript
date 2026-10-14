@@ -11,6 +11,7 @@ vfs_env = env.Clone()
 
 # Include search paths for CherryVFS
 vfs_env.Append(CPPPATH=[
+    '#components/cherry_kal/include',
     '#components/cherry_vfs/include',
     '#components/cherry_vfs/tests',
     '#include',

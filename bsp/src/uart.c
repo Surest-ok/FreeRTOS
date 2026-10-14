@@ -65,14 +65,31 @@ void uart_puts(const char *str)
     }
 }
 
-/* Simple vsnprintf implementation for console output */
-static int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
+/* Read a single character from UART (non-blocking). Returns -1 if no character available. */
+int uart_getc_nonblock(void)
 {
+    if (UART_REG_READ(UART0_BASE, UART0_FR_OFFSET) & UART_FR_RXFE) {
+        return -1;
+    }
+    return (int)(UART_REG_READ(UART0_BASE, UART0_DR_OFFSET) & 0xFF);
+}
+
+/* Read a single character from UART (blocking) */
+char uart_getc(void)
+{
+    while (UART_REG_READ(UART0_BASE, UART0_FR_OFFSET) & UART_FR_RXFE) {
+        /* Wait */
+    }
+    return (char)(UART_REG_READ(UART0_BASE, UART0_DR_OFFSET) & 0xFF);
+}
+
+/* Formatted printing implementation for freestanding environment */
+int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
+{
+    if (!buf || size == 0) return 0;
+
     int count = 0;
     char *p = buf;
-    const char *s;
-    int i;
-    char *tmp;
 
     while (*fmt && (size_t)count < (size - 1)) {
         if (*fmt != '%') {
@@ -82,67 +99,147 @@ static int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
         }
 
         fmt++;
+        int pad_zero = 0;
+        int width = 0;
+        if (*fmt == '0') {
+            pad_zero = 1;
+            fmt++;
+        }
+        while (*fmt >= '0' && *fmt <= '9') {
+            width = width * 10 + (*fmt - '0');
+            fmt++;
+        }
+
+        int is_long = 0;
+        if (*fmt == 'l') {
+            is_long = 1;
+            fmt++;
+            if (*fmt == 'l') {
+                is_long = 2;
+                fmt++;
+            }
+        }
 
         switch (*fmt) {
-            case 'd':  /* Integer */
-                i = va_arg(args, int);
-                if (i < 0) {
+            case 'd':
+            case 'i': {
+                long long val;
+                if (is_long == 2) val = va_arg(args, long long);
+                else if (is_long == 1) val = va_arg(args, long);
+                else val = va_arg(args, int);
+
+                if (val < 0) {
                     *p++ = '-';
                     count++;
-                    i = -i;
+                    val = -val;
                 }
-                /* Convert to string */
-                {
-                    char *end = p;
-                    tmp = p;
-                    do {
-                        *p++ = '0' + (i % 10);
-                        i /= 10;
-                        count++;
-                    } while (i > 0 && count < (int)(size - 1));
-                    /* Reverse the digits in-place */
-                    end = p;
-                    while (tmp < p) {
-                        char c = *tmp;
-                        *tmp = *(p - 1);
-                        *(p - 1) = c;
-                        tmp++;
-                        p--;
-                    }
-                    p = end;  /* Restore p to point past the digits */
-                }
-                break;
+                char num_buf[32];
+                int nlen = 0;
+                unsigned long long uval = (unsigned long long)val;
+                do {
+                    num_buf[nlen++] = '0' + (uval % 10);
+                    uval /= 10;
+                } while (uval > 0);
 
-            case 'x':  /* Hexadecimal */
-                i = va_arg(args, int);
-                for (int j = 7; j >= 0; j--) {
-                    int nibble = (i >> (j * 4)) & 0xF;
-                    *p++ = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+                while (nlen < width && (size_t)count < (size - 1)) {
+                    *p++ = pad_zero ? '0' : ' ';
+                    count++;
+                    width--;
+                }
+                for (int j = nlen - 1; j >= 0 && (size_t)count < (size - 1); j--) {
+                    *p++ = num_buf[j];
                     count++;
                 }
                 break;
+            }
 
-            case 's':  /* String */
-                s = va_arg(args, char*);
+            case 'u': {
+                unsigned long long uval;
+                if (is_long == 2) uval = va_arg(args, unsigned long long);
+                else if (is_long == 1) uval = va_arg(args, unsigned long);
+                else uval = va_arg(args, unsigned int);
+
+                char num_buf[32];
+                int nlen = 0;
+                do {
+                    num_buf[nlen++] = '0' + (uval % 10);
+                    uval /= 10;
+                } while (uval > 0);
+
+                while (nlen < width && (size_t)count < (size - 1)) {
+                    *p++ = pad_zero ? '0' : ' ';
+                    count++;
+                    width--;
+                }
+                for (int j = nlen - 1; j >= 0 && (size_t)count < (size - 1); j--) {
+                    *p++ = num_buf[j];
+                    count++;
+                }
+                break;
+            }
+
+            case 'x':
+            case 'X':
+            case 'p': {
+                unsigned long long uval;
+                if (*fmt == 'p') {
+                    uval = (uintptr_t)va_arg(args, void *);
+                    if (width == 0) width = 16;
+                    pad_zero = 1;
+                } else if (is_long == 2) {
+                    uval = va_arg(args, unsigned long long);
+                } else if (is_long == 1) {
+                    uval = va_arg(args, unsigned long);
+                } else {
+                    uval = va_arg(args, unsigned int);
+                }
+
+                char num_buf[32];
+                int nlen = 0;
+                const char *hex_digits = (*fmt == 'X') ? "0123456789ABCDEF" : "0123456789abcdef";
+                do {
+                    num_buf[nlen++] = hex_digits[uval & 0xF];
+                    uval >>= 4;
+                } while (uval > 0);
+
+                while (nlen < width && (size_t)count < (size - 1)) {
+                    *p++ = pad_zero ? '0' : ' ';
+                    count++;
+                    width--;
+                }
+                for (int j = nlen - 1; j >= 0 && (size_t)count < (size - 1); j--) {
+                    *p++ = num_buf[j];
+                    count++;
+                }
+                break;
+            }
+
+            case 's': {
+                const char *s = va_arg(args, char *);
+                if (!s) s = "(null)";
                 while (*s && (size_t)count < (size - 1)) {
                     *p++ = *s++;
                     count++;
                 }
                 break;
+            }
 
-            case 'c':  /* Character */
+            case 'c': {
                 *p++ = (char)va_arg(args, int);
                 count++;
                 break;
+            }
 
-            case '%':  /* Percent sign */
+            case '%': {
                 *p++ = '%';
                 count++;
                 break;
+            }
 
             default:
                 *p++ = *fmt;
                 count++;
+                break;
         }
 
         fmt++;
@@ -150,6 +247,15 @@ static int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
     *p = '\0';
     return count;
+}
+
+int snprintf(char *buf, size_t size, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsnprintf(buf, size, fmt, ap);
+    va_end(ap);
+    return ret;
 }
 
 /* Formatted print to UART (SMP-safe with the common CAS raw spinlock). */
