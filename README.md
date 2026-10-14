@@ -81,29 +81,36 @@
 
 ## 3. 核心架构设计
 
-项目采用严格的三层解耦架构：
+项目采用清晰的分层解耦与组件化架构：
 
 ```
-┌────────────────────────────────────────────────────────┐
-│           BSP 应用与测试层 (bsp/src/app.c, ukernel.c)   │
-│   调度器验证探针 (优先级 / 时间片 / 信号量 / 队列 / 互斥锁) │
-└───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│      FreeRTOS SMP 内核与移植层 (kernel/, include/)       │
-│    FreeRTOS V11.x Core + GCC/ARM_AARCH64_SRE 端口       │
-└───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│         通用体系结构抽象层 ARCH (arch/include, arch/)   │
-│   MPIDR亲和性 / 内存屏障 / 内联原子操作 / 嵌套自旋锁 /    │
-│   通用 IRQ 分发表 / 异常记录与诊断 / 统一线程句柄抽象     │
-└───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│     底层硬件与固件 (QEMU virt AArch64 / Cortex-A53)    │
-│    PL011 UART · GICv3 (ICC_SRE) · Generic Timer · PSCI │
-└────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                   CherryOS 现代化组件生态 (components/)                │
+│    CherryShell (VxWorks C解释器/符号反查) · CherryVFS (Inode/Dev/POSIX) │
+│    CherryTimer (Per-CPU/hrtimer)          · CherryPrintk (无锁环形/dmesg)│
+│                                   │                                    │
+│                  CherryKAL (Linux 标准 API 内核抽象层)                 │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│              BSP 应用与测试层 (bsp/src/app.c, ukernel.c)                │
+│     调度器验证探针 (优先级 / 时间片 / 信号量 / 队列 / 互斥锁)          │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│               FreeRTOS SMP 内核与移植层 (kernel/, include/)            │
+│             FreeRTOS V11.x Core + GCC/ARM_AARCH64_SRE 端口             │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                  通用体系结构抽象层 ARCH (arch/include, arch/)         │
+│     MPIDR亲和性 / 内存屏障 / 内联原子操作 / 嵌套自旋锁 / 通用 IRQ 分发表│
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│              底层硬件与固件 (QEMU virt AArch64 / Cortex-A53)           │
+│             PL011 UART · GICv3 (ICC_SRE) · Generic Timer · PSCI        │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 1. **体系结构抽象层 (`arch/`)**：
@@ -123,22 +130,22 @@
    - 硬件驱动：PL011 UART 驱动（含轻量级 `vsnprintf` 与 Linux 风格格式化日志）、ARM Generic Timer 物理定时器（1000Hz SysTick）。
 
 4. **CherryOS 现代化组件生态 (`components/`)**：
-   - **`CherryKAL` (Kernel Abstraction Layer / OSAL)**：
+   - [**`CherryKAL`**](components/cherry_kal/README.md) (Kernel Abstraction Layer / OSAL)：
      - 采用严格 Linux 内核接口语义（`kal_mutex_*`, `kal_sem_*`, `kal_spin_*`, `kal_thread_*`, `kal_malloc`/`free`, `kal_atomic_*`）。
      - 将上层组件与具体底层 RTOS 100% 隔离解耦，使每个 Cherry 组件均可独立剥离给任意第三方嵌入式开发者使用。
-   - **`CherryVFS` (Virtual File System & Device Driver Framework)**：
+   - [**`CherryVFS`**](components/cherry_vfs/README.md) (Virtual File System & Device Driver Framework)：
      - 与主流 Linux 高度兼容的 Inode / Dentry 虚拟文件系统抽象，提供标准 POSIX 文件操作接口（`open`, `close`, `read`, `write`, `opendir`, `readdir`, `mkdir`, `mount`）。
      - 统一抽象字符设备（Char Dev，如 PL011 UART、`/dev/null`、`/dev/zero`）、块设备（Block Dev，如 `/dev/ramdisk0`）、网络套接字设备（Socket Dev，BSD Socket 映射）。
      - 提供标准的平台总线（Platform Bus）与驱动枚举绑定体系（`vfs_platform_device_register`, `vfs_platform_driver_register`, `probe`/`remove`）。
-   - **`CherryPrintk` (High-Performance Multi-Core Linux-Style Logging Engine)**：
+   - [**`CherryPrintk`**](components/cherry_printk/README.md) (High-Performance Multi-Core Linux-Style Logging Engine)：
      - **100% Linux 内核 Dmesg 规范**：格式对齐 `[seconds.usec] [level:cpux:task:tid] msg`，支持 `pr_info`, `pr_err`, `pr_warn`, `pr_debug` 等标准日志级别，全小写规整输出。
      - **多核并发原子行输出**：结构化环形记录缓冲区（Record Ring Buffer），避免跨核字符交错（Non-Interleaving）。
      - **极短关中断时间（< 100ns）**：入队仅占用微秒级以下自旋锁，慢速 UART 打印完全在开中断状态下异步 Drain，绝不影响硬件定时器中断。
-   - **`CherryTimer` (Multi-Core High-Precision Linux Timer Subsystem)**：
+   - [**`CherryTimer`**](components/cherry_timer/README.md) (Multi-Core High-Precision Linux Timer Subsystem)：
      - **Linux 双标准接口**：完整支持低精度定时器（`struct timer_list`，`timer_setup`, `mod_timer`, `del_timer`）与高分辨率纳秒定时器（`struct hrtimer`，`hrtimer_init`, `hrtimer_start`, `hrtimer_cancel`）。
      - **硬件级精准纳秒时基**：直接对接 BSP 的 ARM Generic Timer 物理计数器 `cntpct_el0`，单周期精度 ~16ns，零漂移。
      - **Per-CPU Timer Base**：独立每个核心的定时队列与自旋锁，实现多核并发无竞争添加与分发。
-   - **`CherryShell` (VxWorks-style Dynamic C Interpreter & Symbol Engine)**：
+   - [**`CherryShell`**](components/cherry_shell/README.md) (VxWorks-style Dynamic C Interpreter & Symbol Engine)：
      - **C 函数即命令（Functions as Commands）**：终端直接以 C 语法调用任意函数并传递参数，实时打印返回值（`value = <dec> = 0x<hex>`）。基于 AAPCS64 实现最高 8 参数（`x0`~`x7`）无缝寄存器调用。
      - **符号与地址双向解析（`addr2sym`）**：运行时支持从内存或异常 PC 指针反查最近符号名称及偏移（如 `vfs_open + 0x18`）。
      - **编译期段导出与动态注册**：支持 `CHERRY_SHELL_EXPORT_SYM` / `CMD` / `VAR` 零侵入宏导出，亦支持运行时动态注册。
@@ -314,7 +321,7 @@ qemu-system-aarch64 \
     -serial stdio
 ```
 
-### 7.2 运行自动化调度器验收测试 (PASS 验证)
+### 7.2 运行自动化调度器验收测试 (pass 验证)
 
 验收测试套件会抓取 QEMU 控制台输出，解析所有的 `[sched-verify]` 状态指标：
 
@@ -328,8 +335,19 @@ make sched-test
 **测试输出示例**：
 ```text
 ==> Running Scheduler Acceptance Test (cores=2, mode=full)...
-[    0.168315] [6:cpu0:sched-mon:20920] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=138
-[SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=2
+[    0.095444] [6:cpu0:sched-mon:20920] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
+[    0.146771] [6:cpu0:sched-mon:20920] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
+[    0.175497] [6:cpu0:sched-mon:20920] cherry_vfs: ==> starting cherryvfs acceptance test suite...
+cherry_vfs: [/dev/console] posix write through cdev successful
+[    0.204259] [6:cpu0:sched-mon:20920] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
+[    0.204763] [6:cpu0:sched-mon:20920] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
+[    0.315926] [6:cpu0:sched-mon:20920] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
+[    0.316911] [6:cpu0:sched-mon:20920] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.317146] [6:cpu0:sched-mon:20920] cherry_shell: starting verification test suite...
+[    0.330134] [6:cpu0:sched-mon:20920]   [[func]] cherry_vfs_init (0x000000004000a044) - initialize complete cherryvfs subsystem
+[    0.335866] [6:cpu0:sched-mon:20920] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
+[    0.336898] [6:cpu0:sched-mon:20920] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=112
+[SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
 scons: done building targets.
 ```
 
@@ -345,8 +363,17 @@ make sched-cross
 **测试输出示例**：
 ```text
 ==> Running Scheduler Acceptance Test (cores=2, mode=cross)...
-[    0.190308] [6:cpu0:sched-mon:19697] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
-[SCHED-TEST] SUMMARY result=pass mode=cross cores=2 markers=2
+[    0.033590] [6:cpu0:sched-mon:19685] [printk-verify] basic=pass multicore=pass irq_safe=pass all=pass
+[    0.066896] [6:cpu0:sched-mon:19685] [timer-verify] standard=pass hrtimer=pass multi_core=pass restart=pass cancel=pass all=pass
+[    0.072394] [6:cpu0:sched-mon:19685] cherry_vfs: ==> starting cherryvfs acceptance test suite...
+cherry_vfs: [/dev/console] posix write through cdev successful
+[    0.083317] [6:cpu0:sched-mon:19685] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
+[    0.083523] [6:cpu0:sched-mon:19685] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
+[    0.173758] [6:cpu0:sched-mon:19685] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
+[    0.174648] [6:cpu0:sched-mon:19685] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.189784] [6:cpu0:sched-mon:19685] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
+[    0.191072] [6:cpu0:sched-mon:19685] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
+[SCHED-TEST] SUMMARY result=pass mode=cross cores=2 markers=1
 scons: done building targets.
 ```
 

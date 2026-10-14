@@ -192,9 +192,9 @@ closedir(dirp);
 测试套件内置于 `components/cherry_vfs/tests/vfs_test.c`，在 QEMU 启动阶段自动运行并打印标准化断言探针：
 
 ```text
-<6>cherry_vfs: ==> Starting CherryVFS Acceptance Test Suite...
-<6>cherry_vfs: [/dev/console] POSIX write through cdev successful
-<6>cherry_vfs: [vfs-verify] pdev=PASS cdev=PASS bdev=PASS ramfs=PASS sock=PASS all=PASS
+[    0.064788] [6:cpu0:sched-mon:20920] cherry_vfs: ==> starting cherryvfs acceptance test suite...
+cherry_vfs: [/dev/console] posix write through cdev successful
+[    0.072995] [6:cpu0:sched-mon:20920] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
 ```
 
 ---
@@ -221,6 +221,6 @@ int vfs_run_stress_tests(int file_count);
 
 ### 自动化测试探针输出：
 ```text
-<6>[vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
-<6>[vfs-stress] hierarchy=PASS batch_files=PASS large_seek_trunc=PASS rename=PASS concurrent_smp=PASS all=PASS
+[    0.073200] [6:cpu0:sched-mon:20920] [vfs-stress] starting large-scale file operation stress tests (batch_files=50)...
+[    0.144413] [6:cpu0:sched-mon:20920] [vfs-stress] hierarchy=pass batch_files=pass large_seek_trunc=pass rename=pass concurrent_smp=pass all=pass
 ```

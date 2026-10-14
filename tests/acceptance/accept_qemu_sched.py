@@ -112,7 +112,7 @@ def process_line(
     if any(marker in line for marker in FAIL_MARKERS):
         sys.stdout.write(line)
         sys.stdout.flush()
-        print(f"[SCHED-TEST] SUMMARY result=FAIL reason=fatal-marker cores={args.cores}")
+        print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
     if "[vfs-verify]" in line or "[vfs-stress]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
@@ -128,7 +128,7 @@ def process_line(
             sys.stdout.write(line)
             sys.stdout.flush()
             print(
-                f"[SCHED-TEST] SUMMARY result=PASS mode={args.mode} "
+                f"[SCHED-TEST] SUMMARY result=pass mode={args.mode} "
                 f"cores={args.cores} markers={len(markers)}"
             )
             return True
@@ -197,7 +197,7 @@ def main() -> int:
 
     reason = "no-marker" if not markers else "condition-not-met"
     print(
-        f"[SCHED-TEST] SUMMARY result=FAIL mode={args.mode} "
+        f"[SCHED-TEST] SUMMARY result=fail mode={args.mode} "
         f"cores={args.cores} markers={len(markers)} reason={reason}"
     )
     if markers:
