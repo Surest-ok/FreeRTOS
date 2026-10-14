@@ -157,12 +157,28 @@ cherry_sdio_lib = env.SConscript(
     exports='env'
 )
 
-# 8. BSP and Target Binary
+# 10. CherryEXT4 Component (Ext4 Filesystem, JBD2 Journaling, mkfs, fsck)
+cherry_ext4_lib = env.SConscript(
+    'components/cherry_ext4/SConscript',
+    variant_dir=f'{build_dir}/cherry_ext4',
+    duplicate=0,
+    exports='env'
+)
+
+# 11. CherryFSTools Component (MBR Partitioning, mount/umount, Core File Utilities)
+cherry_fstools_lib = env.SConscript(
+    'components/cherry_fstools/SConscript',
+    variant_dir=f'{build_dir}/cherry_fstools',
+    duplicate=0,
+    exports='env'
+)
+
+# 12. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib']
 )
 
 

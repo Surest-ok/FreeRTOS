@@ -127,7 +127,7 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
-    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
+    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
         sys.stdout.write(line)
         sys.stdout.flush()
 

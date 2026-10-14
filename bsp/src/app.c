@@ -20,6 +20,10 @@
 #include "pci_test.h"
 #include "cherry_sdio.h"
 #include "sdio_test.h" 
+#include "cherry_ext4.h"
+#include "ext4_test.h"
+#include "cherry_fstools.h"
+#include "fstools_test.h"
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -589,6 +593,10 @@ static void scheduler_monitor(void *arg)
         cherry_pci_run_tests();
         cherry_sdio_init();
         cherry_sdio_run_tests();
+        cherry_ext4_init();
+        cherry_ext4_run_tests();
+        cherry_fstools_init();
+        cherry_fstools_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();
