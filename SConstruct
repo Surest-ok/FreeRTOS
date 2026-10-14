@@ -125,12 +125,28 @@ cherry_shell_lib = env.SConscript(
     exports='env'
 )
 
-# 6. BSP and Target Binary
+# 6. CherryPrintk Component (High-Performance Concurrent Logging Engine)
+cherry_printk_lib = env.SConscript(
+    'components/cherry_printk/SConscript',
+    variant_dir=f'{build_dir}/cherry_printk',
+    duplicate=0,
+    exports='env'
+)
+
+# 7. CherryTimer Component (High-Precision Multi-Core Timer Subsystem)
+cherry_timer_lib = env.SConscript(
+    'components/cherry_timer/SConscript',
+    variant_dir=f'{build_dir}/cherry_timer',
+    duplicate=0,
+    exports='env'
+)
+
+# 8. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib']
 )
 
 

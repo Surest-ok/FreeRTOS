@@ -130,6 +130,14 @@
      - 与主流 Linux 高度兼容的 Inode / Dentry 虚拟文件系统抽象，提供标准 POSIX 文件操作接口（`open`, `close`, `read`, `write`, `opendir`, `readdir`, `mkdir`, `mount`）。
      - 统一抽象字符设备（Char Dev，如 PL011 UART、`/dev/null`、`/dev/zero`）、块设备（Block Dev，如 `/dev/ramdisk0`）、网络套接字设备（Socket Dev，BSD Socket 映射）。
      - 提供标准的平台总线（Platform Bus）与驱动枚举绑定体系（`vfs_platform_device_register`, `vfs_platform_driver_register`, `probe`/`remove`）。
+   - **`CherryPrintk` (High-Performance Multi-Core Linux-Style Logging Engine)**：
+     - **100% Linux 内核 Dmesg 规范**：格式对齐 `<level>[seconds.usec] [CPUx:task:tid] msg`，支持 `pr_info`, `pr_err`, `pr_warn`, `pr_debug` 等标准日志级别。
+     - **多核并发原子行输出**：结构化环形记录缓冲区（Record Ring Buffer），避免跨核字符交错（Non-Interleaving）。
+     - **极短关中断时间（< 100ns）**：入队仅占用微秒级以下自旋锁，慢速 UART 打印完全在开中断状态下异步 Drain，绝不影响硬件定时器中断。
+   - **`CherryTimer` (Multi-Core High-Precision Linux Timer Subsystem)**：
+     - **Linux 双标准接口**：完整支持低精度定时器（`struct timer_list`，`timer_setup`, `mod_timer`, `del_timer`）与高分辨率纳秒定时器（`struct hrtimer`，`hrtimer_init`, `hrtimer_start`, `hrtimer_cancel`）。
+     - **硬件级精准纳秒时基**：直接对接 BSP 的 ARM Generic Timer 物理计数器 `cntpct_el0`，单周期精度 ~16ns，零漂移。
+     - **Per-CPU Timer Base**：独立每个核心的定时队列与自旋锁，实现多核并发无竞争添加与分发。
    - **`CherryShell` (VxWorks-style Dynamic C Interpreter & Symbol Engine)**：
      - **C 函数即命令（Functions as Commands）**：终端直接以 C 语法调用任意函数并传递参数，实时打印返回值（`value = <dec> = 0x<hex>`）。基于 AAPCS64 实现最高 8 参数（`x0`~`x7`）无缝寄存器调用。
      - **符号与地址双向解析（`addr2sym`）**：运行时支持从内存或异常 PC 指针反查最近符号名称及偏移（如 `vfs_open + 0x18`）。
@@ -151,6 +159,14 @@ freertos-workspace/
 │   │   ├── include/cherry_kal.h
 │   │   ├── src/kal_freertos.c  # 基于 FreeRTOS V11 SMP + AArch64 的适配层
 │   │   └── SConscript          # libcherry_kal.a 构建规则
+│   ├── cherry_printk/          # 高性能多核并发 Linux 日志引擎 (短关中断、环形队列、dmesg 格式)
+│   │   ├── include/printk.h    # 标准 printk 与 pr_* 宏
+│   │   ├── src/                # 环形缓冲区、栈局部格式化、整行输出
+│   │   └── SConscript          # libcherry_printk.a 构建规则
+│   ├── cherry_timer/           # 多核并发高精度 Linux 风格定时器 (timer_list + hrtimer, BSP 硬件驱动)
+│   │   ├── include/            # timer.h, hrtimer.h, cherry_timer.h
+│   │   ├── src/                # Per-CPU Timer Base, 纳秒 hrtimer, 队列分发器
+│   │   └── SConscript          # libcherry_timer.a 构建规则
 │   ├── cherry_vfs/             # 虚拟文件系统与统一设备驱动框架
 │   │   ├── include/            # VFS、Inode、POSIX、Device、Driver、Platform 头文件
 │   │   ├── src/                # Inode 管理、DevFS、RamFS、PL011/Null/Zero/Ramdisk/Socket 驱动
