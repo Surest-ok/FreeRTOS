@@ -22,6 +22,7 @@
     .extern ulPortInterruptNestings
     .extern ulPortTaskHasFPUContexts
     .extern ulPortYieldRequireds
+    .extern xPortCheckAndResetYield
 #if ( configPORT_SMP_DIAGNOSTICS == 1 )
     .extern ullPortSvcEntries
     .extern ullPortSvcExits
@@ -420,22 +421,11 @@ FreeRTOS_IRQ_Handler:
     CMP     X1, #0
     B.NE    Exit_IRQ_No_Context_Switch
 
-    /* Is a context switch required? (per-core yield flag) */
+    /* Is a context switch required? (per-core yield flag & critical nesting) */
     GET_CORE_ID  X0
-    LDR     X6, =ulPortYieldRequireds
-    LDR     X1, [X6, X0, LSL #3]     /* ulPortYieldRequireds[core_id] */
-    CMP     X1, #0
+    BL      xPortCheckAndResetYield
+    CMP     X0, #0
     B.EQ    Exit_IRQ_No_Context_Switch
-
-    /* Reset yield flag for this core */
-    MOV     X2, #0
-    STR     X2, [X6, X0, LSL #3]
-#if ( configPORT_SMP_DIAGNOSTICS == 1 )
-    LDR     X6, =ullPortIrqSwitches
-    LDR     X1, [X6, X0, LSL #3]
-    ADD     X1, X1, #1
-    STR     X1, [X6, X0, LSL #3]
-#endif
 
     /* Restore volatile registers before context switch */
     LDP     X4, X5, [SP], #0x10       /* SPSR and ELR */

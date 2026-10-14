@@ -74,5 +74,6 @@ extern void vPortClearInterruptMask(unsigned long uxNewMaskValue);
 extern unsigned long ulPortInterruptNestings[];
 extern unsigned long ulPortYieldRequireds[];
 extern unsigned long ulPortTaskHasFPUContexts[];
+extern long xPortCheckAndResetYield(unsigned int core_id);
 
 #endif /* PORT_SMP_H */

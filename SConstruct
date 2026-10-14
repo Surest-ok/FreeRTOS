@@ -181,12 +181,36 @@ cherry_net_lib = env.SConscript(
     exports='env'
 )
 
-# 13. BSP and Target Binary
+# 13. CherryNVMe Component (PCIe NVMe 1.4+ Storage Controller Subsystem)
+cherry_nvme_lib = env.SConscript(
+    'components/cherry_nvme/SConscript',
+    variant_dir=f'{build_dir}/cherry_nvme',
+    duplicate=0,
+    exports='env'
+)
+
+# 14. CherryAHCI Component (SATA AHCI 1.3+ Controller & Disk Subsystem)
+cherry_ahci_lib = env.SConscript(
+    'components/cherry_ahci/SConscript',
+    variant_dir=f'{build_dir}/cherry_ahci',
+    duplicate=0,
+    exports='env'
+)
+
+# 15. CherryUSBD Component (USB 2.0/3.0 Device Stack, CDC-ACM, MSC, HID & VUDC)
+cherry_usbd_lib = env.SConscript(
+    'components/cherry_usbd/SConscript',
+    variant_dir=f'{build_dir}/cherry_usbd',
+    duplicate=0,
+    exports='env'
+)
+
+# 16. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib']
 )
 
 
@@ -200,6 +224,8 @@ env.Alias('all', [elf_target, bin_target])
 # QEMU Execution
 qemu_cmd = (
     f"truncate -s 64M build/test_sd.img 2>/dev/null || true && "
+    f"truncate -s 64M build/test_nvme.img 2>/dev/null || true && "
+    f"truncate -s 64M build/test_sata.img 2>/dev/null || true && "
     f"qemu-system-aarch64 "
     f"-machine virt,gic-version=3,its=on "
     f"-cpu cortex-a53 "
@@ -210,6 +236,11 @@ qemu_cmd = (
     f"-device sd-card,drive=sd0 "
     f"-netdev user,id=net0 "
     f"-device virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56 "
+    f"-drive if=none,id=nvme0,file=build/test_nvme.img,format=raw "
+    f"-device nvme,drive=nvme0,serial=nvme_disk_0 "
+    f"-device ich9-ahci,id=ahci0 "
+    f"-drive if=none,id=sata0,file=build/test_sata.img,format=raw "
+    f"-device ide-hd,drive=sata0,bus=ahci0.0 "
     f"-kernel {elf_target[0].abspath} "
     f"-nographic -monitor none -serial stdio"
 )
