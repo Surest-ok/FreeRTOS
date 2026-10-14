@@ -4,7 +4,7 @@
 [![Standard: Linux-Style](https://img.shields.io/badge/API-Linux--Style%20Kernel%20Primitives-orange.svg)]()
 [![SMP: Multicore](https://img.shields.io/badge/SMP-Multicore%20Safe-blue.svg)]()
 
-`CherryKAL` 是为嵌入式和实时操作系统（RTOS）设计的**现代化、小而美、标准化**的内核抽象层（Kernel Abstraction Layer / OSAL）。它严格遵循 Linux 内核编程规范与命名习惯（`kal_mutex_*`, `kal_sem_*`, `kal_spin_*`, `kal_thread_*`, `kal_malloc`/`free`, `kal_atomic_*`），将上层组件（如 `CherryVFS`, `CherryShell`）与底层具体 RTOS（如 FreeRTOS SMP、ThreadX、RT-Thread、Zephyr 或 Bare-metal）完全解耦。
+`CherryKAL` 是为嵌入式和实时操作系统（RTOS）设计的**现代化、小而美、标准化**的内核抽象层（Kernel Abstraction Layer / OSAL）。它严格遵循 Linux 内核编程规范与命名习惯（`kal_mutex_*`, `kal_sem_*`, `kal_spin_*`, `kal_thread_*`, `kal_malloc`/`free`, `kal_atomic_*`），将上层组件（如 `CherryVFS`, `CherryShell`, `CherryTimer`, `CherryPrintk`）与底层具体 RTOS（如 FreeRTOS SMP、ThreadX、RT-Thread、Zephyr 或 Bare-metal）完全解耦。
 
 ---
 
@@ -25,7 +25,7 @@
 
 `CherryKAL` 提供与 Linux 内核头文件完全一致的数据结构与函数命名规范，无需任何自定义前缀：
 
-### 1. 标准日志级别与 printk（Linux Printk & Log Levels）
+### 1. 标准日志级别与 printk（Linux Printk & Log Levels，底层由 CherryPrintk 驱动）
 ```c
 int printk(const char *fmt, ...);
 

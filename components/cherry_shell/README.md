@@ -110,10 +110,11 @@ cherry_shell_register_symbol("ktime_get_ms", (uintptr_t)ktime_get_ms, CHERRY_SHE
 
 在 QEMU 模拟器上的启动验证输出：
 ```
-<6>cherry_vfs: [vfs-verify] pdev=PASS cdev=PASS bdev=PASS ramfs=PASS sock=PASS all=PASS
-<6>cherry_shell: initialized with VxWorks C-function call & addr2sym engine
-<6>cherry_shell: starting verification test suite...
-<6>cherry_shell: [shell-verify] syms=PASS addr2sym=PASS c_func=PASS sum8=PASS str=PASS cmds=PASS all=PASS
-<6>[    0.000000] freertos: [sched-verify] active=PASS idle=PASS affinity=PASS coverage=PASS progress=PASS prio=PASS rr=PASS sem=PASS queue=PASS mutex=PASS spin=PASS cores=2 seen=0x3 missing=0x0 hb0=1 hb1=28
-[SCHED-TEST] SUMMARY result=PASS mode=full cores=2 markers=1
+[    0.072995] [6:cpu0:sched-mon:20920] cherry_vfs: [vfs-verify] pdev=pass cdev=pass bdev=pass ramfs=pass sock=pass all=pass
+[    0.145298] [6:cpu0:sched-mon:20920] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.145553] [6:cpu0:sched-mon:20920] cherry_shell: starting verification test suite...
+[    0.156382] [6:cpu0:sched-mon:20920]   [[func]] cherry_vfs_init (0x000000004000a044) - initialize complete cherryvfs subsystem
+[    0.160910] [6:cpu0:sched-mon:20920] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
+[    0.161845] [6:cpu0:sched-mon:20920] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=138
+[SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
 ```
