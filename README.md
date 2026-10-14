@@ -8,7 +8,7 @@
 
 本项目是一个基于 **FreeRTOS SMP (Symmetric Multiprocessing)** 的标准、高可靠、完全可复现的 64 位对称多核实时操作系统（RTOS）基准环境。项目以 **ARMv8-A (AArch64, Cortex-A53)** 架构与 **QEMU virt (GICv3)** 为目标硬件平台，提供工业级的体系结构抽象层（`arch`）、标准化的 FreeRTOS 多核调度扩展（`kernel`）、完整的板级支持包（`bsp`）以及现代化的 **SCons** 构建体系。
 
-项目经过深度清理与架构重构，移除了异构 RTOS（LK / ThreadX 等）干扰，沉淀为一套纯净、自包含、生产可用的 FreeRTOS SMP 操作系统基准。
+项目经过深度清理与架构重构，可以作为一套纯净、自包含、生产可用的 FreeRTOS SMP 操作系统基准。
 
 ---
 
