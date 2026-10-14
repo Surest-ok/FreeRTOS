@@ -115,8 +115,13 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=FAIL reason=fatal-marker cores={args.cores}")
         return False
 
+    if "[vfs-verify]" in line:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+
     expected_marker = XSYNC_MARKER if args.mode.startswith("cross") else SCHED_MARKER
     if expected_marker in line:
+
         markers.append(line.rstrip())
         fields = parse_marker(line)
         if marker_passes(fields, args.mode):

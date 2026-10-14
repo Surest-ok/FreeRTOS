@@ -6,7 +6,7 @@ Builds freertos_smp.elf and freertos_smp.bin
 from SCons.Script import *
 from arch.rules import setup_linker_rules
 
-Import('env', 'kernel_lib')
+Import('env', 'kernel_lib', 'cherry_vfs_lib')
 
 bsp_env = env.Clone()
 
@@ -16,6 +16,8 @@ setup_linker_rules(bsp_env, '#bsp/linker.ld')
 # BSP include search paths
 bsp_env.Append(CPPPATH=[
     '#bsp/include',
+    '#components/cherry_vfs/include',
+    '#components/cherry_vfs/tests',
     '#include',
     '#kernel/include',
     '#kernel/portable/GCC/ARM_AARCH64_SRE',
@@ -38,11 +40,12 @@ bsp_sources = [
 
 bsp_objs = bsp_env.Object(bsp_sources)
 
-# Link ELF image with kernel library and libgcc
+# Link ELF image with kernel library, CherryVFS library and libgcc
 elf_target = bsp_env.Program(
     target='freertos_smp.elf',
-    source=bsp_objs + [kernel_lib]
+    source=bsp_objs + [kernel_lib, cherry_vfs_lib]
 )
+
 
 # Generate raw binary image
 bin_target = bsp_env.Command(
