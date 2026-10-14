@@ -159,3 +159,30 @@ char *strstr(const char *haystack, const char *needle)
     }
     return NULL;
 }
+
+char *strcat(char *dest, const char *src)
+{
+    char *ret = dest;
+    if (!dest || !src) return dest;
+    while (*dest) {
+        dest++;
+    }
+    while ((*dest++ = *src++))
+        ;
+    return ret;
+}
+
+char *strncat(char *dest, const char *src, size_t n)
+{
+    char *ret = dest;
+    if (!dest || !src || n == 0) return dest;
+    while (*dest) {
+        dest++;
+    }
+    while (n && *src) {
+        *dest++ = *src++;
+        n--;
+    }
+    *dest = '\0';
+    return ret;
+}

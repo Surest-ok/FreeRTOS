@@ -150,6 +150,24 @@
      - **符号与地址双向解析（`addr2sym`）**：运行时支持从内存或异常 PC 指针反查最近符号名称及偏移（如 `vfs_open + 0x18`）。
      - **编译期段导出与动态注册**：支持 `CHERRY_SHELL_EXPORT_SYM` / `CMD` / `VAR` 零侵入宏导出，亦支持运行时动态注册。
      - 内置丰富的系统级指令：`help`, `syms`, `addr2sym`, `ls`, `cat`, `mkdir`, `touch`, `ps`, `echo`。
+   - [**`CherryPCI`**](components/cherry_pci/README.md) (PCIe Subsystem & ARM GICv3 ITS MSI/LPI Engine)：
+     - **标准 PCIe ECAM 枚举**：支持 PCIe ECAM 增强配置访问机制，自动扫描总线、设备与功能，解析配置空间（Vendor/Device ID, Class Code, BARs, Capabilities）。
+     - **GICv3 ITS 中断虚拟化**：实现 ARM GICv3 ITS（Interrupt Translation Service）环形命令队列驱动（`MAPD`, `MAPTI`, `SYNC`），配置 Device Table、Interrupt Translation Table (ITT) 与 LPI 配置/挂起表，为 PCIe 外设提供现代化的 MSI/MSI-X 消息中断。
+     - **BAR 动态分配与 Shell 导出**：提供 32 位 MMIO BAR 资源分配器，并导出 `pci_ls`、`pci_read_config` 等诊断指令与 C 符号。
+   - [**`CherrySDIO`**](components/cherry_sdio/README.md) (SD / SDIO / MMC / eMMC Protocol Stack & Block Driver)：
+     - **SDHCI 标准主机控制器**：支持基于 PCIe 与 MMIO 的 SDHCI 寄存器接口（4.x+ 规范），管理供电、时钟分频、总线位宽与中断事件。
+     - **完整卡识别状态机**：支持 CMD0 (Reset)、CMD8 (Voltage Check)、ACMD41 (OCR 协商/高容量 SDHC 探测)、CMD2 (CID 解析)、CMD3 (RCA 分配)、CMD9 (CSD 容量计算) 与 CMD7 (Select Card)。
+     - **CherryVFS 块设备无缝对接**：完成枚举后自动向 CherryVFS 注册 `/dev/mmcblk0`（512 字节扇区，支持大容量扇区读写与同步落盘）。
+   - [**`CherryEXT4`**](components/cherry_ext4/README.md) (Linux Ext4 Filesystem & JBD2 Journaling Engine)：
+     - **标准 Ext4 磁盘格式**：支持超级块（`0xEF53`）、块组描述符（GDT）、块/Inode 位图、Inode 表及标准 Ext4 Extents 区段树（`0xF30A`）。
+     - **JBD2 事务日志引擎**：支持事务上下文（`jbd2_trans_start`, `jbd2_trans_commit`）、Descriptor 块、数据日志环、Commit 块（`0xC03B3998`）、检查点与开机/挂载前日志恢复重放（`jbd2_replay`），确保掉电元数据零损坏。
+     - **格式化与自检工具**：内置 `ext4_mkfs` (`mkfs.ext4`) 格式化工具与 `ext4_fsck` (`fsck.ext4`) 深度一致性检查修复器。
+     - **VFS 原生驱动**：注册为标准 `"ext4"` 文件系统类型，支持透明 POSIX 挂载与文件读写。
+   - [**`CherryFSTools`**](components/cherry_fstools/README.md) (Disk Partitioning, Mount Management & Core File Utilities)：
+     - **MBR 磁盘分区管理**：支持扇区 0 MBR（`0xAA55`）分区表解析与创建（`fdisk`, `part_create`），支持 4 主分区与 Linux Native（`0x83`）等标准类型。
+     - **分区子块设备虚拟化**：自动将分区映射并注册为独立虚拟块设备（如 `/dev/mmcblk0p1`），提供 LBA 偏置重定向与严格边界越界防护。
+     - **挂载与卸载引擎**：提供 `mount` 与 `umount` 标准文件系统挂载管理器。
+     - **Linux 风格核心文件实用工具**：提供 `ls`（带类型、Inode与名称格式化输出）、`cat`、`cp`、`mv`、`rm`（文件与目录自适应）、`mkdir`（内置 `mkdior` 别名）、`echo`（原生支持 `>` 覆盖与 `>>` 追加重定向）、`mkfs` 与 `fsck` 命令行工具及 C API。
 
 ---
 
@@ -189,11 +207,21 @@ freertos-workspace/
 │   │   ├── src/                # 总线扫描、BAR 分配器、ITS 命令队列驱动、MSI 绑定、pci_ls 指令
 │   │   ├── tests/              # PCIe 自动化验收测试套件 (pci_test.c)
 │   │   └── SConscript          # libcherry_pci.a 构建规则
-│   └── cherry_sdio/            # SD / SDIO / MMC / eMMC 协议栈与 CherryVFS 块设备
-│       ├── include/            # SDHCI 寄存器、SD 协议规范头文件
-│       ├── src/                # SDHCI 主机驱动、卡识别状态机、PCI 驱动适配、/dev/mmcblk0 桥接
-│       ├── tests/              # SD/eMMC 读写自动化验收测试套件 (sdio_test.c)
-│       └── SConscript          # libcherry_sdio.a 构建规则
+│   ├── cherry_sdio/            # SD / SDIO / MMC / eMMC 协议栈与 CherryVFS 块设备
+│   │   ├── include/            # SDHCI 寄存器、SD 协议规范头文件
+│   │   ├── src/                # SDHCI 主机驱动、卡识别状态机、PCI 驱动适配、/dev/mmcblk0 桥接
+│   │   ├── tests/              # SD/eMMC 读写自动化验收测试套件 (sdio_test.c)
+│   │   └── SConscript          # libcherry_sdio.a 构建规则
+│   ├── cherry_ext4/            # Linux Ext4 文件系统与 JBD2 事务日志引擎
+│   │   ├── include/            # Ext4 磁盘结构 (ext4_types.h), JBD2 规范 (ext4_jbd2.h)
+│   │   ├── src/                # 磁盘超级块、位图分配器、Extents 树、目录解析、JBD2 事务、mkfs、fsck、VFS 驱动
+│   │   ├── tests/              # Ext4 读写、事务与自检自动化测试套件 (ext4_test.c)
+│   │   └── SConscript          # libcherry_ext4.a 构建规则
+│   └── cherry_fstools/         # MBR 磁盘分区工具、挂载管理与核心文件命令集
+│       ├── include/            # MBR 规范 (mbr.h)、分区抽象 (fdisk.h)
+│       ├── src/                # MBR 读写、/dev/mmcblk0p1 子块设备虚拟化、mount/umount、ls/cat/cp/mv/rm/mkdir/echo
+│       ├── tests/              # 分区、挂载、文件操作验收测试套件 (fstools_test.c)
+│       └── SConscript          # libcherry_fstools.a 构建规则
 ├── arch/                       # 体系结构抽象层
 │   ├── rules.py                # 通用 AArch64 编译规则与工具链初始化
 │   ├── SConscript              # arch 静态对象构建脚本
@@ -360,7 +388,9 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.189699] [6:cpu0:sched-mon:60111] cherry_sdio: csd parsed: capacity=64 mb, sectors=131072, blksize=512
 [    0.190117] [6:cpu0:sched-mon:60111] cherry_sdio: registered block device /dev/mmcblk0 (131072 sectors, 512b/sector)
 [    0.194767] [6:cpu0:sched-mon:60111] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
-[    0.195332] [6:cpu0:sched-mon:60111] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.376756] [6:cpu0:sched-mon:64207] cherry_ext4: [ext4-verify] mkfs=pass fsck=pass mount=pass file_io=pass dir_ops=pass journal=pass umount=pass all=pass
+[    0.570997] [6:cpu0:sched-mon:64207] cherry_fstools: [fstools-verify] fdisk=pass part_bdev=pass mkfs=pass mount=pass echo_cat=pass cp_mv=pass ls_rm=pass umount=pass all=pass
+[    0.571926] [6:cpu0:sched-mon:64207] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.215410] [6:cpu0:sched-mon:60111] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
 [    0.216483] [6:cpu0:sched-mon:60111] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=173
 [SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
@@ -393,7 +423,9 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.200213] [6:cpu0:sched-mon:58869] cherry_sdio: csd parsed: capacity=64 mb, sectors=131072, blksize=512
 [    0.200897] [6:cpu0:sched-mon:58869] cherry_sdio: registered block device /dev/mmcblk0 (131072 sectors, 512b/sector)
 [    0.205436] [6:cpu0:sched-mon:58869] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
-[    0.206180] [6:cpu0:sched-mon:58869] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.363385] [6:cpu0:sched-mon:62965] cherry_ext4: [ext4-verify] mkfs=pass fsck=pass mount=pass file_io=pass dir_ops=pass journal=pass umount=pass all=pass
+[    0.563920] [6:cpu0:sched-mon:62965] cherry_fstools: [fstools-verify] fdisk=pass part_bdev=pass mkfs=pass mount=pass echo_cat=pass cp_mv=pass ls_rm=pass umount=pass all=pass
+[    0.564911] [6:cpu0:sched-mon:62965] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.221261] [6:cpu0:sched-mon:58869] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
 [    0.222377] [6:cpu0:sched-mon:58869] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0
 [SCHED-TEST] SUMMARY result=pass mode=cross cores=2 markers=1
