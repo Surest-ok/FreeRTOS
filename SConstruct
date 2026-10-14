@@ -101,13 +101,22 @@ kernel_lib = env.SConscript(
     exports=['env', 'arch_objs']
 )
 
-# 3. BSP and Target Binary
+# 3. CherryVFS Component (Virtual File System & Device Driver Framework)
+cherry_vfs_lib = env.SConscript(
+    'components/cherry_vfs/SConscript',
+    variant_dir=f'{build_dir}/cherry_vfs',
+    duplicate=0,
+    exports='env'
+)
+
+# 4. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib']
+    exports=['env', 'kernel_lib', 'cherry_vfs_lib']
 )
+
 
 # Default build targets
 Default([elf_target, bin_target])

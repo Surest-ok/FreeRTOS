@@ -7,11 +7,14 @@
 #include "port_smp.h"
 #include "uart.h"
 #include "ukernel.h"
+#include "cherry_vfs.h"
+#include "vfs_test.h"
 
 #define APP_WORKER_STACK_WORDS  256
-#define APP_MONITOR_STACK_WORDS 512
+#define APP_MONITOR_STACK_WORDS 2048
 #define APP_PROBE_STACK_WORDS   512
 #define APP_PROBE_ITERATIONS    16U
+
 
 #ifndef APP_ENABLE_CROSS_CORE_STRESS
 #define APP_ENABLE_CROSS_CORE_STRESS 0
@@ -557,7 +560,15 @@ static void scheduler_monitor(void *arg)
     uint64_t last_hb0 = 0;
     uint64_t expected = expected_core_mask(boot->cores);
 
+    static int s_vfs_tested = 0;
+    if (!s_vfs_tested) {
+        s_vfs_tested = 1;
+        cherry_vfs_init();
+        cherry_vfs_run_tests();
+    }
+
     for (;;) {
+
         if (__atomic_exchange_n(&g_secondary_cores_woken, 1U, __ATOMIC_ACQ_REL) == 0U) {
             ukernel_wake_secondary_cores();
         }
