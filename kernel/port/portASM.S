@@ -34,6 +34,7 @@
     .extern ullPortIrqSwitches
 #endif
     .extern _freertos_vector_table
+    .extern cherry_syscall_dispatch_trap
 
     .global FreeRTOS_IRQ_Handler
     .global FreeRTOS_SWI_Handler
@@ -273,6 +274,81 @@ FreeRTOS_SWI_Handler:
     B       FreeRTOS_Abort
 
 1:
+    /* Check SVC immediate:
+     * imm16 == 0  -> Linux POSIX system call (from glibc / musl / BusyBox ELF)
+     * imm16 != 0  -> FreeRTOS internal task yield (portYIELD)
+     */
+    AND     X17, X16, #0xFFFF
+    CBNZ    X17, 2f
+
+    /* =========================================================================
+     * Linux AArch64 System Call Trap Handler (SVC #0)
+     * ========================================================================= */
+    LDP     X16, X17, [SP], #0x10       /* Restore original X16, X17 */
+
+    SUB     SP, SP, #0x110
+    STP     X0,  X1,  [SP, #0x00]
+    STP     X2,  X3,  [SP, #0x10]
+    STP     X4,  X5,  [SP, #0x20]
+    STP     X6,  X7,  [SP, #0x30]
+    STP     X8,  X9,  [SP, #0x40]
+    STP     X10, X11, [SP, #0x50]
+    STP     X12, X13, [SP, #0x60]
+    STP     X14, X15, [SP, #0x70]
+    STP     X16, X17, [SP, #0x80]
+    STP     X18, X19, [SP, #0x90]
+    STP     X20, X21, [SP, #0xA0]
+    STP     X22, X23, [SP, #0xB0]
+    STP     X24, X25, [SP, #0xC0]
+    STP     X26, X27, [SP, #0xD0]
+    STP     X28, X29, [SP, #0xE0]
+    STR     X30,      [SP, #0xF0]
+
+    ADD     X0,  SP,  #0x110
+    STR     X0,       [SP, #0xF8]       /* sp */
+
+    MRS     X16, ELR_EL1
+    MRS     X17, SPSR_EL1
+    STP     X16, X17, [SP, #0x100]      /* pc, pstate */
+
+    /* Pass struct syscall_frame * in X0 */
+    MOV     X0, SP
+
+    /* Enable interrupts during syscall execution */
+    MSR     DAIFCLR, #2
+
+    BL      cherry_syscall_dispatch_trap
+
+    /* Disable interrupts for context restore */
+    MSR     DAIFSET, #2
+
+    /* Restore exception state */
+    LDP     X16, X17, [SP, #0x100]
+    MSR     ELR_EL1, X16
+    MSR     SPSR_EL1, X17
+
+    /* Restore general purpose registers */
+    LDR     X30,      [SP, #0xF0]
+    LDP     X28, X29, [SP, #0xE0]
+    LDP     X26, X27, [SP, #0xD0]
+    LDP     X24, X25, [SP, #0xC0]
+    LDP     X22, X23, [SP, #0xB0]
+    LDP     X20, X21, [SP, #0xA0]
+    LDP     X18, X19, [SP, #0x90]
+    LDP     X16, X17, [SP, #0x80]
+    LDP     X14, X15, [SP, #0x70]
+    LDP     X12, X13, [SP, #0x60]
+    LDP     X10, X11, [SP, #0x50]
+    LDP     X8,  X9,  [SP, #0x40]
+    LDP     X6,  X7,  [SP, #0x30]
+    LDP     X4,  X5,  [SP, #0x20]
+    LDP     X2,  X3,  [SP, #0x10]
+    LDP     X0,  X1,  [SP, #0x00]
+    ADD     SP, SP, #0x110
+
+    ERET
+
+2:
     LDP     X16, X17, [SP], #0x10
 
     /* Save the context of the current task and select a new task. */
