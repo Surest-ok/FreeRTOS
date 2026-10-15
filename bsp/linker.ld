@@ -15,7 +15,7 @@ SECTIONS
         *(.bss*) *(COMMON)
         . = ALIGN(16);
         ucHeap = .;
-        . = . + (2048 * 1024);
+        . = . + (16384 * 1024);
         __bss_end = .;
     }
     .stack (NOLOAD) : { . = ALIGN(16); stack_top = .; . = . + (8192 * 32); }

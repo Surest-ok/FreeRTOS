@@ -47,7 +47,7 @@
 #define configUSE_APPLICATION_TASK_TAG           0
 #define configSUPPORT_STATIC_ALLOCATION          0
 #define configSUPPORT_DYNAMIC_ALLOCATION         1
-#define configTOTAL_HEAP_SIZE                    ((size_t)(2048 * 1024))
+#define configTOTAL_HEAP_SIZE                    ((size_t)(16384 * 1024))
 #define configAPPLICATION_ALLOCATED_HEAP         1
 #define configHEAP_CLEAR_MEMORY_ON_FREE          0
 #define configUSE_TASK_FPU_SUPPORT               1
