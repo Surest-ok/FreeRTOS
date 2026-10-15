@@ -1,0 +1,39 @@
+[submodule "components/cherry_printk"]
+	path = components/cherry_printk
+	url = https://github.com/Surest-ok/cherry_printk.git
+[submodule "components/cherry_ahci"]
+	path = components/cherry_ahci
+	url = https://github.com/Surest-ok/cherry_ahci.git
+[submodule "components/cherry_ext4"]
+	path = components/cherry_ext4
+	url = https://github.com/Surest-ok/cherry_ext4.git
+[submodule "components/cherry_fstools"]
+	path = components/cherry_fstools
+	url = https://github.com/Surest-ok/cherry_fs.git
+[submodule "components/cherry_kal"]
+	path = components/cherry_kal
+	url = https://github.com/Surest-ok/cherry_kal.git
+[submodule "components/cherry_net"]
+	path = components/cherry_net
+	url = https://github.com/Surest-ok/cherry_net.git
+[submodule "components/cherry_nvme"]
+	path = components/cherry_nvme
+	url = https://github.com/Surest-ok/cherry_nvme.git
+[submodule "components/cherry_pci"]
+	path = components/cherry_pci
+	url = https://github.com/Surest-ok/cherry_pci.git
+[submodule "components/cherry_process"]
+	path = components/cherry_process
+	url = https://github.com/Surest-ok/cherry_process.git
+[submodule "components/cherry_sdio"]
+	path = components/cherry_sdio
+	url = https://github.com/Surest-ok/cherry_sdio.git
+[submodule "components/cherry_shell"]
+	path = components/cherry_shell
+	url = https://github.com/Surest-ok/cherry_shell.git
+[submodule "components/cherry_timer"]
+	path = components/cherry_timer
+	url = https://github.com/Surest-ok/cherry_timer.git
+[submodule "components/cherry_vfs"]
+	path = components/cherry_vfs
+	url = https://github.com/Surest-ok/cherry_vfs.git
