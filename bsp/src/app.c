@@ -1,3 +1,5 @@
+extern int cherry_ebpf_init(void);
+extern int cherry_ebpf_run_tests(void);
 extern int cherry_kmod_init(void);
 extern int cherry_kmod_run_tests(void);
 #include <stdint.h>
@@ -617,6 +619,8 @@ static void scheduler_monitor(void *arg)
         cherry_process_run_tests();
         cherry_kmod_init();
         cherry_kmod_run_tests();
+        cherry_ebpf_init();
+        cherry_ebpf_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();

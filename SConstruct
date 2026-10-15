@@ -226,12 +226,20 @@ cherry_kmod_lib = env.SConscript(
     exports='env'
 )
 
+# 18. CherryEBPF Component (eBPF VM, Verifier, Maps & Tracepoint Subsystem)
+cherry_ebpf_lib = env.SConscript(
+    'components/cherry_ebpf/SConscript',
+    variant_dir=f'{build_dir}/cherry_ebpf',
+    duplicate=0,
+    exports='env'
+)
+
 # 17. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib', 'cherry_ebpf_lib']
 )
 
 

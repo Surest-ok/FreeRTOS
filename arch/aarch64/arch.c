@@ -123,15 +123,21 @@ int arch_irq_dispatch(uint32_t vector)
     return 0;
 }
 
+__attribute__((weak)) void cherry_trace_irq_enter(uint32_t irq, uint32_t cpu) { (void)irq; (void)cpu; }
+__attribute__((weak)) void cherry_trace_irq_exit(uint32_t irq, uint32_t cpu, int handled) { (void)irq; (void)cpu; (void)handled; }
+__attribute__((weak)) void cherry_trace_sched_switch_hook(void) {}
+
 void arch_irq_note_enter(uint32_t vector, uint32_t cpu)
 {
     __atomic_fetch_add(&g_irq_stats.entries, 1U, __ATOMIC_RELAXED);
     __atomic_store_n(&g_irq_stats.last_vector, vector, __ATOMIC_RELAXED);
     __atomic_store_n(&g_irq_stats.last_cpu, cpu, __ATOMIC_RELAXED);
+    cherry_trace_irq_enter(vector, cpu);
 }
 
 void arch_irq_note_exit(uint32_t vector, uint32_t cpu, int handled)
 {
+    cherry_trace_irq_exit(vector, cpu, handled);
     (void)vector;
     (void)cpu;
 
