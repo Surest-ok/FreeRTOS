@@ -9,6 +9,12 @@ SECTIONS
         KEEP(*(SORT(.cherry_shell_sym*)))
         __cherry_shell_sym_end = .;
     }
+    .ksymtab : {
+        . = ALIGN(8);
+        __ksymtab_start = .;
+        KEEP(*(SORT(__ksymtab*)))
+        __ksymtab_end = .;
+    }
     .data : { *(.data*) }
     .bss : {
         __bss_start = .;

@@ -52,7 +52,17 @@
 #define portSP_ELx   ( ( StackType_t ) 0x01 )
 #define portSP_EL0   ( ( StackType_t ) 0x00 )
 #define portEL1      ( ( StackType_t ) 0x04 )
-#define portINITIAL_PSTATE  ( portEL1 | portSP_EL0 )  /* GUEST mode */
+#define portEL2      ( ( StackType_t ) 0x08 )
+
+static inline StackType_t port_get_initial_pstate(void)
+{
+    uint64_t current_el;
+    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
+    if (((current_el >> 2) & 0x3) == 2) {
+        return (StackType_t)(portEL2 | portSP_EL0);
+    }
+    return (StackType_t)(portEL1 | portSP_EL0);
+}
 
 #define portAPSR_MODE_BITS_MASK  ( 0x0C )
 #define portDAIF_I               ( 0x80 )
@@ -172,9 +182,9 @@ StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack,
     pxTopOfStack--;
     *pxTopOfStack = (StackType_t)0x00;            /* X30 (LR) */
 
-    /* SPSR_EL1 and ELR_EL1 */
+    /* SPSR and ELR */
     pxTopOfStack--;
-    *pxTopOfStack = portINITIAL_PSTATE;           /* SPSR */
+    *pxTopOfStack = port_get_initial_pstate();    /* SPSR */
     pxTopOfStack--;
     *pxTopOfStack = (StackType_t)pxCode;          /* ELR (task entry) */
 
@@ -201,9 +211,9 @@ BaseType_t xPortStartScheduler(void)
     __asm__ volatile("MRS %0, CurrentEL" : "=r"(ulAPSR));
     ulAPSR &= portAPSR_MODE_BITS_MASK;
 
-    configASSERT(ulAPSR == portEL1);
+    configASSERT((ulAPSR == portEL1) || (ulAPSR == portEL2));
 
-    if (ulAPSR == portEL1)
+    if ((ulAPSR == portEL1) || (ulAPSR == portEL2))
     {
         /* Disable interrupts during scheduler startup */
         portDISABLE_INTERRUPTS();

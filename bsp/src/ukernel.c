@@ -52,13 +52,18 @@ void ukernel_panic(const char *reason)
     }
 }
 
+extern void uart_puts(const char *s);
 static inline int psci_cpu_on(uint64_t mpidr, uint64_t entrypoint)
 {
     register uint64_t x0 __asm__("x0") = 0xC4000003; /* PSCI CPU_ON 64-bit */
     register uint64_t x1 __asm__("x1") = mpidr;
     register uint64_t x2 __asm__("x2") = entrypoint;
     register uint64_t x3 __asm__("x3") = 0;
+#if defined(CONFIG_RUN_AT_EL2) && (CONFIG_RUN_AT_EL2 == 1)
+    __asm__ volatile("smc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
+#else
     __asm__ volatile("hvc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x3) : "memory");
+#endif
     return (int)x0;
 }
 

@@ -150,23 +150,50 @@ static void gicr_init(uint32_t core_id)
  * ================================================================ */
 static void gic_cpuif_init(void)
 {
-    uint64_t val;
+    uint64_t current_el;
+    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
+    uint32_t el = (uint32_t)((current_el >> 2) & 0x3);
 
-    /* Enable system register access */
-    val = read_sysreg(ICC_SRE_EL1);
-    val |= 0x7;
-    write_sysreg(ICC_SRE_EL1, val);
+    if (el == 2) {
+        /* Enable GICv3 system register access at EL2 (SRE + DFB + DIB + Enable) */
+        uint64_t val = read_sysreg("S3_4_C12_C9_5"); /* ICC_SRE_EL2 */
+        val |= 0xF;
+        write_sysreg("S3_4_C12_C9_5", val);
 
-    /* Priority mask: allow all */
-    write_sysreg(ICC_PMR_EL1, 0xFF);
+        /* Enable Group 1 interrupts for EL2 */
+        val = read_sysreg("S3_4_C12_C12_7"); /* ICC_IGRPEN1_EL2 */
+        val |= 0x1;
+        write_sysreg("S3_4_C12_C12_7", val);
 
-    /* Binary point */
-    write_sysreg(ICC_BPR1_EL1, 0);
+        /* Priority mask: allow all */
+        write_sysreg(ICC_PMR_EL1, 0xFF);
 
-    /* Enable Group 1 NS interrupts */
-    val = read_sysreg(ICC_IGRPEN1_EL1);
-    val |= 0x1;
-    write_sysreg(ICC_IGRPEN1_EL1, val);
+        /* Binary point */
+        write_sysreg(ICC_BPR1_EL1, 0);
+
+        /* Also enable Group 1 for EL1 in case needed */
+        val = read_sysreg(ICC_IGRPEN1_EL1);
+        val |= 0x1;
+        write_sysreg(ICC_IGRPEN1_EL1, val);
+    } else {
+        uint64_t val;
+
+        /* Enable system register access */
+        val = read_sysreg(ICC_SRE_EL1);
+        val |= 0x7;
+        write_sysreg(ICC_SRE_EL1, val);
+
+        /* Priority mask: allow all */
+        write_sysreg(ICC_PMR_EL1, 0xFF);
+
+        /* Binary point */
+        write_sysreg(ICC_BPR1_EL1, 0);
+
+        /* Enable Group 1 NS interrupts */
+        val = read_sysreg(ICC_IGRPEN1_EL1);
+        val |= 0x1;
+        write_sysreg(ICC_IGRPEN1_EL1, val);
+    }
 }
 
 /* ================================================================

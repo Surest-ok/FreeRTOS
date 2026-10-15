@@ -38,6 +38,7 @@
 
     .global FreeRTOS_IRQ_Handler
     .global FreeRTOS_SWI_Handler
+    .global FreeRTOS_Abort
     .global vPortRestoreTaskContext
 
 /* ==================================================================
@@ -88,9 +89,16 @@
     STP     X28, X29, [SP, #-0x10]!
     STP     X30, XZR, [SP, #-0x10]!
 
-    /* Save the SPSR and ELR (EL1 for GUEST mode). */
+    /* Save the SPSR and ELR (EL1 or EL2). */
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 11f
+    MRS     X3, SPSR_EL2
+    MRS     X2, ELR_EL2
+    B       12f
+11:
     MRS     X3, SPSR_EL1
     MRS     X2, ELR_EL1
+12:
     STP     X2, X3, [SP, #-0x10]!
 
     /* Save the FPU context indicator from per-core array. */
@@ -215,8 +223,15 @@
 1:
     /* Restore SPSR and ELR */
     LDP     X2, X3, [SP], #0x10
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 13f
+    MSR     SPSR_EL2, X3
+    MSR     ELR_EL2, X2
+    B       14f
+13:
     MSR     SPSR_EL1, X3
     MSR     ELR_EL1, X2
+14:
 
     /* Restore general purpose registers */
     LDP     X30, XZR, [SP], #0x10
@@ -255,7 +270,13 @@ FreeRTOS_SWI_Handler:
     ISB     SY
 
     STP     X16, X17, [SP, #-0x10]!
+    MRS     X16, CurrentEL
+    TBZ     X16, #3, 21f
+    MRS     X16, ESR_EL2
+    B       22f
+21:
     MRS     X16, ESR_EL1
+22:
     LSR     X17, X16, #26
     CMP     X17, #0x15
     B.EQ    1f
@@ -264,12 +285,23 @@ FreeRTOS_SWI_Handler:
     GET_CORE_ID  X15
     LDR     X0, =ullPortSyncAbortEsr
     STR     X16, [X0, X15, LSL #3]
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 51f
+    MRS     X1, ELR_EL2
+    LDR     X0, =ullPortSyncAbortElr
+    STR     X1, [X0, X15, LSL #3]
+    MRS     X1, FAR_EL2
+    LDR     X0, =ullPortSyncAbortFar
+    STR     X1, [X0, X15, LSL #3]
+    B       52f
+51:
     MRS     X1, ELR_EL1
     LDR     X0, =ullPortSyncAbortElr
     STR     X1, [X0, X15, LSL #3]
     MRS     X1, FAR_EL1
     LDR     X0, =ullPortSyncAbortFar
     STR     X1, [X0, X15, LSL #3]
+52:
 #endif
     B       FreeRTOS_Abort
 
@@ -307,8 +339,15 @@ FreeRTOS_SWI_Handler:
     ADD     X0,  SP,  #0x110
     STR     X0,       [SP, #0xF8]       /* sp */
 
+    MRS     X18, CurrentEL
+    TBZ     X18, #3, 23f
+    MRS     X16, ELR_EL2
+    MRS     X17, SPSR_EL2
+    B       24f
+23:
     MRS     X16, ELR_EL1
     MRS     X17, SPSR_EL1
+24:
     STP     X16, X17, [SP, #0x100]      /* pc, pstate */
 
     /* Pass struct syscall_frame * in X0 */
@@ -324,8 +363,15 @@ FreeRTOS_SWI_Handler:
 
     /* Restore exception state */
     LDP     X16, X17, [SP, #0x100]
+    MRS     X18, CurrentEL
+    TBZ     X18, #3, 25f
+    MSR     ELR_EL2, X16
+    MSR     SPSR_EL2, X17
+    B       26f
+25:
     MSR     ELR_EL1, X16
     MSR     SPSR_EL1, X17
+26:
 
     /* Restore general purpose registers */
     LDR     X30,      [SP, #0xF0]
@@ -365,7 +411,13 @@ FreeRTOS_SWI_Handler:
     STR     X2, [X1, X0, LSL #3]
 #endif
 
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 27f
+    MRS     X0, ESR_EL2
+    B       28f
+27:
     MRS     X0, ESR_EL1
+28:
 #if ( configPORT_SMP_DIAGNOSTICS == 1 )
     GET_CORE_ID  X3
     LDR     X4, =ullPortSvcEsr
@@ -401,10 +453,19 @@ FreeRTOS_SWI_Handler:
     portRESTORE_CONTEXT
 
 FreeRTOS_Abort:
+    MRS     X4, CurrentEL
+    TBZ     X4, #3, 41f
+    MRS     X0, ESR_EL2
+    MRS     X1, ELR_EL2
+    MRS     X2, FAR_EL2
+    MRS     X3, SPSR_EL2
+    B       42f
+41:
     MRS     X0, ESR_EL1
     MRS     X1, ELR_EL1
     MRS     X2, FAR_EL1
     MRS     X3, SPSR_EL1
+42:
     MSR     SPSEL, #1
     BL      vPortFatalException
 1:
@@ -453,8 +514,15 @@ FreeRTOS_IRQ_Handler:
     STP     X29, X30, [SP, #-0x10]!
 
     /* Save the SPSR and ELR */
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 31f
+    MRS     X3, SPSR_EL2
+    MRS     X2, ELR_EL2
+    B       32f
+31:
     MRS     X3, SPSR_EL1
     MRS     X2, ELR_EL1
+32:
     STP     X2, X3, [SP, #-0x10]!
 
     /* Increment the per-core interrupt nesting counter.
@@ -505,8 +573,15 @@ FreeRTOS_IRQ_Handler:
 
     /* Restore volatile registers before context switch */
     LDP     X4, X5, [SP], #0x10       /* SPSR and ELR */
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 33f
+    MSR     SPSR_EL2, X5
+    MSR     ELR_EL2, X4
+    B       34f
+33:
     MSR     SPSR_EL1, X5
     MSR     ELR_EL1, X4
+34:
     DSB     SY
     ISB     SY
 
@@ -534,8 +609,15 @@ FreeRTOS_IRQ_Handler:
 Exit_IRQ_No_Context_Switch:
     /* Restore volatile registers and return */
     LDP     X4, X5, [SP], #0x10       /* SPSR and ELR */
+    MRS     X1, CurrentEL
+    TBZ     X1, #3, 35f
+    MSR     SPSR_EL2, X5
+    MSR     ELR_EL2, X4
+    B       36f
+35:
     MSR     SPSR_EL1, X5
     MSR     ELR_EL1, X4
+36:
     DSB     SY
     ISB     SY
 

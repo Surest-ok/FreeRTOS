@@ -24,6 +24,7 @@ vars.AddVariables(
     ('CROSS_COMPILE', 'Cross compiler toolchain prefix', 'aarch64-linux-gnu-'),
     ('BUILD_DIR', 'Build output directory', 'build'),
     ('TIMEOUT', 'Timeout in seconds for QEMU acceptance test', 30, None, int),
+    ('RUN_EL', 'Exception level to run FreeRTOS (1 or 2)', 1, None, int),
 )
 
 env = Environment(
@@ -53,6 +54,7 @@ sched_mode = str(env['SCHED_MODE'])
 log_level = int(env['LOG_LEVEL'])
 tick_broadcast = int(env['TICK_BROADCAST'])
 timeout = int(env['TIMEOUT'])
+run_el = int(env['RUN_EL'])
 build_dir = str(env['BUILD_DIR'])
 
 port_smp_diag = 1 if log_level == 7 else 0
@@ -63,7 +65,10 @@ defines = [
     ('configPORT_SMP_DIAGNOSTICS', port_smp_diag),
     ('APP_ENABLE_SMP_DIAG', port_smp_diag),
     ('APP_LOG_LEVEL', log_level),
+    ('CONFIG_RUN_EL', run_el),
 ]
+if run_el == 2:
+    defines.append(('CONFIG_RUN_AT_EL2', 1))
 
 if sched_mode.startswith('cross'):
     defines.append(('APP_ENABLE_BASE_PROBES', 0))
@@ -213,12 +218,20 @@ cherry_process_lib = env.SConscript(
     exports='env'
 )
 
+# 17. CherryKmod Component (Kernel Module Subsystem)
+cherry_kmod_lib = env.SConscript(
+    'components/cherry_kmod/SConscript',
+    variant_dir=f'{build_dir}/cherry_kmod',
+    duplicate=0,
+    exports='env'
+)
+
 # 17. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib']
 )
 
 
@@ -235,7 +248,7 @@ qemu_cmd = (
     f"truncate -s 64M build/test_nvme.img 2>/dev/null || true && "
     f"truncate -s 64M build/test_sata.img 2>/dev/null || true && "
     f"qemu-system-aarch64 "
-    f"-machine virt,gic-version=3,its=on "
+    f"-machine virt{',virtualization=on' if run_el == 2 else ''},gic-version=3,its=on "
     f"-cpu cortex-a53 "
     f"-smp {cores} "
     f"-m 512 "
@@ -263,6 +276,7 @@ test_cmd = (
     f"--cores {cores} "
     f"--timeout {timeout} "
     f"--mode {sched_mode} "
+    f"--el {run_el} "
     f"--elf {elf_target[0].abspath}"
 )
 test_node = env.Command('__run_test', elf_target, Action(test_cmd, f"==> Running Scheduler Acceptance Test (cores={cores}, mode={sched_mode})..."))

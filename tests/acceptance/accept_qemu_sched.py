@@ -34,6 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cores", type=int, default=2)
     parser.add_argument("--timeout", type=int, default=30)
+    parser.add_argument("--el", type=int, default=1, choices=(1, 2))
     parser.add_argument("--elf", type=Path)
     parser.add_argument(
         "--mode",
@@ -65,10 +66,11 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         with open(sata_img, "wb") as f:
             f.truncate(64 * 1024 * 1024)
 
+    machine_opt = "virt,virtualization=on,gic-version=3,its=on" if args.el == 2 else "virt,gic-version=3,its=on"
     return [
         "qemu-system-aarch64",
         "-machine",
-        "virt,gic-version=3,its=on",
+        machine_opt,
         "-cpu",
         "cortex-a53",
         "-smp",
@@ -151,7 +153,7 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
-    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[net-verify]" in line or "[nvme-verify]" in line or "[ahci-verify]" in line or "[usbd-verify]" in line or "[process-verify]" in line or "[shell-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
+    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[net-verify]" in line or "[nvme-verify]" in line or "[ahci-verify]" in line or "[usbd-verify]" in line or "[process-verify]" in line or "[shell-verify]" in line or "[kmod-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
         sys.stdout.write(line)
         sys.stdout.flush()
 
