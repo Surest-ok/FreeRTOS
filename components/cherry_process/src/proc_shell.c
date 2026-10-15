@@ -56,4 +56,5 @@ void proc_register_shell_commands(void)
     cherry_shell_register_symbol("sh",      (uintptr_t)cmd_sh,      CHERRY_SHELL_SYM_CMD, "interactive or scripted UNIX shell");
     cherry_shell_register_symbol("elf_run", (uintptr_t)cmd_elf_run, CHERRY_SHELL_SYM_CMD, "execute Linux AArch64 ELF binary: elf_run <path> [args...]");
     cherry_shell_register_symbol("proc_spawn_elf", (uintptr_t)proc_spawn_elf, CHERRY_SHELL_SYM_FUNC, "proc_spawn_elf(path, argc, argv, envp, in, out, err)");
+    cherry_shell_register_symbol("proc_exec_elf",  (uintptr_t)proc_exec_elf,  CHERRY_SHELL_SYM_FUNC, "proc_exec_elf(path, argc, argv, envp)");
 }

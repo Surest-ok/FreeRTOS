@@ -424,3 +424,13 @@ long cherry_syscall(long nr, long a0, long a1, long a2, long a3, long a4, long a
         return -ENOSYS;
     }
 }
+
+long cherry_syscall_dispatch_trap(struct syscall_frame *frame)
+{
+    if (!frame) return -EINVAL;
+    long ret = cherry_syscall((long)frame->x8,
+                              (long)frame->x0, (long)frame->x1, (long)frame->x2,
+                              (long)frame->x3, (long)frame->x4, (long)frame->x5);
+    frame->x0 = (uint64_t)ret;
+    return ret;
+}

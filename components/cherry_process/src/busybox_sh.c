@@ -127,6 +127,8 @@ static int execute_pipeline(char *line)
 
         int status = 0;
         proc_waitpid(pid, &status, 0);
+        if (in_fd >= 0) close(in_fd);
+        if (out_fd >= 0) close(out_fd);
         return status;
     }
 

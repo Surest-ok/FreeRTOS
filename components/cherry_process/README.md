@@ -42,6 +42,13 @@
    - 补全 glibc 启动阶段必需的底层系统调用：
      - `set_tid_address`, `getrandom`, `writev`, `readv`, `newfstatat`, `mmap`, `munmap`, `mprotect`, `prlimit64`, `rseq`, `brk`。
 
+6. **内核完全解耦架构 (`cherry_kal` 抽象与硬件解耦)**：
+   - `cherry_process` 与内核完全解耦，源码中零引用 `FreeRTOS.h`、`task.h` 等具体实时操作系统内部头文件与私有类型。
+   - 所有线程生命周期统一由 `cherry_kal` (`kthread_run`, `kthread_exit`, `kthread_delete`, `kthread_current`) 承载，实现可移植的进程运行环境。
+   - 进程与内核陷入点解耦，提供通用陷入调度分发器 `cherry_syscall_dispatch_trap()` 与 AArch64 架构蹦床 `cherry_arch_enter_elf()`。
+   - 彻底解决用户空间 ELF 执行返回、用户栈切换与内核现场保存恢复的解耦。
+
+
 ---
 
 ## 命令体系区分 (fstool vs busybox)

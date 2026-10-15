@@ -138,6 +138,21 @@ int     sys_nanosleep(const struct timespec *req, struct timespec *rem);
 int     sys_clock_gettime(int clk_id, struct timespec *tp);
 void   *sys_brk(void *addr);
 
+/* Decoupled hardware / architecture trap frame for system calls */
+struct syscall_frame {
+    uint64_t x0, x1, x2, x3, x4, x5, x6, x7;
+    uint64_t x8; /* Linux AArch64 syscall number */
+    uint64_t x9, x10, x11, x12, x13, x14, x15, x16;
+    uint64_t x17, x18, x19, x20, x21, x22, x23, x24;
+    uint64_t x25, x26, x27, x28, x29, x30;
+    uint64_t sp;
+    uint64_t pc;
+    uint64_t pstate;
+};
+
+long cherry_syscall_dispatch_trap(struct syscall_frame *frame);
+
+
 #ifdef __cplusplus
 }
 #endif

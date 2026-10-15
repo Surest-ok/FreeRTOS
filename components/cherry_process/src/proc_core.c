@@ -15,9 +15,13 @@ static struct mutex    g_proc_lock;
 static pid_t           g_next_pid = 1;
 static bool            g_proc_initialized = false;
 
-static void proc_task_wrapper(void *arg)
+static void proc_exit_internal(struct process *p, int exit_code);
+
+static int proc_task_wrapper(void *arg)
 {
     struct process *p = (struct process *)arg;
+    if (!p) return -1;
+
     p->state = PROC_STATE_RUNNING;
     p->core_id = smp_processor_id();
     p->start_time_ms = ktime_get_ms();
@@ -27,8 +31,9 @@ static void proc_task_wrapper(void *arg)
         ret = p->entry(p->argc, p->argv);
     }
 
-    proc_exit(ret);
-    vTaskDelete(NULL);
+    proc_exit_internal(p, ret);
+    kthread_exit(0);
+    return 0;
 }
 
 int cherry_process_init(void)
@@ -47,7 +52,7 @@ int cherry_process_init(void)
     init_p->state = PROC_STATE_RUNNING;
     strncpy(init_p->name, "init", PROC_NAME_LEN - 1);
     init_p->core_id = smp_processor_id();
-    init_p->task = xTaskGetCurrentTaskHandle();
+    init_p->task = kthread_current();
     strncpy(init_p->cwd, "/", VFS_PATH_MAX - 1);
     sema_init(&init_p->wait_sem, 0);
 
@@ -79,12 +84,13 @@ struct process *proc_current(void)
         cherry_process_init();
     }
 
-    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    struct task_struct *cur = kthread_current();
 
     mutex_lock(&g_proc_lock);
     for (int i = 0; i < PROC_MAX_COUNT; i++) {
         if (g_process_table[i].state != PROC_STATE_UNUSED &&
-            g_process_table[i].task == cur_task) {
+            g_process_table[i].task && cur &&
+            g_process_table[i].task->handle == cur->handle) {
             mutex_unlock(&g_proc_lock);
             return &g_process_table[i];
         }
@@ -111,8 +117,8 @@ struct process *proc_get_by_pid(pid_t pid)
     return NULL;
 }
 
-pid_t proc_spawn(const char *name, proc_entry_fn entry, int argc, char **argv, char **envp,
-                 int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd)
+pid_t proc_spawn_ex(const char *name, proc_entry_fn entry, int argc, char **argv, char **envp,
+                    int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd, void *priv)
 {
     if (!name || !entry) {
         return -EINVAL;
@@ -141,7 +147,9 @@ pid_t proc_spawn(const char *name, proc_entry_fn entry, int argc, char **argv, c
     child->ppid = parent ? parent->pid : 1;
     child->state = PROC_STATE_READY;
     child->entry = entry;
+    child->priv = priv;
     strncpy(child->name, name, PROC_NAME_LEN - 1);
+    strncpy(child->exec_path, name, VFS_PATH_MAX - 1);
     sema_init(&child->wait_sem, 0);
 
     /* Inherit CWD */
@@ -188,20 +196,16 @@ pid_t proc_spawn(const char *name, proc_entry_fn entry, int argc, char **argv, c
         child->envp[env_idx] = NULL;
     }
 
-    /* Create task for process */
-    BaseType_t ret = xTaskCreate(
-        proc_task_wrapper,
-        child->name,
-        PROC_STACK_WORDS,
-        child,
-        PROC_DEFAULT_PRIO,
-        &child->task
-    );
+    /* Create thread for process via decoupled KAL */
+    child->task = kthread_run((kthread_fn_t)proc_task_wrapper, child, child->name);
 
-    if (ret != pdPASS || !child->task) {
+    if (!child->task) {
         /* Cleanup allocated argv/envp */
         for (int i = 0; i < child->argc; i++) {
             if (child->argv[i]) kfree(child->argv[i]);
+        }
+        for (int i = 0; i < PROC_MAX_ENVP; i++) {
+            if (child->envp[i]) kfree(child->envp[i]);
         }
         child->state = PROC_STATE_UNUSED;
         mutex_unlock(&g_proc_lock);
@@ -213,9 +217,14 @@ pid_t proc_spawn(const char *name, proc_entry_fn entry, int argc, char **argv, c
     return new_pid;
 }
 
-void proc_exit(int exit_code)
+pid_t proc_spawn(const char *name, proc_entry_fn entry, int argc, char **argv, char **envp,
+                 int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd)
 {
-    struct process *p = proc_current();
+    return proc_spawn_ex(name, entry, argc, argv, envp, stdin_vfs_fd, stdout_vfs_fd, stderr_vfs_fd, NULL);
+}
+
+static void proc_exit_internal(struct process *p, int exit_code)
+{
     if (!p) return;
 
     mutex_lock(&g_proc_lock);
@@ -234,6 +243,12 @@ void proc_exit(int exit_code)
     /* Wake up waiting parent */
     up(&p->wait_sem);
     mutex_unlock(&g_proc_lock);
+}
+
+void proc_exit(int exit_code)
+{
+    struct process *p = proc_current();
+    proc_exit_internal(p, exit_code);
 }
 
 pid_t proc_waitpid(pid_t pid, int *status, int options)
@@ -275,6 +290,16 @@ pid_t proc_waitpid(pid_t pid, int *status, int options)
                 if (target->envp[e]) kfree(target->envp[e]);
             }
 
+            if (target->task) {
+                kfree(target->task);
+                target->task = NULL;
+            }
+
+            if (target->priv) {
+                kfree(target->priv);
+                target->priv = NULL;
+            }
+
             sema_destroy(&target->wait_sem);
             memset(target, 0, sizeof(struct process));
             target->state = PROC_STATE_UNUSED;
@@ -304,7 +329,7 @@ int proc_kill(pid_t pid, int sig)
         mutex_lock(&g_proc_lock);
         if (p->state == PROC_STATE_RUNNING || p->state == PROC_STATE_READY || p->state == PROC_STATE_SLEEPING) {
             if (p->task) {
-                vTaskDelete(p->task);
+                kthread_delete(p->task);
             }
             p->exit_code = 128 + 9;
             p->state = PROC_STATE_ZOMBIE;

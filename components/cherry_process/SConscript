@@ -28,6 +28,7 @@ sources = [
     'src/busybox_sh.c',
     'src/proc_shell.c',
     'src/proc_elf.c',
+    'src/proc_arch_aarch64.S',
     'tests/process_test.c',
 ]
 

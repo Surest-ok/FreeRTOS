@@ -17,8 +17,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "FreeRTOS.h"
-#include "task.h"
 #include "cherry_kal.h"
 #include "cherry_vfs.h"
 
@@ -32,7 +30,7 @@ extern "C" {
 #define PROC_MAX_ARGS           32
 #define PROC_MAX_ENVP           16
 #define PROC_STACK_WORDS        2048
-#define PROC_DEFAULT_PRIO       (tskIDLE_PRIORITY + 2)
+#define PROC_DEFAULT_PRIO       2
 
 /* Process States */
 typedef enum {
@@ -57,7 +55,7 @@ struct process {
     char                name[PROC_NAME_LEN];/* Process / command name */
     int                 exit_code;          /* Termination exit code */
     uint32_t            core_id;            /* Assigned / active CPU core */
-    TaskHandle_t        task;               /* Bound FreeRTOS task */
+    struct task_struct *task;               /* Bound OS thread */
     
     /* Per-Process File Descriptors (index 0..31)
      * Maps process fd to global VFS file descriptor (or -1 if closed) */
@@ -81,6 +79,10 @@ struct process {
 
     /* Synchronization for parent waitpid() */
     struct semaphore    wait_sem;
+
+    /* Executable and Context */
+    char                exec_path[VFS_PATH_MAX];/* Executable full path */
+    void               *priv;                   /* Private process context / loader data */
 
     /* Accounting & Timing */
     uint64_t            start_time_ms;
@@ -111,6 +113,12 @@ int cherry_process_init(void);
  */
 pid_t proc_spawn(const char *name, proc_entry_fn entry, int argc, char **argv, char **envp,
                  int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd);
+
+/**
+ * Spawn a new process from an entry function with private context pointer.
+ */
+pid_t proc_spawn_ex(const char *name, proc_entry_fn entry, int argc, char **argv, char **envp,
+                    int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd, void *priv);
 
 /**
  * Retrieve the PCB of the currently executing process.
