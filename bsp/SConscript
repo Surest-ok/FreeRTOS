@@ -6,7 +6,7 @@ Builds freertos_smp.elf and freertos_smp.bin
 from SCons.Script import *
 from arch.rules import setup_linker_rules
 
-Import('env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib')
+Import('env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib', 'cherry_ebpf_lib')
 
 bsp_env = env.Clone()
 
@@ -40,6 +40,8 @@ bsp_env.Append(CPPPATH=[
     '#components/cherry_process/tests',
     '#components/cherry_kmod/include',
     '#components/cherry_kmod/tests',
+    '#components/cherry_ebpf/include',
+    '#components/cherry_ebpf/tests',
     '#components/cherry_shell/include',
     '#components/cherry_shell/tests',
     '#components/cherry_kal/include',
@@ -71,7 +73,7 @@ bsp_objs = bsp_env.Object(bsp_sources)
 # cherry_process -> cherry_usbd -> cherry_ahci -> cherry_nvme -> cherry_net -> cherry_fstools -> cherry_ext4 -> cherry_sdio -> cherry_pci -> cherry_shell -> cherry_vfs -> cherry_timer -> cherry_printk -> cherry_kal -> freertos kernel
 elf_target = bsp_env.Program(
     target='freertos_smp.elf',
-    source=bsp_objs + [cherry_process_lib, cherry_kmod_lib, cherry_usbd_lib, cherry_ahci_lib, cherry_nvme_lib, cherry_net_lib, cherry_fstools_lib, cherry_ext4_lib, cherry_sdio_lib, cherry_pci_lib, cherry_shell_lib, cherry_vfs_lib, cherry_timer_lib, cherry_printk_lib, cherry_kal_lib, kernel_lib]
+    source=bsp_objs + [cherry_process_lib, cherry_kmod_lib, cherry_ebpf_lib, cherry_usbd_lib, cherry_ahci_lib, cherry_nvme_lib, cherry_net_lib, cherry_fstools_lib, cherry_ext4_lib, cherry_sdio_lib, cherry_pci_lib, cherry_shell_lib, cherry_vfs_lib, cherry_timer_lib, cherry_printk_lib, cherry_kal_lib, kernel_lib]
 )
 
 

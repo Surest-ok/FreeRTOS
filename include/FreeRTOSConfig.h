@@ -72,5 +72,9 @@ void vAssertCalled(const char *file, int line);
 #define INCLUDE_xTaskGetCurrentTaskHandle        1
 #define INCLUDE_xTaskGetIdleTaskHandle           1
 #define INCLUDE_uxTaskGetStackHighWaterMark      0
+extern void cherry_trace_sched_switch_hook(void);
+#ifndef traceTASK_SWITCHED_IN
+#define traceTASK_SWITCHED_IN() cherry_trace_sched_switch_hook()
+#endif
 #include "port_smp.h"
 #endif

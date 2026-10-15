@@ -16,6 +16,8 @@ extern int snprintf(char *str, size_t size, const char *format, ...);
 
 extern void kmod_init_symtab(void);
 extern int kmod_elf_load(const void *buf, size_t size, struct cherry_kmod *mod);
+__attribute__((weak)) void cherry_trace_kmod_load(const char *name, void *base, size_t size) { (void)name; (void)base; (void)size; }
+__attribute__((weak)) void cherry_trace_kmod_unload(const char *name) { (void)name; }
 
 static struct cherry_kmod *g_kmod_list = NULL;
 static struct mutex g_kmod_mutex;
@@ -118,6 +120,7 @@ struct cherry_kmod *cherry_kmod_load_buffer(const void *buf, size_t size, const 
         }
     }
 
+    cherry_trace_kmod_load(mod->name, mod->load_addr, mod->load_size);
     printk("kmod: loaded '%s' (load_addr=0x%lx, size=%lu bytes, syms=%lu)\n",
            mod->name, (uintptr_t)mod->load_addr, (unsigned long)mod->load_size, (unsigned long)mod->num_syms);
 
@@ -211,6 +214,7 @@ int cherry_kmod_unload(const char *name)
             }
 
             printk("kmod: unloaded '%s'\n", mod->name);
+            cherry_trace_kmod_unload(name);
             kfree(mod);
             return 0;
         }
