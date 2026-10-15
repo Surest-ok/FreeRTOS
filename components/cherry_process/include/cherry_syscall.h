@@ -36,13 +36,20 @@ extern "C" {
 #define __NR_lseek              62
 #define __NR_read               63
 #define __NR_write              64
+#define __NR_readv              65
+#define __NR_writev             66
+#define __NR_newfstatat         79
 #define __NR_fstat              80
 #define __NR_exit               93
 #define __NR_exit_group         94
+#define __NR_set_tid_address    96
+#define __NR_futex              98
 #define __NR_nanosleep          101
 #define __NR_clock_gettime      113
 #define __NR_sched_yield        124
 #define __NR_kill               129
+#define __NR_rt_sigaction       134
+#define __NR_rt_sigprocmask     135
 #define __NR_uname              160
 #define __NR_gettimeofday       169
 #define __NR_getpid             172
@@ -54,7 +61,18 @@ extern "C" {
 #define __NR_brk                214
 #define __NR_munmap             215
 #define __NR_mmap               222
+#define __NR_mprotect           226
 #define __NR_wait4              260
+#define __NR_prlimit64          261
+#define __NR_getrandom          278
+#define __NR_statx              291
+#define __NR_rseq               293
+
+/* POSIX struct iovec */
+struct iovec {
+    void  *iov_base;
+    size_t iov_len;
+};
 
 /* POSIX struct utsname */
 struct utsname {

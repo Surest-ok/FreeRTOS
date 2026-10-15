@@ -7,11 +7,53 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "cherry_fstools.h"
 #include "fdisk.h"
 #include "vfs_dev.h"
 #include "cherry_shell.h"
 #include "cherry_printk.h"
+
+int cmd_fstool(int argc, char **argv)
+{
+    if (argc < 2) {
+        printk("Usage: fstool <subcommand> [args...]\n");
+        printk("CherryFS Storage & Filesystem Admin Utility:\n");
+        printk("  fdisk <dev>               - Manage MBR partition table\n");
+        printk("  mount <dev> <target> [fs] - Mount filesystem on target\n");
+        printk("  umount <target>           - Unmount filesystem\n");
+        printk("  mkfs <dev> [vol_name]     - Format partition (ext4)\n");
+        printk("  fsck <dev> [-y]           - Check/repair filesystem\n");
+        printk("  ls [path]                 - List directory contents\n");
+        printk("  cat <file>                - Display file contents\n");
+        printk("  cp <src> <dst>            - Copy file\n");
+        printk("  mv <src> <dst>            - Move/rename file\n");
+        printk("  rm <path>                 - Remove file or directory\n");
+        printk("  mkdir <path>              - Create directory\n");
+        printk("  echo <text> [> >> file]   - Write text to file\n");
+        return -1;
+    }
+
+    const char *sub = argv[1];
+    char **sub_argv = &argv[1];
+    int sub_argc = argc - 1;
+
+    if (strcmp(sub, "fdisk") == 0) return cmd_fdisk(sub_argc, sub_argv);
+    if (strcmp(sub, "mount") == 0) return cmd_mount(sub_argc, sub_argv);
+    if (strcmp(sub, "umount") == 0) return cmd_umount(sub_argc, sub_argv);
+    if (strcmp(sub, "mkfs") == 0) return cmd_mkfs(sub_argc, sub_argv);
+    if (strcmp(sub, "fsck") == 0) return cmd_fsck(sub_argc, sub_argv);
+    if (strcmp(sub, "ls") == 0) return cmd_ls(sub_argc, sub_argv);
+    if (strcmp(sub, "cat") == 0) return cmd_cat(sub_argc, sub_argv);
+    if (strcmp(sub, "cp") == 0) return cmd_cp(sub_argc, sub_argv);
+    if (strcmp(sub, "mv") == 0) return cmd_mv(sub_argc, sub_argv);
+    if (strcmp(sub, "rm") == 0) return cmd_rm(sub_argc, sub_argv);
+    if (strcmp(sub, "mkdir") == 0 || strcmp(sub, "mkdior") == 0) return cmd_mkdir(sub_argc, sub_argv);
+    if (strcmp(sub, "echo") == 0) return cmd_echo(sub_argc, sub_argv);
+
+    printk("fstool: unknown subcommand '%s' (type 'fstool' for list)\n", sub);
+    return -1;
+}
 
 int cherry_fstools_init(void)
 {
@@ -23,7 +65,11 @@ int cherry_fstools_init(void)
         part_scan_and_register(sd);
     }
 
-    /* Register CLI Commands */
+    /* Register Primary Root CLI Command */
+    cherry_shell_register_symbol("fstool",  (uintptr_t)cmd_fstool,  CHERRY_SHELL_SYM_CMD, "filesystem admin tool: fstool <fdisk|mount|umount|mkfs|fsck|ls|cat|cp|mv|rm|mkdir|echo>");
+    cherry_shell_register_symbol("fstools", (uintptr_t)cmd_fstool,  CHERRY_SHELL_SYM_CMD, "alias to fstool");
+
+    /* Register CLI Subcommands & Direct Callbacks */
     cherry_shell_register_symbol("fdisk",   (uintptr_t)cmd_fdisk,   CHERRY_SHELL_SYM_CMD, "disk partition manager: fdisk <dev>");
     cherry_shell_register_symbol("mount",   (uintptr_t)cmd_mount,   CHERRY_SHELL_SYM_CMD, "mount filesystem: mount <dev> <target> [type]");
     cherry_shell_register_symbol("umount",  (uintptr_t)cmd_umount,  CHERRY_SHELL_SYM_CMD, "unmount filesystem: umount <target>");
