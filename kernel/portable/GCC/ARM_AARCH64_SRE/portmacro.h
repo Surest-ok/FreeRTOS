@@ -90,7 +90,7 @@ typedef uint64_t         TickType_t;
 
 #define portYIELD_FROM_ISR( x )    portEND_SWITCHING_ISR( x )
 #if defined( GUEST )
-    #define portYIELD()            __asm volatile ( "SVC 0" ::: "memory" )
+    #define portYIELD()            __asm volatile ( "SVC #0x1" ::: "memory" )
 #else
     #define portYIELD()            __asm volatile ( "SMC 0" ::: "memory" )
 #endif

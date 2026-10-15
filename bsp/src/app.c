@@ -953,3 +953,10 @@ int ukernel_app_init(const UkernelBootInfo *boot)
                                            &g_monitor_task);
     return ok == pdPASS ? 0 : -1;
 }
+
+struct syscall_frame;
+__attribute__((weak)) long cherry_syscall_dispatch_trap(struct syscall_frame *frame)
+{
+    (void)frame;
+    return -38; /* -ENOSYS */
+}
