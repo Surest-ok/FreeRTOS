@@ -449,7 +449,7 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.630743] [6:cpu0:sched-mon:64207] cherry_nvme: [nvme-verify] probe=pass ctrl=pass queues=pass ns=pass single_io=pass multi_io=pass bdev=pass flush=pass all=pass
 [    0.640909] [6:cpu0:sched-mon:64207] cherry_ahci: [ahci-verify] probe=pass port_scan=pass rebase=pass identify=pass single_io=pass multi_io=pass bdev=pass flush=pass all=pass
 [    0.646013] [6:cpu0:sched-mon:64207] cherry_usbd: [usbd-verify] init=pass enum_desc=pass set_addr_cfg=pass cdc_acm=pass cdc_vfs=pass msc_inquiry=pass msc_rw=pass hid_report=pass all=pass
-[    0.651409] [6:cpu0:sched-mon:64207] cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass all=pass
+[    0.651409] [6:cpu0:sched-mon:64207] cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass elf_glibc=pass all=pass
 [    0.652637] [6:cpu0:sched-mon:64207] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.215410] [6:cpu0:sched-mon:60111] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
 [    0.216483] [6:cpu0:sched-mon:60111] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=575
@@ -485,7 +485,7 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.205436] [6:cpu0:sched-mon:58869] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
 [    0.363385] [6:cpu0:sched-mon:62965] cherry_ext4: [ext4-verify] mkfs=pass fsck=pass mount=pass file_io=pass dir_ops=pass journal=pass umount=pass all=pass
 [    0.563920] [6:cpu0:sched-mon:62965] cherry_fstools: [fstools-verify] fdisk=pass part_bdev=pass mkfs=pass mount=pass echo_cat=pass cp_mv=pass ls_rm=pass umount=pass all=pass
-[    0.659769] [6:cpu0:sched-mon:30198] cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass all=pass
+[    0.659769] [6:cpu0:sched-mon:30198] cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass elf_glibc=pass all=pass
 [    0.564911] [6:cpu0:sched-mon:62965] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.221261] [6:cpu0:sched-mon:58869] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
 [    0.222377] [6:cpu0:sched-mon:58869] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0

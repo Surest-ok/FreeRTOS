@@ -273,6 +273,65 @@ void *sys_brk(void *addr)
     return addr;
 }
 
+static ssize_t sys_writev(int fd, const struct iovec *iov, int iovcnt)
+{
+    if (!iov || iovcnt <= 0) return -EINVAL;
+    ssize_t total = 0;
+    for (int i = 0; i < iovcnt; i++) {
+        if (iov[i].iov_len > 0 && iov[i].iov_base) {
+            ssize_t w = sys_write(fd, iov[i].iov_base, iov[i].iov_len);
+            if (w < 0) return (total > 0) ? total : w;
+            total += w;
+        }
+    }
+    return total;
+}
+
+static ssize_t sys_readv(int fd, const struct iovec *iov, int iovcnt)
+{
+    if (!iov || iovcnt <= 0) return -EINVAL;
+    ssize_t total = 0;
+    for (int i = 0; i < iovcnt; i++) {
+        if (iov[i].iov_len > 0 && iov[i].iov_base) {
+            ssize_t r = sys_read(fd, iov[i].iov_base, iov[i].iov_len);
+            if (r < 0) return (total > 0) ? total : r;
+            total += r;
+            if ((size_t)r < iov[i].iov_len) break;
+        }
+    }
+    return total;
+}
+
+static long sys_getrandom(void *buf, size_t buflen, unsigned int flags)
+{
+    (void)flags;
+    if (!buf) return -EINVAL;
+    uint8_t *p = (uint8_t *)buf;
+    uint64_t t = ktime_get_real_ns();
+    for (size_t i = 0; i < buflen; i++) {
+        p[i] = (uint8_t)((t >> ((i % 8) * 8)) ^ (i * 0x3d + 0xa5));
+    }
+    return (long)buflen;
+}
+
+static void *sys_mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+{
+    (void)addr; (void)prot; (void)flags; (void)fd; (void)offset;
+    if (length == 0) return (void *)-EINVAL;
+    void *ptr = kmalloc(length, GFP_KERNEL);
+    if (!ptr) return (void *)-ENOMEM;
+    memset(ptr, 0, length);
+    return ptr;
+}
+
+static int sys_munmap(void *addr, size_t length)
+{
+    (void)length;
+    if (!addr) return -EINVAL;
+    kfree(addr);
+    return 0;
+}
+
 long cherry_syscall(long nr, long a0, long a1, long a2, long a3, long a4, long a5)
 {
     (void)a4;
@@ -307,11 +366,21 @@ long cherry_syscall(long nr, long a0, long a1, long a2, long a3, long a4, long a
         return (long)sys_read((int)a0, (void *)a1, (size_t)a2);
     case __NR_write:
         return (long)sys_write((int)a0, (const void *)a1, (size_t)a2);
+    case __NR_writev:
+        return (long)sys_writev((int)a0, (const struct iovec *)a1, (int)a2);
+    case __NR_readv:
+        return (long)sys_readv((int)a0, (const struct iovec *)a1, (int)a2);
+    case __NR_newfstatat:
+        return (long)sys_stat((const char *)a1, (struct stat *)a2);
     case __NR_fstat:
         return (long)sys_fstat((int)a0, (struct stat *)a1);
     case __NR_exit:
     case __NR_exit_group:
         sys_exit((int)a0);
+        return 0;
+    case __NR_set_tid_address:
+        return (long)sys_getpid();
+    case __NR_futex:
         return 0;
     case __NR_nanosleep:
         return (long)sys_nanosleep((const struct timespec *)a0, (struct timespec *)a1);
@@ -322,6 +391,9 @@ long cherry_syscall(long nr, long a0, long a1, long a2, long a3, long a4, long a
         return 0;
     case __NR_kill:
         return (long)sys_kill((pid_t)a0, (int)a1);
+    case __NR_rt_sigaction:
+    case __NR_rt_sigprocmask:
+        return 0;
     case __NR_uname:
         return (long)sys_uname((struct utsname *)a0);
     case __NR_getpid:
@@ -335,6 +407,17 @@ long cherry_syscall(long nr, long a0, long a1, long a2, long a3, long a4, long a
         return 0;
     case __NR_brk:
         return (long)sys_brk((void *)a0);
+    case __NR_mmap:
+        return (long)sys_mmap((void *)a0, (size_t)a1, (int)a2, (int)a3, (int)a4, (off_t)a5);
+    case __NR_munmap:
+        return (long)sys_munmap((void *)a0, (size_t)a1);
+    case __NR_mprotect:
+    case __NR_prlimit64:
+        return 0;
+    case __NR_getrandom:
+        return (long)sys_getrandom((void *)a0, (size_t)a1, (unsigned int)a2);
+    case __NR_rseq:
+        return -ENOSYS;
     case __NR_wait4:
         return (long)sys_wait4((pid_t)a0, (int *)a1, (int)a2, (void *)a3);
     default:

@@ -32,9 +32,32 @@
      - 支持标准输出/输入重定向 (`> file`, `>> file`, `< file`)。
      - 支持内置命令 `cd`, `pwd`, `exit` 以及后台执行。
 
+5. **ELF64 加载器与 Linux ABI 兼容环境 (`cherry_elf`)**：
+   - 支持解析标准 64 位 ELF 目标文件 (`Elf64_Ehdr`, `Elf64_Phdr`, `PT_LOAD`)。
+   - 支持 Position-Independent Executable (PIE) 与动态内存重定位加载。
+   - 构造标准的 Linux ARM64 System V ABI 初始用户栈与辅助向量表 (`auxv`)：
+     - `argc`, `argv[]`, `envp[]`
+     - `AT_PHDR`, `AT_PHENT`, `AT_PHNUM`, `AT_PAGESZ=4096`, `AT_BASE`, `AT_ENTRY`
+     - `AT_RANDOM` (16 字节随机数，用于 glibc `__stack_chk_guard` 栈保护)
+   - 补全 glibc 启动阶段必需的底层系统调用：
+     - `set_tid_address`, `getrandom`, `writev`, `readv`, `newfstatat`, `mmap`, `munmap`, `mprotect`, `prlimit64`, `rseq`, `brk`。
+
 ---
 
-## 8 点自动化验收测试套件
+## 命令体系区分 (fstool vs busybox)
+
+为避免内核态文件系统管理命令与用户态应用命令冲突，系统进行了明确的职责分工与命令空间划分：
+
+| 维度 | `cherry_fstools` (`fstool`) | `cherry_process` (`busybox`) |
+| :--- | :--- | :--- |
+| **定位** | **内核态存储与文件系统底层管理维护** | **进程级用户态多合一实用工具箱** |
+| **执行上下文** | 内核当前线程，直接调用 VFS 驱动与 Ext4 物理层 | 独立的轻量级进程（PCB），拥有私有 FD 表与工作目录 |
+| **标准调用入口** | `fstool <subcommand> [args...]`<br>如 `fstool fdisk /dev/mmcblk0`<br>`fstool mount /dev/mmcblk0p1 /mnt ext4`<br>`fstool mkfs /dev/mmcblk0p1`<br>`fstool fsck /dev/mmcblk0p1` | `busybox <applet> [args...]` 或 `sh`<br>如 `busybox ls -l`<br>`busybox cat /etc/passwd`<br>`busybox df`<br>`busybox ps` |
+| **符号与脚本** | 提供 `fstools_*` C 符号供 VxWorks 风格直接调用 | 在 `sh` 中支持完整的管道 `\|` 与重定向 `>` / `>>` / `<` |
+
+---
+
+## 9 点自动化验收测试套件
 
 | 验证项 | 验证内容 | 成功标志 |
 | :--- | :--- | :--- |
@@ -46,8 +69,9 @@
 | **`applets`** | BusyBox 基础工具 (`echo`, `cat`, `ls`, `mkdir`) 进程化运行 | `applets=pass` |
 | **`sh`** | BusyBox Shell 管道与多进程串联 (`cmd1 \| cmd2`) 验证 | `sh=pass` |
 | **`smp_ps`** | SMP 多核并发进程调度与 `ps` 进程快照输出 | `smp_ps=pass` |
+| **`elf_glibc`**| ELF64 校验与加载、System V ABI 用户栈 (`auxv`、`AT_RANDOM`) 与 glibc 系统调用 (`set_tid_address`, `getrandom`, `writev`) | `elf_glibc=pass` |
 
 测试输出格式：
 ```text
-cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass all=pass
+cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass elf_glibc=pass all=pass
 ```

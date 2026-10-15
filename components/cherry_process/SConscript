@@ -27,6 +27,7 @@ sources = [
     'src/busybox_applets.c',
     'src/busybox_sh.c',
     'src/proc_shell.c',
+    'src/proc_elf.c',
     'tests/process_test.c',
 ]
 

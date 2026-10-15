@@ -9,6 +9,7 @@
 #include "cherry_process.h"
 #include "cherry_syscall.h"
 #include "cherry_busybox.h"
+#include "cherry_elf.h"
 #include "cherry_printk.h"
 #include <string.h>
 
@@ -53,6 +54,7 @@ int cherry_process_run_tests(void)
     bool pass_applets  = false;
     bool pass_sh       = false;
     bool pass_smp_ps   = false;
+    bool pass_elf      = false;
 
     sys_mkdir("/cherry_proc_test", 0755);
 
@@ -163,10 +165,73 @@ int cherry_process_run_tests(void)
         }
     }
 
-    bool all_pass = pass_spawn && pass_wait && pass_fd && pass_pipe &&
-                    pass_syscall && pass_applets && pass_sh && pass_smp_ps;
+    /* 9. Test ELF64 Loader, glibc Syscalls & System V ABI Stack */
+    uint8_t dummy_elf[sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr) + 64];
+    memset(dummy_elf, 0, sizeof(dummy_elf));
 
-    pr_info("cherry_process: [process-verify] spawn=%s wait=%s fd=%s pipe=%s syscall=%s applets=%s sh=%s smp_ps=%s all=%s\n",
+    Elf64_Ehdr *eh = (Elf64_Ehdr *)dummy_elf;
+    eh->e_ident[EI_MAG0] = ELFMAG0;
+    eh->e_ident[EI_MAG1] = ELFMAG1;
+    eh->e_ident[EI_MAG2] = ELFMAG2;
+    eh->e_ident[EI_MAG3] = ELFMAG3;
+    eh->e_ident[EI_CLASS] = ELFCLASS64;
+    eh->e_ident[EI_DATA] = ELFDATA2LSB;
+    eh->e_ident[EI_VERSION] = EV_CURRENT;
+    eh->e_type = ET_DYN; /* PIE */
+    eh->e_machine = EM_AARCH64;
+    eh->e_version = EV_CURRENT;
+    eh->e_entry = sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr);
+    eh->e_phoff = sizeof(Elf64_Ehdr);
+    eh->e_ehsize = sizeof(Elf64_Ehdr);
+    eh->e_phentsize = sizeof(Elf64_Phdr);
+    eh->e_phnum = 1;
+
+    Elf64_Phdr *ph = (Elf64_Phdr *)(dummy_elf + sizeof(Elf64_Ehdr));
+    ph->p_type = PT_LOAD;
+    ph->p_flags = PF_R | PF_X;
+    ph->p_offset = sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr);
+    ph->p_vaddr = 0x1000;
+    ph->p_paddr = 0x1000;
+    ph->p_filesz = 64;
+    ph->p_memsz = 128;
+    ph->p_align = 4096;
+
+    int elf_fd = sys_open("/cherry_proc_test/sample_app.elf", O_WRONLY | O_CREAT | O_TRUNC, 0755);
+    if (elf_fd >= 0) {
+        sys_write(elf_fd, dummy_elf, sizeof(dummy_elf));
+        sys_close(elf_fd);
+
+        struct elf_image img;
+        if (proc_elf_load("/cherry_proc_test/sample_app.elf", &img) == 0) {
+            uint64_t stack_buf[128];
+            char *test_argv[] = { (char *)"sample_app", (char *)"--version", NULL };
+            char *test_envp[] = { (char *)"PATH=/bin", NULL };
+            uintptr_t sp = proc_elf_setup_stack((uintptr_t)&stack_buf[127], 2, test_argv, test_envp, &img);
+
+            /* Test glibc bootstrap syscalls */
+            long tid = cherry_syscall(__NR_set_tid_address, 0, 0, 0, 0, 0, 0);
+            char rand_buf[16];
+            long rnd = cherry_syscall(__NR_getrandom, (long)rand_buf, sizeof(rand_buf), 0, 0, 0, 0);
+
+            struct iovec iov;
+            const char *hello_v = "hello writev";
+            iov.iov_base = (void *)hello_v;
+            iov.iov_len = strlen(hello_v);
+            int tmp_wfd = sys_open("/cherry_proc_test/writev.tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            long wv = (tmp_wfd >= 0) ? cherry_syscall(__NR_writev, tmp_wfd, (long)&iov, 1, 0, 0, 0) : -1;
+            if (tmp_wfd >= 0) sys_close(tmp_wfd);
+
+            if (sp != 0 && tid > 0 && rnd == 16 && wv == (long)strlen(hello_v)) {
+                pass_elf = true;
+            }
+            proc_elf_unload(&img);
+        }
+    }
+
+    bool all_pass = pass_spawn && pass_wait && pass_fd && pass_pipe &&
+                    pass_syscall && pass_applets && pass_sh && pass_smp_ps && pass_elf;
+
+    pr_info("cherry_process: [process-verify] spawn=%s wait=%s fd=%s pipe=%s syscall=%s applets=%s sh=%s smp_ps=%s elf_glibc=%s all=%s\n",
             pass_spawn ? "pass" : "fail",
             pass_wait ? "pass" : "fail",
             pass_fd ? "pass" : "fail",
@@ -175,6 +240,7 @@ int cherry_process_run_tests(void)
             pass_applets ? "pass" : "fail",
             pass_sh ? "pass" : "fail",
             pass_smp_ps ? "pass" : "fail",
+            pass_elf ? "pass" : "fail",
             all_pass ? "pass" : "fail");
 
     return all_pass ? 0 : -1;

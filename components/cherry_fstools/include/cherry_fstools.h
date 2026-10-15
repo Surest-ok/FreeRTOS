@@ -35,6 +35,7 @@ int fstools_mkdir(const char *path);
 int fstools_echo(const char *str, const char *redir_file, bool append);
 
 /* Shell Command Callbacks */
+int cmd_fstool(int argc, char **argv);
 int cmd_fdisk(int argc, char **argv);
 int cmd_mount(int argc, char **argv);
 int cmd_umount(int argc, char **argv);
