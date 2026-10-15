@@ -164,10 +164,10 @@
      - **格式化与自检工具**：内置 `ext4_mkfs` (`mkfs.ext4`) 格式化工具与 `ext4_fsck` (`fsck.ext4`) 深度一致性检查修复器。
      - **VFS 原生驱动**：注册为标准 `"ext4"` 文件系统类型，支持透明 POSIX 挂载与文件读写。
    - [**`CherryFSTools`**](components/cherry_fstools/README.md) (Disk Partitioning, Mount Management & Core File Utilities)：
-     - **MBR 磁盘分区管理**：支持扇区 0 MBR（`0xAA55`）分区表解析与创建（`fdisk`, `part_create`），支持 4 主分区与 Linux Native（`0x83`）等标准类型。
+     - **MBR 磁盘分区管理**：支持扇区 0 MBR（`0xAA55`）分区表解析与创建（`cherry_fdisk`, `cherry_part_create`），支持 4 主分区与 Linux Native（`0x83`）等标准类型。
      - **分区子块设备虚拟化**：自动将分区映射并注册为独立虚拟块设备（如 `/dev/mmcblk0p1`），提供 LBA 偏置重定向与严格边界越界防护。
-     - **挂载与卸载引擎**：提供 `mount` 与 `umount` 标准文件系统挂载管理器。
-     - **Linux 风格核心文件实用工具**：提供 `ls`（带类型、Inode与名称格式化输出）、`cat`、`cp`、`mv`、`rm`（文件与目录自适应）、`mkdir`（内置 `mkdior` 别名）、`echo`（原生支持 `>` 覆盖与 `>>` 追加重定向）、`mkfs` 与 `fsck` 命令行工具及 C API。
+     - **挂载与卸载引擎**：提供 `cherry_mount` 与 `cherry_umount` 标准文件系统挂载管理器。
+     - **fs 引导分发与 cherry_ 核心实用工具**：支持 `fs <subcommand>` 引导命令（`fs ls`, `fs mount`, `fs fdisk` 等）统一分发，与 BusyBox 进程命令空间区分隔离；底层提供 `cherry_ls`, `cherry_cat`, `cherry_cp`, `cherry_mv`, `cherry_rm`, `cherry_mkdir`, `cherry_echo`, `cherry_mkfs`, `cherry_fsck` 及标准 C API（并保留历史别名兼容）。
     - [**`CherryNet`**](components/cherry_net/README.md) (High-Performance Multi-Core Multi-Queue TCP/IP Stack & VirtIO Driver)：
       - **现代多核多队列架构 (MQ-RSS)**：Per-Core 独立工作线程（`net_worker_0`, `net_worker_1`），基于 4 元组哈希（FNV-1a）实现 RSS 流导向，消除核间锁竞争。
       - **VirtIO-Net PCI 硬件加速驱动**：基于 PCIe ECAM 自动匹配驱动，支持 legacy/modern PCI virtio 接口，管理 4KB 对齐的 RX/TX 双环虚拟队列（vrings），自动探测 MAC 地址。

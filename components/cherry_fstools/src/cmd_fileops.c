@@ -18,7 +18,7 @@
 /* =========================================================================
  * 1. ls Implementation
  * ========================================================================= */
-int fstools_ls(const char *path)
+int cherry_ls(const char *path)
 {
     const char *dir_path = (path && strlen(path) > 0) ? path : "/";
     DIR *dir = opendir(dir_path);
@@ -44,13 +44,13 @@ int fstools_ls(const char *path)
 int cmd_ls(int argc, char **argv)
 {
     const char *p = (argc >= 2) ? argv[1] : "/";
-    return fstools_ls(p);
+    return cherry_ls(p);
 }
 
 /* =========================================================================
  * 2. cat Implementation
  * ========================================================================= */
-int fstools_cat(const char *path)
+int cherry_cat(const char *path)
 {
     if (!path) return -1;
     int fd = open(path, O_RDONLY, 0);
@@ -76,13 +76,13 @@ int cmd_cat(int argc, char **argv)
         printk("usage: cat <file>\n");
         return -1;
     }
-    return fstools_cat(argv[1]);
+    return cherry_cat(argv[1]);
 }
 
 /* =========================================================================
  * 3. cp & mv Implementation
  * ========================================================================= */
-int fstools_cp(const char *src, const char *dst)
+int cherry_cp(const char *src, const char *dst)
 {
     if (!src || !dst) return -1;
 
@@ -121,13 +121,13 @@ int cmd_cp(int argc, char **argv)
         printk("usage: cp <source> <dest>\n");
         return -1;
     }
-    return fstools_cp(argv[1], argv[2]);
+    return cherry_cp(argv[1], argv[2]);
 }
 
-int fstools_mv(const char *src, const char *dst)
+int cherry_mv(const char *src, const char *dst)
 {
     if (!src || !dst) return -1;
-    int ret = fstools_cp(src, dst);
+    int ret = cherry_cp(src, dst);
     if (ret == 0) {
         unlink(src);
     }
@@ -140,13 +140,13 @@ int cmd_mv(int argc, char **argv)
         printk("usage: mv <source> <dest>\n");
         return -1;
     }
-    return fstools_mv(argv[1], argv[2]);
+    return cherry_mv(argv[1], argv[2]);
 }
 
 /* =========================================================================
  * 4. rm & mkdir Implementation
  * ========================================================================= */
-int fstools_rm(const char *path)
+int cherry_rm(const char *path)
 {
     if (!path) return -1;
 
@@ -169,10 +169,10 @@ int cmd_rm(int argc, char **argv)
         printk("usage: rm <path>\n");
         return -1;
     }
-    return fstools_rm(argv[1]);
+    return cherry_rm(argv[1]);
 }
 
-int fstools_mkdir(const char *path)
+int cherry_mkdir(const char *path)
 {
     if (!path) return -1;
     int ret = mkdir(path, 0755);
@@ -188,13 +188,13 @@ int cmd_mkdir(int argc, char **argv)
         printk("usage: mkdir <path>\n");
         return -1;
     }
-    return fstools_mkdir(argv[1]);
+    return cherry_mkdir(argv[1]);
 }
 
 /* =========================================================================
  * 5. echo Implementation (with > and >> support)
  * ========================================================================= */
-int fstools_echo(const char *str, const char *redir_file, bool append)
+int cherry_echo(const char *str, const char *redir_file, bool append)
 {
     if (!str) return 0;
 
@@ -247,7 +247,7 @@ int cmd_echo(int argc, char **argv)
         strncat(line_buf, argv[i], sizeof(line_buf) - strlen(line_buf) - 1);
     }
 
-    return fstools_echo(line_buf, redir_file, append);
+    return cherry_echo(line_buf, redir_file, append);
 }
 
 /* =========================================================================

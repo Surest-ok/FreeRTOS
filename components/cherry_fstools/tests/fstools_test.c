@@ -71,16 +71,18 @@ void cherry_fstools_run_tests(void)
         }
 
         /* 7. ls, mkdir and rm testing */
-        int ls1 = fstools_ls("/mnt/part1");
-        int mk1 = fstools_mkdir("/mnt/part1/test_dir");
-        int rm1 = fstools_rm("/mnt/part1/test_dir");
-        int rm2 = fstools_rm("/mnt/part1/msg_moved.txt");
-        if (ls1 == 0 && mk1 == 0 && rm1 == 0 && rm2 == 0) {
+        int ls1 = cherry_ls("/mnt/part1");
+        char *fs_argv[] = { (char *)"fs", (char *)"ls", (char *)"/mnt/part1", NULL };
+        int fs_cmd_ret = cmd_fs(3, fs_argv);
+        int mk1 = cherry_mkdir("/mnt/part1/test_dir");
+        int rm1 = cherry_rm("/mnt/part1/test_dir");
+        int rm2 = cherry_rm("/mnt/part1/msg_moved.txt");
+        if (ls1 == 0 && fs_cmd_ret == 0 && mk1 == 0 && rm1 == 0 && rm2 == 0) {
             ls_rm_pass = true;
         }
 
         /* 8. umount */
-        int u_ret = fstools_umount("/mnt/part1");
+        int u_ret = cherry_umount("/mnt/part1");
         umount_pass = (u_ret == 0);
     }
 
