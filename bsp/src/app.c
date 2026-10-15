@@ -28,6 +28,8 @@
 #include "cherry_nvme.h"
 #include "cherry_ahci.h"
 #include "cherry_usbd.h"
+#include "cherry_process.h"
+#include "process_test.h"
 
 #define APP_WORKER_STACK_WORDS  256
 #define APP_MONITOR_STACK_WORDS 2048
@@ -609,6 +611,8 @@ static void scheduler_monitor(void *arg)
         cherry_ahci_run_tests();
         cherry_usbd_init();
         cherry_usbd_run_tests();
+        cherry_process_init();
+        cherry_process_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();

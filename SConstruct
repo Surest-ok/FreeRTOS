@@ -205,12 +205,20 @@ cherry_usbd_lib = env.SConscript(
     exports='env'
 )
 
-# 16. BSP and Target Binary
+# 16. CherryProcess Component (Lightweight Process Model, POSIX Syscall & Busybox)
+cherry_process_lib = env.SConscript(
+    'components/cherry_process/SConscript',
+    variant_dir=f'{build_dir}/cherry_process',
+    duplicate=0,
+    exports='env'
+)
+
+# 17. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib']
 )
 
 
