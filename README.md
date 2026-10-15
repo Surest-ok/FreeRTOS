@@ -193,6 +193,11 @@
       - **MSC 块存储 (BOT / SCSI)**：规范处理 31 字节 CBW 与 13 字节 CSW，内置 SCSI-2 命令引擎 (`INQUIRY`, `TEST_UNIT_READY`, `READ_CAPACITY_10`, `READ_10`, `WRITE_10`) 并桥接块设备。
       - **HID 人机交互设备**：标准 63 字节键盘报告描述符，支持键盘与鼠标事件打包发送。
       - **Shell 诊断指令**：导出 `usb_info`、`usb_cdc_echo`。
+    - [**`CherryProcess`**](components/cherry_process/README.md) (Lightweight Process Model & POSIX Syscall Subsystem):
+      - **轻量级进程控制块 (PCB)**：维护独立 PID/PPID、状态机 (`READY`/`RUNNING`/`SLEEPING`/`ZOMBIE`/`DEAD`)、私有文件描述符表 (`fd_table[32]`)、当前工作目录 (`cwd`) 与命令行参数 (`argv`/`envp`)。
+      - **AArch64 Linux 兼容系统调用层 (`cherry_syscall`)**：标准 Linux ARM64 系统调用号 (`__NR_openat`, `__NR_read`, `__NR_write`, `__NR_close`, `__NR_pipe2`, `__NR_dup`, `__NR_dup2`, `__NR_statx`, `__NR_fstat`, `__NR_mkdirat`, `__NR_unlinkat`, `__NR_getcwd`, `__NR_chdir`, `__NR_getpid`, `__NR_getppid`, `__NR_exit`, `__NR_wait4`, `__NR_nanosleep`, `__NR_uname`)。
+      - **虚拟管道与重定向 (IPC Pipe)**：基于内存环形缓冲区 (`CHERRY_PIPE_BUF_SIZE = 4096`) 提供读写阻塞与同步唤醒，完整对接 CherryVFS `vfs_file_operations`。
+      - **BusyBox 多合一二进制应用集与 Shell**：纯嵌入式无依赖封装 25+ 核心工具（`sh`, `ls`, `cat`, `echo`, `cp`, `mv`, `rm`, `mkdir`, `rmdir`, `pwd`, `touch`, `uname`, `ps`, `kill`, `sleep`, `head`, `tail`, `wc`, `grep`, `df`, `free`, `dmesg`, `date`, `true`, `false`, `hexdump`），支持管道符 `|` 与重定向 `>` / `>>`。
 
 ---
 
@@ -262,11 +267,16 @@ freertos-workspace/
 │   │   ├── src/                # GHC/端口扫描, 内存重基址, ATA DMA (Read/Write/Flush), /dev/sda 桥接, Shell
 │   │   ├── tests/              # 8 点 AHCI 自动化验收测试套件 (ahci_test.c)
 │   │   └── SConscript          # libcherry_ahci.a 构建规则
-│   └── cherry_usbd/            # USB 2.0/3.0 设备协议栈与类驱动
-│       ├── include/            # USB 规范 (usb_spec.h), CDC, MSC, HID, 子系统 API (cherry_usbd.h)
-│       ├── src/                # Chapter 9 状态机, CDC-ACM (/dev/ttyUSB0), MSC BOT/SCSI, HID, VUDC, Shell
-│       ├── tests/              # 8 点 USB 设备协议栈自动化验收测试套件 (usbd_test.c)
-│       └── SConscript          # libcherry_usbd.a 构建规则
+│   ├── cherry_usbd/            # USB 2.0/3.0 设备协议栈与类驱动
+│   │   ├── include/            # USB 规范 (usb_spec.h), CDC, MSC, HID, 子系统 API (cherry_usbd.h)
+│   │   ├── src/                # Chapter 9 状态机, CDC-ACM (/dev/ttyUSB0), MSC BOT/SCSI, HID, VUDC, Shell
+│   │   ├── tests/              # 8 点 USB 设备协议栈自动化验收测试套件 (usbd_test.c)
+│   │   └── SConscript          # libcherry_usbd.a 构建规则
+│   └── cherry_process/         # 轻量级进程模型、POSIX 系统调用与 BusyBox 应用集
+│       ├── include/            # PCB (cherry_process.h), POSIX 系统调用 (cherry_syscall.h), 管道 (cherry_pipe.h), BusyBox (cherry_busybox.h)
+│       ├── src/                # 进程生命周期 (spawn/exit/waitpid/kill), 系统调用分发, 内存管道, BusyBox 25+ 工具集与 Shell
+│       ├── tests/              # 8 点进程模型与 POSIX 验收测试套件 (process_test.c)
+│       └── SConscript          # libcherry_process.a 构建规则
 ├── arch/                       # 体系结构抽象层
 │   ├── rules.py                # 通用 AArch64 编译规则与工具链初始化
 │   ├── SConscript              # arch 静态对象构建脚本
@@ -439,7 +449,8 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.630743] [6:cpu0:sched-mon:64207] cherry_nvme: [nvme-verify] probe=pass ctrl=pass queues=pass ns=pass single_io=pass multi_io=pass bdev=pass flush=pass all=pass
 [    0.640909] [6:cpu0:sched-mon:64207] cherry_ahci: [ahci-verify] probe=pass port_scan=pass rebase=pass identify=pass single_io=pass multi_io=pass bdev=pass flush=pass all=pass
 [    0.646013] [6:cpu0:sched-mon:64207] cherry_usbd: [usbd-verify] init=pass enum_desc=pass set_addr_cfg=pass cdc_acm=pass cdc_vfs=pass msc_inquiry=pass msc_rw=pass hid_report=pass all=pass
-[    0.646637] [6:cpu0:sched-mon:64207] cherry_shell: initialized with vxworks c-function call & addr2sym engine
+[    0.651409] [6:cpu0:sched-mon:64207] cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass all=pass
+[    0.652637] [6:cpu0:sched-mon:64207] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.215410] [6:cpu0:sched-mon:60111] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
 [    0.216483] [6:cpu0:sched-mon:60111] freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0 hb0=1 hb1=575
 [SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
@@ -474,6 +485,7 @@ cherry_vfs: [/dev/console] posix write through cdev successful
 [    0.205436] [6:cpu0:sched-mon:58869] cherry_sdio: [sdio-verify] sdhci_init=pass card_detect=pass ocr=pass cid=pass csd=pass block_read=pass block_write=pass vfs_bdev=pass all=pass
 [    0.363385] [6:cpu0:sched-mon:62965] cherry_ext4: [ext4-verify] mkfs=pass fsck=pass mount=pass file_io=pass dir_ops=pass journal=pass umount=pass all=pass
 [    0.563920] [6:cpu0:sched-mon:62965] cherry_fstools: [fstools-verify] fdisk=pass part_bdev=pass mkfs=pass mount=pass echo_cat=pass cp_mv=pass ls_rm=pass umount=pass all=pass
+[    0.659769] [6:cpu0:sched-mon:30198] cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass all=pass
 [    0.564911] [6:cpu0:sched-mon:62965] cherry_shell: initialized with vxworks c-function call & addr2sym engine
 [    0.221261] [6:cpu0:sched-mon:58869] cherry_shell: [shell-verify] syms=pass addr2sym=pass c_func=pass sum8=pass str=pass cmds=pass all=pass
 [    0.222377] [6:cpu0:sched-mon:58869] freertos: [xsync-verify] sem=pass queue=pass mutex=pass spin=pass sg=16 st=16 qs=16 qr=16 qe=0 me=32 mc=32 merr=0 se=32 sc=32 serr=0

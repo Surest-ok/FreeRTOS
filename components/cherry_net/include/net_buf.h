@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 #define NET_BUF_POOL_SIZE     128
-#define NET_BUF_DATA_SIZE     1600
+#define NET_BUF_DATA_SIZE     2048
 #define NET_BUF_HEADROOM      128
 
 struct netif;
