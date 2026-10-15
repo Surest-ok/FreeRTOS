@@ -63,7 +63,13 @@ const arch_exception_stats_t *arch_exception_get_stats(void)
 
 void arch_vector_install(void *table)
 {
-    __asm__ volatile("msr vbar_el1, %0\nisb" :: "r"(table) : "memory");
+    uint64_t current_el;
+    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
+    if (((current_el >> 2) & 0x3) == 2) {
+        __asm__ volatile("msr vbar_el2, %0\nisb" :: "r"(table) : "memory");
+    } else {
+        __asm__ volatile("msr vbar_el1, %0\nisb" :: "r"(table) : "memory");
+    }
 }
 
 void arch_syscall_set_handler(arch_syscall_handler_t handler)

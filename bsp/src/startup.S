@@ -46,14 +46,49 @@ _start:
     b       el1_setup
 
 el2_setup:
-    /* Enable GICv3 system register access at EL2 */
+#if defined(CONFIG_RUN_AT_EL2)
+    /* Native EL2 Execution: FreeRTOS executes entirely in EL2 */
     mrs     x0, S3_4_C12_C9_5         /* ICC_SRE_EL2 */
-    orr     x0, x0, #0x7
+    orr     x0, x0, #0xF              /* SRE, DFB, DIB, Enable */
     msr     S3_4_C12_C9_5, x0
     isb
 
-    /* HCR_EL2: RW=1 (EL1 is AArch64), no IRQ/FIQ routing */
-    mov     x0, #(1 << 31)            /* RW bit */
+    /* Route physical IRQ/FIQ/SError to EL2: HCR_EL2.RW=1, IMO=1, FMO=1, AMO=1 */
+    ldr     x0, =0x80000038
+    msr     hcr_el2, x0
+    isb
+
+    ldr     x0, =0x33FF
+    msr     cnthctl_el2, x0
+    msr     cntvoff_el2, xzr
+    isb
+
+    msr     cptr_el2, xzr             /* No FP/SIMD traps */
+    isb
+
+    ldr     x6, =0x30C50838
+    msr     SCTLR_EL2, x6
+    isb
+
+    msr     spsel, #1
+    bl      setup_stack_el1
+    b       common_init
+#else
+    /* Drop to EL1 Execution: configure EL2 and drop cleanly */
+    mrs     x0, S3_4_C12_C9_5         /* ICC_SRE_EL2 */
+    orr     x0, x0, #0xF              /* SRE + DFB + DIB + Enable (allows EL1 ICC access) */
+    msr     S3_4_C12_C9_5, x0
+    isb
+
+    ldr     x0, =0x33FF               /* Allow EL1 timer access without trap */
+    msr     cnthctl_el2, x0
+    msr     cntvoff_el2, xzr
+    isb
+
+    msr     cptr_el2, xzr             /* Disable FP/SIMD traps at EL2 */
+    isb
+
+    mov     x0, #(1 << 31)            /* HCR_EL2: RW=1 (EL1 is AArch64) */
     msr     hcr_el2, x0
     isb
 
@@ -72,6 +107,7 @@ el2_setup:
     mov     x0, #0x3C5                /* SPSR_EL2: EL1h, DAIF all masked */
     msr     spsr_el2, x0
     eret                              /* → el1_entry at EL1 */
+#endif
 
 el1_entry:
     /* Now at EL1 — set up per-core stack */
@@ -139,6 +175,12 @@ wait_for_mailbox:
     /* Got entry point — set up per-core stack */
     bl      setup_stack_el1
 
+    mrs     x10, CurrentEL
+    lsr     x10, x10, #2
+    and     x10, x10, #3
+    cmp     x10, #2
+    b.eq    2f
+
     /* Configure EL1 */
     mrs     x6, CPACR_EL1
     orr     x6, x6, #0x00F00000
@@ -146,6 +188,14 @@ wait_for_mailbox:
     ldr     x6, =0x30C50838
     msr     SCTLR_EL1, x6
     isb
+    b       3f
+
+2:  /* Configure EL2 */
+    msr     cptr_el2, xzr
+    ldr     x6, =0x30C50838
+    msr     SCTLR_EL2, x6
+    isb
+3:
 
     /* Enable IRQ */
     msr     daifclr, #0x2
@@ -154,10 +204,42 @@ wait_for_mailbox:
     br      x8
 
 el2_setup_secondary:
+#if defined(CONFIG_RUN_AT_EL2)
+    mrs     x0, S3_4_C12_C9_5
+    orr     x0, x0, #0xF
+    msr     S3_4_C12_C9_5, x0
+    isb
+
+    ldr     x0, =0x80000038           /* Route IRQ to EL2 */
+    msr     hcr_el2, x0
+    isb
+
+    ldr     x0, =0x33FF
+    msr     cnthctl_el2, x0
+    msr     cntvoff_el2, xzr
+    isb
+
+    msr     cptr_el2, xzr
+    isb
+
+    ldr     x6, =0x30C50838
+    msr     SCTLR_EL2, x6
+    isb
+
+    b       wait_for_mailbox
+#else
     /* EL2 → EL1 drop for secondary cores */
     mrs     x0, S3_4_C12_C9_5         /* ICC_SRE_EL2 */
-    orr     x0, x0, #0x7
+    orr     x0, x0, #0xF
     msr     S3_4_C12_C9_5, x0
+    isb
+
+    ldr     x0, =0x33FF
+    msr     cnthctl_el2, x0
+    msr     cntvoff_el2, xzr
+    isb
+
+    msr     cptr_el2, xzr
     isb
 
     mov     x0, #(1 << 31)            /* HCR_EL2.RW = 1 */
@@ -178,6 +260,7 @@ el2_setup_secondary:
     mov     x0, #0x3C5                /* SPSR_EL2: EL1h, DAIF all masked */
     msr     spsr_el2, x0
     eret
+#endif
 
 /* === Stack Setup Helper === */
 /* Sets SP_EL1 = stack_top + ((linear_core_id + 1) * STACK_SIZE) */

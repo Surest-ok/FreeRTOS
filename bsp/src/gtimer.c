@@ -39,6 +39,13 @@ static uint32_t gtimer_current_core(void)
 
 void gtimer_init(void)
 {
+    uint64_t current_el;
+    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
+    if (((current_el >> 2) & 0x3) == 2) {
+        write_sysreg("cnthctl_el2", 0x33FF);
+        write_sysreg("cntvoff_el2", 0);
+    }
+
     uint64_t freq = read_sysreg("cntfrq_el0");
     timer_step = freq / GTIMER_TICK_RATE;
 

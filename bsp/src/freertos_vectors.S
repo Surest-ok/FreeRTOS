@@ -44,5 +44,4 @@ _freertos_vector_table:
     ventry  hang_stub
 
 hang_stub:
-    wfe
-    b hang_stub
+    b FreeRTOS_Abort

@@ -1,3 +1,5 @@
+extern int cherry_kmod_init(void);
+extern int cherry_kmod_run_tests(void);
 #include <stdint.h>
 #include "FreeRTOS.h"
 #include "task.h"
@@ -613,6 +615,8 @@ static void scheduler_monitor(void *arg)
         cherry_usbd_run_tests();
         cherry_process_init();
         cherry_process_run_tests();
+        cherry_kmod_init();
+        cherry_kmod_run_tests();
         cherry_shell_init();
         cherry_shell_run_tests();
         cherry_shell_start();
