@@ -14,7 +14,7 @@
 #include "vfs_posix.h"
 #include "cherry_fstools.h"
 
-int fstools_mount(const char *src, const char *target, const char *fstype)
+int cherry_mount(const char *src, const char *target, const char *fstype)
 {
     if (!src || !target) return -1;
     mkdir(target, 0755);
@@ -27,7 +27,7 @@ int fstools_mount(const char *src, const char *target, const char *fstype)
     return ret;
 }
 
-int fstools_umount(const char *target)
+int cherry_umount(const char *target)
 {
     if (!target) return -1;
     int ret = umount(target);
@@ -50,7 +50,7 @@ int cmd_mount(int argc, char **argv)
     const char *tgt = argv[2];
     const char *fstype = (argc >= 4) ? argv[3] : "ext4";
 
-    return fstools_mount(src, tgt, fstype);
+    return cherry_mount(src, tgt, fstype);
 }
 
 int cmd_umount(int argc, char **argv)
@@ -59,5 +59,5 @@ int cmd_umount(int argc, char **argv)
         printk("usage: umount <target>\n");
         return -1;
     }
-    return fstools_umount(argv[1]);
+    return cherry_umount(argv[1]);
 }

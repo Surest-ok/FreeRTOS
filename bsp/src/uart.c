@@ -100,9 +100,14 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
         fmt++;
         int pad_zero = 0;
+        int left_align = 0;
         int width = 0;
-        if (*fmt == '0') {
-            pad_zero = 1;
+        while (*fmt == '-' || *fmt == '0') {
+            if (*fmt == '-') {
+                left_align = 1;
+            } else if (*fmt == '0') {
+                pad_zero = 1;
+            }
             fmt++;
         }
         while (*fmt >= '0' && *fmt <= '9') {
@@ -128,9 +133,9 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                 else if (is_long == 1) val = va_arg(args, long);
                 else val = va_arg(args, int);
 
+                int is_neg = 0;
                 if (val < 0) {
-                    *p++ = '-';
-                    count++;
+                    is_neg = 1;
                     val = -val;
                 }
                 char num_buf[32];
@@ -141,14 +146,35 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                     uval /= 10;
                 } while (uval > 0);
 
-                while (nlen < width && (size_t)count < (size - 1)) {
-                    *p++ = pad_zero ? '0' : ' ';
+                int total_len = nlen + (is_neg ? 1 : 0);
+                if (!left_align) {
+                    if (pad_zero && is_neg) {
+                        if ((size_t)count < (size - 1)) {
+                            *p++ = '-';
+                            count++;
+                            is_neg = 0;
+                        }
+                    }
+                    while (total_len < width && (size_t)count < (size - 1)) {
+                        *p++ = pad_zero ? '0' : ' ';
+                        count++;
+                        width--;
+                    }
+                }
+                if (is_neg && (size_t)count < (size - 1)) {
+                    *p++ = '-';
                     count++;
-                    width--;
                 }
                 for (int j = nlen - 1; j >= 0 && (size_t)count < (size - 1); j--) {
                     *p++ = num_buf[j];
                     count++;
+                }
+                if (left_align) {
+                    while (total_len < width && (size_t)count < (size - 1)) {
+                        *p++ = ' ';
+                        count++;
+                        width--;
+                    }
                 }
                 break;
             }
@@ -166,14 +192,23 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                     uval /= 10;
                 } while (uval > 0);
 
-                while (nlen < width && (size_t)count < (size - 1)) {
-                    *p++ = pad_zero ? '0' : ' ';
-                    count++;
-                    width--;
+                if (!left_align) {
+                    while (nlen < width && (size_t)count < (size - 1)) {
+                        *p++ = pad_zero ? '0' : ' ';
+                        count++;
+                        width--;
+                    }
                 }
                 for (int j = nlen - 1; j >= 0 && (size_t)count < (size - 1); j--) {
                     *p++ = num_buf[j];
                     count++;
+                }
+                if (left_align) {
+                    while (nlen < width && (size_t)count < (size - 1)) {
+                        *p++ = ' ';
+                        count++;
+                        width--;
+                    }
                 }
                 break;
             }
@@ -202,14 +237,23 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
                     uval >>= 4;
                 } while (uval > 0);
 
-                while (nlen < width && (size_t)count < (size - 1)) {
-                    *p++ = pad_zero ? '0' : ' ';
-                    count++;
-                    width--;
+                if (!left_align) {
+                    while (nlen < width && (size_t)count < (size - 1)) {
+                        *p++ = pad_zero ? '0' : ' ';
+                        count++;
+                        width--;
+                    }
                 }
                 for (int j = nlen - 1; j >= 0 && (size_t)count < (size - 1); j--) {
                     *p++ = num_buf[j];
                     count++;
+                }
+                if (left_align) {
+                    while (nlen < width && (size_t)count < (size - 1)) {
+                        *p++ = ' ';
+                        count++;
+                        width--;
+                    }
                 }
                 break;
             }
@@ -217,9 +261,26 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
             case 's': {
                 const char *s = va_arg(args, char *);
                 if (!s) s = "(null)";
+                int slen = 0;
+                while (s[slen]) slen++;
+
+                if (!left_align) {
+                    while (slen < width && (size_t)count < (size - 1)) {
+                        *p++ = ' ';
+                        count++;
+                        width--;
+                    }
+                }
                 while (*s && (size_t)count < (size - 1)) {
                     *p++ = *s++;
                     count++;
+                }
+                if (left_align) {
+                    while (slen < width && (size_t)count < (size - 1)) {
+                        *p++ = ' ';
+                        count++;
+                        width--;
+                    }
                 }
                 break;
             }

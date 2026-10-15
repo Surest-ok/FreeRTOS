@@ -34,7 +34,7 @@ static struct vfs_bdev *resolve_bdev(const char *dev_name)
     return bdev;
 }
 
-int fstools_fdisk(const char *dev)
+int cherry_fdisk(const char *dev)
 {
     struct vfs_bdev *bdev = resolve_bdev(dev);
     if (!bdev) {
@@ -44,7 +44,7 @@ int fstools_fdisk(const char *dev)
     return part_dump_table(bdev);
 }
 
-int fstools_part_create(const char *dev, int part_no, uint32_t start_lba, uint32_t sectors, uint8_t type)
+int cherry_part_create(const char *dev, int part_no, uint32_t start_lba, uint32_t sectors, uint8_t type)
 {
     struct vfs_bdev *bdev = resolve_bdev(dev);
     if (!bdev) {
