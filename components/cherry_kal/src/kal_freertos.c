@@ -16,7 +16,7 @@
 #include "uart.h"
 
 #define KTHREAD_DEFAULT_STACK_WORDS 2048
-#define KTHREAD_DEFAULT_PRIORITY    (configMAX_PRIORITIES - 3)
+#define KTHREAD_DEFAULT_PRIORITY    (tskIDLE_PRIORITY + 2)
 
 /* =========================================================================
  * 1. Memory Management
@@ -331,6 +331,31 @@ unsigned int smp_processor_id(void)
     uint64_t mpidr;
     __asm__ volatile("mrs %0, mpidr_el1" : "=r"(mpidr));
     return (unsigned int)((mpidr & 0xFFU) + (((mpidr >> 8) & 0xFFU) << 4));
+}
+
+static struct task_struct s_cur_tasks[32];
+
+struct task_struct *kthread_current(void)
+{
+    uint32_t cpu = smp_processor_id();
+    if (cpu >= 32) cpu = 0;
+    TaskHandle_t h = xTaskGetCurrentTaskHandle();
+    s_cur_tasks[cpu].handle = (void *)h;
+    return &s_cur_tasks[cpu];
+}
+
+void kthread_exit(int code)
+{
+    (void)code;
+    vTaskDelete(NULL);
+}
+
+void kthread_delete(struct task_struct *task)
+{
+    if (task && task->handle) {
+        vTaskDelete((TaskHandle_t)task->handle);
+        task->handle = NULL;
+    }
 }
 
 /* =========================================================================

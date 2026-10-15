@@ -198,6 +198,7 @@
       - **AArch64 Linux 兼容系统调用层 (`cherry_syscall`)**：标准 Linux ARM64 系统调用号 (`__NR_openat`, `__NR_read`, `__NR_write`, `__NR_close`, `__NR_pipe2`, `__NR_dup`, `__NR_dup2`, `__NR_statx`, `__NR_fstat`, `__NR_mkdirat`, `__NR_unlinkat`, `__NR_getcwd`, `__NR_chdir`, `__NR_getpid`, `__NR_getppid`, `__NR_exit`, `__NR_wait4`, `__NR_nanosleep`, `__NR_uname`)。
       - **虚拟管道与重定向 (IPC Pipe)**：基于内存环形缓冲区 (`CHERRY_PIPE_BUF_SIZE = 4096`) 提供读写阻塞与同步唤醒，完整对接 CherryVFS `vfs_file_operations`。
       - **BusyBox 多合一二进制应用集与 Shell**：纯嵌入式无依赖封装 25+ 核心工具（`sh`, `ls`, `cat`, `echo`, `cp`, `mv`, `rm`, `mkdir`, `rmdir`, `pwd`, `touch`, `uname`, `ps`, `kill`, `sleep`, `head`, `tail`, `wc`, `grep`, `df`, `free`, `dmesg`, `date`, `true`, `false`, `hexdump`），支持管道符 `|` 与重定向 `>` / `>>`。
+      - **内核完全解耦与 ELF64 加载器**：基于 `cherry_kal` 完全解耦内核实现，提供独立的 Linux System V ABI 用户栈 (`auxv`, `AT_RANDOM`)、AArch64 执行蹦床 (`cherry_arch_enter_elf`) 与 glibc 进程级系统调用。
 
 ---
 

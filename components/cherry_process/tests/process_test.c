@@ -165,7 +165,7 @@ int cherry_process_run_tests(void)
         }
     }
 
-    /* 9. Test ELF64 Loader, glibc Syscalls & System V ABI Stack */
+    /* 9. Test Complete ELF64 Loader, glibc Syscalls & Trampoline Execution */
     uint8_t dummy_elf[sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr) + 64];
     memset(dummy_elf, 0, sizeof(dummy_elf));
 
@@ -180,7 +180,7 @@ int cherry_process_run_tests(void)
     eh->e_type = ET_DYN; /* PIE */
     eh->e_machine = EM_AARCH64;
     eh->e_version = EV_CURRENT;
-    eh->e_entry = sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr);
+    eh->e_entry = 0x1000; /* Virtual entry address matching ph->p_vaddr */
     eh->e_phoff = sizeof(Elf64_Ehdr);
     eh->e_ehsize = sizeof(Elf64_Ehdr);
     eh->e_phentsize = sizeof(Elf64_Phdr);
@@ -196,35 +196,47 @@ int cherry_process_run_tests(void)
     ph->p_memsz = 128;
     ph->p_align = 4096;
 
+    /* Real AArch64 executable instructions:
+     *   mov x0, #42   (0xd2800540)
+     *   ret           (0xd65f03c0)
+     */
+    uint32_t *elf_code = (uint32_t *)(dummy_elf + sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr));
+    elf_code[0] = 0xd2800540; /* mov x0, #42 */
+    elf_code[1] = 0xd65f03c0; /* ret */
+
     int elf_fd = sys_open("/cherry_proc_test/sample_app.elf", O_WRONLY | O_CREAT | O_TRUNC, 0755);
     if (elf_fd >= 0) {
         sys_write(elf_fd, dummy_elf, sizeof(dummy_elf));
         sys_close(elf_fd);
 
-        struct elf_image img;
-        if (proc_elf_load("/cherry_proc_test/sample_app.elf", &img) == 0) {
-            uint64_t stack_buf[128];
-            char *test_argv[] = { (char *)"sample_app", (char *)"--version", NULL };
-            char *test_envp[] = { (char *)"PATH=/bin", NULL };
-            uintptr_t sp = proc_elf_setup_stack((uintptr_t)&stack_buf[127], 2, test_argv, test_envp, &img);
+        char *test_argv[] = { (char *)"sample_app", (char *)"--version", NULL };
+        char *test_envp[] = { (char *)"PATH=/bin", NULL };
 
-            /* Test glibc bootstrap syscalls */
-            long tid = cherry_syscall(__NR_set_tid_address, 0, 0, 0, 0, 0, 0);
-            char rand_buf[16];
-            long rnd = cherry_syscall(__NR_getrandom, (long)rand_buf, sizeof(rand_buf), 0, 0, 0, 0);
+        /* (a) Test Synchronous ELF Execution via proc_exec_elf */
+        int exec_ret = proc_exec_elf("/cherry_proc_test/sample_app.elf", 2, test_argv, test_envp);
 
-            struct iovec iov;
-            const char *hello_v = "hello writev";
-            iov.iov_base = (void *)hello_v;
-            iov.iov_len = strlen(hello_v);
-            int tmp_wfd = sys_open("/cherry_proc_test/writev.tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            long wv = (tmp_wfd >= 0) ? cherry_syscall(__NR_writev, tmp_wfd, (long)&iov, 1, 0, 0, 0) : -1;
-            if (tmp_wfd >= 0) sys_close(tmp_wfd);
+        /* (b) Test Asynchronous Process Spawn via proc_spawn_elf */
+        pid_t elf_pid = proc_spawn_elf("/cherry_proc_test/sample_app.elf", 2, test_argv, test_envp, -1, -1, -1);
+        int elf_status = 0;
+        if (elf_pid > 0) {
+            proc_waitpid(elf_pid, &elf_status, 0);
+        }
 
-            if (sp != 0 && tid > 0 && rnd == 16 && wv == (long)strlen(hello_v)) {
-                pass_elf = true;
-            }
-            proc_elf_unload(&img);
+        /* (c) Test glibc bootstrap syscalls */
+        long tid = cherry_syscall(__NR_set_tid_address, 0, 0, 0, 0, 0, 0);
+        char rand_buf[16];
+        long rnd = cherry_syscall(__NR_getrandom, (long)rand_buf, sizeof(rand_buf), 0, 0, 0, 0);
+
+        struct iovec iov;
+        const char *hello_v = "hello writev";
+        iov.iov_base = (void *)hello_v;
+        iov.iov_len = strlen(hello_v);
+        int tmp_wfd = sys_open("/cherry_proc_test/writev.tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        long wv = (tmp_wfd >= 0) ? cherry_syscall(__NR_writev, tmp_wfd, (long)&iov, 1, 0, 0, 0) : -1;
+        if (tmp_wfd >= 0) sys_close(tmp_wfd);
+
+        if (exec_ret == 42 && elf_status == 42 && tid > 0 && rnd == 16 && wv == (long)strlen(hello_v)) {
+            pass_elf = true;
         }
     }
 

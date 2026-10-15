@@ -299,48 +299,115 @@ uintptr_t proc_elf_setup_stack(uintptr_t stack_top, int argc, char **argv, char 
     return sp;
 }
 
-static int elf_entry_trampoline(int argc, char **argv)
+static int elf_process_worker(int argc, char **argv)
 {
     (void)argc;
-    if (!argv || !argv[0]) return -1;
+    (void)argv;
+    struct process *p = proc_current();
+    if (!p || !p->priv) return -EINVAL;
 
-    struct elf_image *img = (struct elf_image *)argv[0];
-    if (!img || !img->entry_point) return -1;
+    struct elf_process_ctx *ctx = (struct elf_process_ctx *)p->priv;
+    p->priv = NULL; /* Transfer ownership to worker */
 
-    /* Invoke entry point */
-    typedef int (*elf_entry_fn)(void);
-    elf_entry_fn entry = (elf_entry_fn)img->entry_point;
+    /* Execute ELF entry point via architecture trampoline with full System V ABI stack */
+    int ret = cherry_arch_enter_elf(ctx->img.entry_point, ctx->user_sp);
+    ctx->exit_code = ret;
+    ctx->running = false;
 
-    int ret = entry();
+    /* Resource reclamation */
+    proc_elf_unload(&ctx->img);
+    if (ctx->stack_mem) {
+        kfree(ctx->stack_mem);
+        ctx->stack_mem = NULL;
+    }
+    kfree(ctx);
+
     return ret;
 }
 
 int proc_spawn_elf(const char *path, int argc, char **argv, char **envp,
                    int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd)
 {
-    (void)argc;
-    (void)argv;
-    struct elf_image *img = (struct elf_image *)kmalloc(sizeof(struct elf_image), GFP_KERNEL);
-    if (!img) return -ENOMEM;
+    if (!path) return -EINVAL;
 
-    int ret = proc_elf_load(path, img);
+    struct elf_process_ctx *ctx = (struct elf_process_ctx *)kzalloc(sizeof(*ctx), GFP_KERNEL);
+    if (!ctx) return -ENOMEM;
+
+    /* 1. Load ELF binary into memory */
+    int ret = proc_elf_load(path, &ctx->img);
     if (ret != 0) {
-        kfree(img);
+        kfree(ctx);
         return ret;
     }
 
-    char *spawn_argv[2];
-    spawn_argv[0] = (char *)img;
-    spawn_argv[1] = NULL;
+    /* 2. Allocate user execution stack (64KB) */
+    ctx->stack_mem = kmalloc(PROC_ELF_STACK_SIZE, GFP_KERNEL);
+    if (!ctx->stack_mem) {
+        proc_elf_unload(&ctx->img);
+        kfree(ctx);
+        return -ENOMEM;
+    }
 
-    pid_t pid = proc_spawn(path, elf_entry_trampoline, 1, spawn_argv, envp,
-                           stdin_vfs_fd, stdout_vfs_fd, stderr_vfs_fd);
+    /* 3. Setup System V ABI initial stack frame */
+    uintptr_t stack_top = (uintptr_t)ctx->stack_mem + PROC_ELF_STACK_SIZE;
+    ctx->user_sp = proc_elf_setup_stack(stack_top, argc, argv, envp, &ctx->img);
+    if (!ctx->user_sp) {
+        kfree(ctx->stack_mem);
+        proc_elf_unload(&ctx->img);
+        kfree(ctx);
+        return -EINVAL;
+    }
+
+    ctx->argc = argc;
+    ctx->argv = argv;
+    ctx->envp = envp;
+    ctx->running = true;
+
+    /* Extract process name (basename) */
+    const char *proc_name = strrchr(path, '/');
+    proc_name = proc_name ? proc_name + 1 : path;
+
+    /* 4. Spawn child process with ctx passed via priv */
+    pid_t pid = proc_spawn_ex(proc_name, elf_process_worker, argc, argv, envp,
+                              stdin_vfs_fd, stdout_vfs_fd, stderr_vfs_fd, ctx);
 
     if (pid <= 0) {
-        proc_elf_unload(img);
-        kfree(img);
+        kfree(ctx->stack_mem);
+        proc_elf_unload(&ctx->img);
+        kfree(ctx);
         return pid;
     }
 
     return pid;
+}
+
+int proc_exec_elf(const char *path, int argc, char **argv, char **envp)
+{
+    if (!path) return -EINVAL;
+
+    struct elf_image img;
+    int ret = proc_elf_load(path, &img);
+    if (ret != 0) return ret;
+
+    void *stack_mem = kmalloc(PROC_ELF_STACK_SIZE, GFP_KERNEL);
+    if (!stack_mem) {
+        proc_elf_unload(&img);
+        return -ENOMEM;
+    }
+
+    uintptr_t stack_top = (uintptr_t)stack_mem + PROC_ELF_STACK_SIZE;
+    uintptr_t sp = proc_elf_setup_stack(stack_top, argc, argv, envp, &img);
+    if (!sp) {
+        kfree(stack_mem);
+        proc_elf_unload(&img);
+        return -EINVAL;
+    }
+
+    /* Synchronously enter ELF */
+    int exit_code = cherry_arch_enter_elf(img.entry_point, sp);
+
+    kfree(stack_mem);
+    proc_elf_unload(&img);
+
+    return exit_code;
 }

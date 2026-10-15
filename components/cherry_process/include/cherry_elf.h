@@ -171,6 +171,26 @@ uintptr_t proc_elf_setup_stack(uintptr_t stack_top, int argc, char **argv, char 
 /**
  * Spawns an ELF executable as a new CherryOS process.
  */
+/* Complete ELF Process Context */
+#define PROC_ELF_STACK_SIZE     (64 * 1024) /* 64KB user stack */
+
+struct elf_process_ctx {
+    struct elf_image img;
+    void            *stack_mem;
+    uintptr_t        user_sp;
+    int              argc;
+    char           **argv;
+    char           **envp;
+    int              exit_code;
+    bool             running;
+};
+
+/* Architecture execution trampoline (implemented in proc_arch_aarch64.S) */
+int cherry_arch_enter_elf(uintptr_t entry_point, uintptr_t user_sp);
+
+/* Synchronous execution of an ELF binary in current process context */
+int proc_exec_elf(const char *path, int argc, char **argv, char **envp);
+
 int proc_spawn_elf(const char *path, int argc, char **argv, char **envp,
                    int stdin_vfs_fd, int stdout_vfs_fd, int stderr_vfs_fd);
 
