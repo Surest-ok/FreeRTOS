@@ -56,11 +56,6 @@
 
 static inline StackType_t port_get_initial_pstate(void)
 {
-    uint64_t current_el;
-    __asm__ volatile("mrs %0, CurrentEL" : "=r"(current_el));
-    if (((current_el >> 2) & 0x3) == 2) {
-        return (StackType_t)(portEL2 | portSP_EL0);
-    }
     return (StackType_t)(portEL1 | portSP_EL0);
 }
 
@@ -211,9 +206,9 @@ BaseType_t xPortStartScheduler(void)
     __asm__ volatile("MRS %0, CurrentEL" : "=r"(ulAPSR));
     ulAPSR &= portAPSR_MODE_BITS_MASK;
 
-    configASSERT((ulAPSR == portEL1) || (ulAPSR == portEL2));
+    configASSERT(ulAPSR == portEL1);
 
-    if ((ulAPSR == portEL1) || (ulAPSR == portEL2))
+    if (ulAPSR == portEL1)
     {
         /* Disable interrupts during scheduler startup */
         portDISABLE_INTERRUPTS();

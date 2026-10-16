@@ -92,16 +92,9 @@
     MRS     X1, TPIDR_EL0
     STP     X30, X1, [SP, #-0x10]!
 
-    /* Save the SPSR and ELR (EL1 or EL2). */
-    MRS     X1, CurrentEL
-    TBZ     X1, #3, 11f
-    MRS     X3, SPSR_EL2
-    MRS     X2, ELR_EL2
-    B       12f
-11:
+    /* Save SPSR_EL1 and ELR_EL1 */
     MRS     X3, SPSR_EL1
     MRS     X2, ELR_EL1
-12:
     STP     X2, X3, [SP, #-0x10]!
 
     /* Save the FPU context indicator from per-core array. */
@@ -224,17 +217,10 @@
     MSR     FPSR, X9
     MSR     FPCR, X10
 1:
-    /* Restore SPSR and ELR */
+    /* Restore SPSR_EL1 and ELR_EL1 */
     LDP     X2, X3, [SP], #0x10
-    MRS     X1, CurrentEL
-    TBZ     X1, #3, 13f
-    MSR     SPSR_EL2, X3
-    MSR     ELR_EL2, X2
-    B       14f
-13:
     MSR     SPSR_EL1, X3
     MSR     ELR_EL1, X2
-14:
 
     /* Restore general purpose registers and TPIDR_EL0 */
     LDP     X30, X1, [SP], #0x10
@@ -274,13 +260,7 @@ FreeRTOS_SWI_Handler:
     ISB     SY
 
     STP     X16, X17, [SP, #-0x10]!
-    MRS     X16, CurrentEL
-    TBZ     X16, #3, 21f
-    MRS     X16, ESR_EL2
-    B       22f
-21:
     MRS     X16, ESR_EL1
-22:
     LSR     X17, X16, #26
     CMP     X17, #0x15
     B.EQ    1f
@@ -347,19 +327,10 @@ alignment_fixup_trap:
     ADD     X0,  SP,  #0x110
     STR     X0,       [SP, #0xF8]       /* sp */
 
-    MRS     X18, CurrentEL
-    TBZ     X18, #3, 71f
-    MRS     X16, ELR_EL2
-    MRS     X17, SPSR_EL2
-    MRS     X1,  ESR_EL2
-    MRS     X3,  FAR_EL2
-    B       72f
-71:
     MRS     X16, ELR_EL1
     MRS     X17, SPSR_EL1
     MRS     X1,  ESR_EL1
     MRS     X3,  FAR_EL1
-72:
     STP     X16, X17, [SP, #0x100]      /* pc, pstate */
 
     /* Call arch_fixup_alignment_fault(frame, esr, elr, far) */
@@ -370,13 +341,7 @@ alignment_fixup_trap:
 
     /* Success: update ELR with advanced PC */
     LDR     X16, [SP, #0x100]
-    MRS     X18, CurrentEL
-    TBZ     X18, #3, 73f
-    MSR     ELR_EL2, X16
-    B       74f
-73:
     MSR     ELR_EL1, X16
-74:
 
     /* Restore registers and return */
     LDR     X16,      [SP, #0xF8]       /* Target SP (with any writeback applied) */
@@ -443,15 +408,8 @@ alignment_fixup_failed:
     ADD     X0,  SP,  #0x110
     STR     X0,       [SP, #0xF8]       /* sp */
 
-    MRS     X18, CurrentEL
-    TBZ     X18, #3, 23f
-    MRS     X16, ELR_EL2
-    MRS     X17, SPSR_EL2
-    B       24f
-23:
     MRS     X16, ELR_EL1
     MRS     X17, SPSR_EL1
-24:
     STP     X16, X17, [SP, #0x100]      /* pc, pstate */
 
     /* Pass struct syscall_frame * in X0 */
@@ -467,15 +425,8 @@ alignment_fixup_failed:
 
     /* Restore exception state */
     LDP     X16, X17, [SP, #0x100]
-    MRS     X18, CurrentEL
-    TBZ     X18, #3, 25f
-    MSR     ELR_EL2, X16
-    MSR     SPSR_EL2, X17
-    B       26f
-25:
     MSR     ELR_EL1, X16
     MSR     SPSR_EL1, X17
-26:
 
     /* Restore general purpose registers */
     LDR     X30,      [SP, #0xF0]
@@ -516,13 +467,7 @@ alignment_fixup_failed:
     STR     X2, [X1, X0, LSL #3]
 #endif
 
-    MRS     X1, CurrentEL
-    TBZ     X1, #3, 27f
-    MRS     X0, ESR_EL2
-    B       28f
-27:
     MRS     X0, ESR_EL1
-28:
 #if ( configPORT_SMP_DIAGNOSTICS == 1 )
     GET_CORE_ID  X3
     LDR     X4, =ullPortSvcEsr
@@ -558,19 +503,10 @@ alignment_fixup_failed:
     portRESTORE_CONTEXT
 
 FreeRTOS_Abort:
-    MRS     X4, CurrentEL
-    TBZ     X4, #3, 41f
-    MRS     X0, ESR_EL2
-    MRS     X1, ELR_EL2
-    MRS     X2, FAR_EL2
-    MRS     X3, SPSR_EL2
-    B       42f
-41:
     MRS     X0, ESR_EL1
     MRS     X1, ELR_EL1
     MRS     X2, FAR_EL1
     MRS     X3, SPSR_EL1
-42:
     MSR     SPSEL, #1
     BL      vPortFatalException
 1:
@@ -618,16 +554,9 @@ FreeRTOS_IRQ_Handler:
     STP     X18, X19, [SP, #-0x10]!
     STP     X29, X30, [SP, #-0x10]!
 
-    /* Save the SPSR and ELR */
-    MRS     X1, CurrentEL
-    TBZ     X1, #3, 31f
-    MRS     X3, SPSR_EL2
-    MRS     X2, ELR_EL2
-    B       32f
-31:
+    /* Save SPSR_EL1 and ELR_EL1 */
     MRS     X3, SPSR_EL1
     MRS     X2, ELR_EL1
-32:
     STP     X2, X3, [SP, #-0x10]!
 
     /* Increment the per-core interrupt nesting counter.
@@ -678,15 +607,8 @@ FreeRTOS_IRQ_Handler:
 
     /* Restore volatile registers before context switch */
     LDP     X4, X5, [SP], #0x10       /* SPSR and ELR */
-    MRS     X1, CurrentEL
-    TBZ     X1, #3, 33f
-    MSR     SPSR_EL2, X5
-    MSR     ELR_EL2, X4
-    B       34f
-33:
     MSR     SPSR_EL1, X5
     MSR     ELR_EL1, X4
-34:
     DSB     SY
     ISB     SY
 
@@ -714,15 +636,8 @@ FreeRTOS_IRQ_Handler:
 Exit_IRQ_No_Context_Switch:
     /* Restore volatile registers and return */
     LDP     X4, X5, [SP], #0x10       /* SPSR and ELR */
-    MRS     X1, CurrentEL
-    TBZ     X1, #3, 35f
-    MSR     SPSR_EL2, X5
-    MSR     ELR_EL2, X4
-    B       36f
-35:
     MSR     SPSR_EL1, X5
     MSR     ELR_EL1, X4
-36:
     DSB     SY
     ISB     SY
 
