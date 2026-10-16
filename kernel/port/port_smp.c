@@ -2,8 +2,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "port_smp.h"
-#include "gic.h"
-#include "app_irq.h"
+
+extern void vPortPlatformSecondaryCoreInit(uint32_t core_id) __attribute__((weak));
 
 uint64_t ulPortInterruptNestings[configNUMBER_OF_CORES] = {0};
 uint64_t ulPortYieldRequireds[configNUMBER_OF_CORES] = {0};
@@ -160,7 +160,9 @@ void vPortSecondaryCoreEntry(void) {
     while (pxCurrentTCBs[core_id] == NULL) {
         __asm__ volatile("dmb sy\nwfe" ::: "memory");
     }
-    gic_init((uint32_t)core_id); gic_set_priority(0,0xB0); gic_enable_irq(0); app_irq_install(0,SGI_Yield_Handler);
+    if (vPortPlatformSecondaryCoreInit) {
+        vPortPlatformSecondaryCoreInit((uint32_t)core_id);
+    }
     vPortSetCoreActive(core_id);
     __asm__ volatile("msr daifclr, #2\nisb\n");
     vPortRestoreTaskContext(); for(;;) __asm__ volatile("wfi");
