@@ -40,7 +40,7 @@ extern int cherry_mesa_run_tests(void);
 #include "process_test.h"
 
 #define APP_WORKER_STACK_WORDS  256
-#define APP_MONITOR_STACK_WORDS 2048
+#define APP_MONITOR_STACK_WORDS 8192
 #define APP_PROBE_STACK_WORDS   512
 #define APP_PROBE_ITERATIONS    16U
 
