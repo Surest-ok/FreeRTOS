@@ -66,7 +66,7 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         with open(sata_img, "wb") as f:
             f.truncate(64 * 1024 * 1024)
 
-    machine_opt = "virt,virtualization=on,gic-version=3,its=on" if args.el == 2 else "virt,gic-version=3,its=on"
+    machine_opt = "virt,gic-version=3,its=on"
     return [
         "qemu-system-aarch64",
         "-machine",
