@@ -318,6 +318,9 @@ FreeRTOS_SWI_Handler:
      * ========================================================================= */
     LDP     X16, X17, [SP], #0x10       /* Restore original X16, X17 */
 
+    /* Switch to task stack (SP_EL0) for executing POSIX syscalls so interrupts & context switches are thread-safe */
+    MSR     SPSEL, #0
+
     SUB     SP, SP, #0x110
     STP     X0,  X1,  [SP, #0x00]
     STP     X2,  X3,  [SP, #0x10]
@@ -392,6 +395,7 @@ FreeRTOS_SWI_Handler:
     LDP     X0,  X1,  [SP, #0x00]
     ADD     SP, SP, #0x110
 
+    MSR     SPSEL, #1
     ERET
 
 2:
