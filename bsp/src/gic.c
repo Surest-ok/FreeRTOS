@@ -160,18 +160,13 @@ static void gic_cpuif_init(void)
         val |= 0xF;
         write_sysreg("S3_4_C12_C9_5", val);
 
-        /* Enable Group 1 interrupts for EL2 */
-        val = read_sysreg("S3_4_C12_C12_7"); /* ICC_IGRPEN1_EL2 */
-        val |= 0x1;
-        write_sysreg("S3_4_C12_C12_7", val);
-
         /* Priority mask: allow all */
         write_sysreg(ICC_PMR_EL1, 0xFF);
 
         /* Binary point */
         write_sysreg(ICC_BPR1_EL1, 0);
 
-        /* Also enable Group 1 for EL1 in case needed */
+        /* Enable Group 1 NS interrupts */
         val = read_sysreg(ICC_IGRPEN1_EL1);
         val |= 0x1;
         write_sysreg(ICC_IGRPEN1_EL1, val);

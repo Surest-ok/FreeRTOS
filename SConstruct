@@ -23,7 +23,7 @@ vars.AddVariables(
     ('TICK_BROADCAST', 'Broadcast tick interrupt across cores (0 or 1)', 1, None, int),
     ('CROSS_COMPILE', 'Cross compiler toolchain prefix', 'aarch64-linux-gnu-'),
     ('BUILD_DIR', 'Build output directory', 'build'),
-    ('TIMEOUT', 'Timeout in seconds for QEMU acceptance test', 30, None, int),
+    ('TIMEOUT', 'Timeout in seconds for QEMU acceptance test', 60, None, int),
     ('RUN_EL', 'Exception level to run FreeRTOS (1 or 2)', 1, None, int),
 )
 

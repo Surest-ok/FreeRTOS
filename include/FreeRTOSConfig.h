@@ -28,7 +28,7 @@
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES    1
 #define configQUEUE_REGISTRY_SIZE                0
 #define configENABLE_BACKWARD_COMPATIBILITY      0
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS  0
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS  2
 #define configUSE_MINI_LIST_ITEM                 1
 #define configSTACK_DEPTH_TYPE                   size_t
 #define configMESSAGE_BUFFER_LENGTH_TYPE         size_t

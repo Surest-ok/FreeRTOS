@@ -126,7 +126,6 @@ void vPortBroadcastTick(void)
 void SGI_Yield_Handler(void)
 {
     BaseType_t c = portGET_CORE_ID();
-    *(volatile uint32_t *)((uint64_t)0x080A0000 + (uint64_t)c * 0x20000 + 0x1100) = 1U;
     __atomic_fetch_add(&ullPortYieldIPIReceives[c], 1ULL, __ATOMIC_RELAXED);
     ulPortYieldRequireds[c] = 1;
 }

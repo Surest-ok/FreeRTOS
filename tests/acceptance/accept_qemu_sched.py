@@ -155,9 +155,8 @@ def process_line(
         print(f"[SCHED-TEST] SUMMARY result=fail reason=fatal-marker cores={args.cores}")
         return False
 
-    if "[vfs-verify]" in line or "[vfs-stress]" in line or "[pci-verify]" in line or "[sdio-verify]" in line or "[ext4-verify]" in line or "[fstools-verify]" in line or "[net-verify]" in line or "[nvme-verify]" in line or "[ahci-verify]" in line or "[usbd-verify]" in line or "[process-verify]" in line or "[shell-verify]" in line or "[kmod-verify]" in line or "[ebpf-verify]" in line or "[drm-verify]" in line or "[mesa-verify]" in line or "[printk-verify]" in line or "[timer-verify]" in line or "cherry_" in line:
-        sys.stdout.write(line)
-        sys.stdout.flush()
+    sys.stdout.write(line)
+    sys.stdout.flush()
 
     expected_marker = XSYNC_MARKER if args.mode.startswith("cross") else SCHED_MARKER
     if expected_marker in line:
@@ -238,7 +237,7 @@ def main() -> int:
     reason = "no-marker" if not markers else "condition-not-met"
     print(
         f"[SCHED-TEST] SUMMARY result=fail mode={args.mode} "
-        f"cores={args.cores} markers={len(markers)} reason={reason}"
+        f"cores={args.cores} markers={len(markers)} reason={reason} rc={proc.returncode}"
     )
     if markers:
         print(f"[SCHED-TEST] LAST {markers[-1]}")

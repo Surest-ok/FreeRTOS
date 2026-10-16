@@ -43,8 +43,8 @@ def setup_arch_toolchain(env, cross_prefix='aarch64-linux-gnu-', cpu='cortex-a53
     env['ASPPFLAGS'] = arch_flags + ['-x', 'assembler-with-cpp']
 
     # Preprocessor assembly compilation commands
-    env['ASCOM'] = '$AS $ASFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES'
-    env['ASPPCOM'] = '$AS $ASPPFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES'
+    env['ASCOM'] = '$AS $ASFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES'
+    env['ASPPCOM'] = '$AS $ASPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c -o $TARGET $SOURCES'
 
     # Common platform macros
     env.Append(CPPDEFINES=['GUEST', 'QEMU'])
