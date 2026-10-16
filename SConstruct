@@ -234,12 +234,28 @@ cherry_ebpf_lib = env.SConscript(
     exports='env'
 )
 
-# 17. BSP and Target Binary
+# 19. CherryDRM Component (Direct Rendering Manager Subsystem)
+cherry_drm_lib = env.SConscript(
+    'components/cherry_drm/SConscript',
+    variant_dir=f'{build_dir}/cherry_drm',
+    duplicate=0,
+    exports='env'
+)
+
+# 20. CherryMesa Component (3D Graphics Subsystem: GBM, EGL, GLES2, Gallium3D)
+cherry_mesa_lib = env.SConscript(
+    'components/cherry_mesa/SConscript',
+    variant_dir=f'{build_dir}/cherry_mesa',
+    duplicate=0,
+    exports='env'
+)
+
+# 21. BSP and Target Binary
 elf_target, bin_target = env.SConscript(
     'bsp/SConscript',
     variant_dir=f'{build_dir}/bsp',
     duplicate=0,
-    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib', 'cherry_ebpf_lib']
+    exports=['env', 'kernel_lib', 'cherry_kal_lib', 'cherry_vfs_lib', 'cherry_shell_lib', 'cherry_printk_lib', 'cherry_timer_lib', 'cherry_pci_lib', 'cherry_sdio_lib', 'cherry_ext4_lib', 'cherry_fstools_lib', 'cherry_net_lib', 'cherry_nvme_lib', 'cherry_ahci_lib', 'cherry_usbd_lib', 'cherry_process_lib', 'cherry_kmod_lib', 'cherry_ebpf_lib', 'cherry_drm_lib', 'cherry_mesa_lib']
 )
 
 
@@ -270,6 +286,7 @@ qemu_cmd = (
     f"-device ich9-ahci,id=ahci0 "
     f"-drive if=none,id=sata0,file=build/test_sata.img,format=raw "
     f"-device ide-hd,drive=sata0,bus=ahci0.0 "
+    f"-device virtio-gpu-pci,id=gpu0 "
     f"-kernel {elf_target[0].abspath} "
     f"-nographic -monitor none -serial stdio"
 )
