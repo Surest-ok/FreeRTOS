@@ -68,6 +68,8 @@ int  cherry_mesa_run_tests(void);
 /* Demos & Benchmarks */
 int  cherry_mesa_run_gears(int frames);
 int  cherry_mesa_run_triangle(int frames);
+int  cherry_mesa_run_bifrost_triangle(int frames);
+int  cherry_mesa_run_bifrost_gears(int frames);
 
 /* Gallium Backend Constructors */
 struct pipe_screen *pipe_screen_create(int drm_fd);

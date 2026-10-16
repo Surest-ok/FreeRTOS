@@ -76,6 +76,44 @@ static int cmd_es2gears(int argc, char **argv)
     return cherry_mesa_run_gears(frames);
 }
 
+
+static int cmd_bifrost(int argc, char **argv)
+{
+    if (argc < 2 || strcmp(argv[1], "info") == 0) {
+        printk("=== ARM Mali Panfrost Bifrost Graphics Engine ===\n");
+        printk("  GPU Target:      ARM Mali-G31 Bifrost v7\n");
+        printk("  Tiler Hierarchy: 16x16 Pixel Tile Buffer\n");
+        printk("  Shading Engine:  Instruction Clauses (ALU, Texture, Load/Store)\n");
+        printk("  Compression:     AFBC v1.2 (ARM Framebuffer Compression)\n");
+        printk("  Display Scanout: Mali-DP / KMS Active (/dev/card1)\n");
+        return 0;
+    }
+
+    if (strcmp(argv[1], "triangle") == 0) {
+        int frames = 10;
+        if (argc >= 3) frames = parse_int(argv[2], 10);
+        printk("Running Panfrost Bifrost 3D triangle demo (%d frames)...\n", frames);
+        return cherry_mesa_run_bifrost_triangle(frames);
+    }
+
+    if (strcmp(argv[1], "gears") == 0) {
+        int frames = 10;
+        if (argc >= 3) frames = parse_int(argv[2], 10);
+        printk("Running Panfrost Bifrost es2gears benchmark (%d frames)...\n", frames);
+        return cherry_mesa_run_bifrost_gears(frames);
+    }
+
+    if (strcmp(argv[1], "test") == 0) {
+        int r1 = cherry_mesa_run_bifrost_triangle(2);
+        int r2 = cherry_mesa_run_bifrost_gears(2);
+        printk("bifrost: test %s\n", (r1 == 0 && r2 == 0) ? "PASSED" : "FAILED");
+        return (r1 == 0 && r2 == 0) ? 0 : -1;
+    }
+
+    printk("usage: bifrost [info|triangle [frames]|gears [frames]|test]\n");
+    return 0;
+}
+
 int cherry_mesa_init(void)
 {
     static bool s_inited = false;
@@ -85,6 +123,7 @@ int cherry_mesa_init(void)
 
     cherry_shell_register_symbol("mesa", (uintptr_t)cmd_mesa, CHERRY_SHELL_SYM_CMD, "Mesa 3D graphics commands: mesa [info|triangle|gears|test]");
     cherry_shell_register_symbol("es2gears", (uintptr_t)cmd_es2gears, CHERRY_SHELL_SYM_CMD, "Run classical 3D es2gears benchmark: es2gears [frames]");
+    cherry_shell_register_symbol("bifrost", (uintptr_t)cmd_bifrost, CHERRY_SHELL_SYM_CMD, "Panfrost Bifrost 3D graphics commands: bifrost [info|triangle|gears|test]");
 
     s_inited = true;
     return 0;

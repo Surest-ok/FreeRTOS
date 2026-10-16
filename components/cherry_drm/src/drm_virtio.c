@@ -629,7 +629,7 @@ int cherry_virtio_gpu_init(void)
     return pci_register_driver(&s_virtgpu_pci_driver);
 }
 
-struct drm_device *cherry_drm_get_primary(void)
+struct drm_device *cherry_virtio_gpu_get_device(void)
 {
     return &s_virtgpu_drm;
 }

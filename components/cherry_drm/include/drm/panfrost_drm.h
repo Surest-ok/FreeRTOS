@@ -24,6 +24,16 @@ extern "C" {
 #define MALI_PRODUCT_ID_G52             0x7212
 #define MALI_PRODUCT_ID_G72             0x6221
 
+/* Bifrost Architecture Definitions */
+#define MALI_ARCH_BIFROST_V7            0x07
+#define BIFROST_TILE_WIDTH              16
+#define BIFROST_TILE_HEIGHT             16
+
+/* Bifrost Execution Clause Types */
+#define BIFROST_CLAUSE_ALU              0x01
+#define BIFROST_CLAUSE_LOAD_STORE       0x02
+#define BIFROST_CLAUSE_TEXTURE          0x03
+
 /* Mali Job Types (Midgard / Bifrost Job Descriptors) */
 #define MALI_JOB_TYPE_NOT_STARTED       0x00
 #define MALI_JOB_TYPE_NULL              0x01
@@ -71,6 +81,9 @@ extern "C" {
 #define DRM_PANFROST_PARAM_MMU_FEATURES         5
 #define DRM_PANFROST_PARAM_THREAD_TLS_ALLOC     6
 #define DRM_PANFROST_PARAM_AFBC_FEATURES        7
+#define DRM_PANFROST_PARAM_BIFROST_VERSION      8
+#define DRM_PANFROST_PARAM_TILE_SIZE            9
+#define DRM_PANFROST_PARAM_HAS_DISPLAY          10
 
 struct drm_panfrost_get_param {
     uint64_t param;
@@ -125,6 +138,29 @@ struct drm_panfrost_wait_bo {
     int64_t  timeout_ns;
 };
 
+/* Bifrost Hardware Descriptors */
+struct bifrost_tiler_descriptor {
+    uint64_t polygon_list;
+    uint32_t tile_width;
+    uint32_t tile_height;
+    uint32_t flags;
+    uint32_t num_tiles_x;
+    uint32_t num_tiles_y;
+};
+
+struct bifrost_shader_clause {
+    uint32_t clause_type;
+    uint32_t tuple[3];
+};
+
+struct bifrost_fragment_descriptor {
+    uint64_t shader_pc;
+    uint64_t tile_buffer;
+    uint32_t width;
+    uint32_t height;
+    uint32_t afbc_enabled;
+};
+
 /* =========================================================================
  * 5. Panfrost IOCTL Commands
  * ========================================================================= */
@@ -135,18 +171,12 @@ struct drm_panfrost_wait_bo {
 #define DRM_PANFROST_GET_PARAM          0x04
 #define DRM_PANFROST_GET_BO_OFFSET      0x05
 
-#define DRM_IOCTL_PANFROST_SUBMIT \
-    _IOW(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_SUBMIT, struct drm_panfrost_submit)
-#define DRM_IOCTL_PANFROST_WAIT_BO \
-    _IOW(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_WAIT_BO, struct drm_panfrost_wait_bo)
-#define DRM_IOCTL_PANFROST_CREATE_BO \
-    _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_CREATE_BO, struct drm_panfrost_create_bo)
-#define DRM_IOCTL_PANFROST_MMAP_BO \
-    _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_MMAP_BO, struct drm_panfrost_mmap_bo)
-#define DRM_IOCTL_PANFROST_GET_PARAM \
-    _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_GET_PARAM, struct drm_panfrost_get_param)
-#define DRM_IOCTL_PANFROST_GET_BO_OFFSET \
-    _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_GET_BO_OFFSET, struct drm_panfrost_get_bo_offset)
+#define DRM_IOCTL_PANFROST_SUBMIT     _IOW(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_SUBMIT, struct drm_panfrost_submit)
+#define DRM_IOCTL_PANFROST_WAIT_BO     _IOW(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_WAIT_BO, struct drm_panfrost_wait_bo)
+#define DRM_IOCTL_PANFROST_CREATE_BO     _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_CREATE_BO, struct drm_panfrost_create_bo)
+#define DRM_IOCTL_PANFROST_MMAP_BO     _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_MMAP_BO, struct drm_panfrost_mmap_bo)
+#define DRM_IOCTL_PANFROST_GET_PARAM     _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_GET_PARAM, struct drm_panfrost_get_param)
+#define DRM_IOCTL_PANFROST_GET_BO_OFFSET     _IOWR(DRM_IOCTL_BASE, DRM_COMMAND_BASE + DRM_PANFROST_GET_BO_OFFSET, struct drm_panfrost_get_bo_offset)
 
 #ifdef __cplusplus
 }

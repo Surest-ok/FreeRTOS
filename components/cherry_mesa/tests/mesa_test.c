@@ -293,6 +293,18 @@ static bool test_demos_execution(void)
     return true;
 }
 
+
+static bool test_bifrost_pipeline(void)
+{
+    int ret1 = cherry_mesa_run_bifrost_triangle(2);
+    if (ret1 != 0) return false;
+
+    int ret2 = cherry_mesa_run_bifrost_gears(2);
+    if (ret2 != 0) return false;
+
+    return true;
+}
+
 int cherry_mesa_run_tests(void)
 {
     pr_info("cherry_mesa: starting acceptance test suite...\n");
@@ -304,16 +316,19 @@ int cherry_mesa_run_tests(void)
     bool gallium_pass = test_gallium_drivers();
     bool demos_pass   = test_demos_execution();
 
-    bool all_pass = gbm_pass && surf_pass && egl_pass &&
-                    gles2_pass && gallium_pass && demos_pass;
+    bool bifrost_pass = test_bifrost_pipeline();
 
-    printk("cherry_mesa: [mesa-verify] gbm=%s surface=%s egl=%s gles2=%s gallium=%s demos=%s all=%s\n",
+    bool all_pass = gbm_pass && surf_pass && egl_pass &&
+                    gles2_pass && gallium_pass && demos_pass && bifrost_pass;
+
+    printk("cherry_mesa: [mesa-verify] gbm=%s surface=%s egl=%s gles2=%s gallium=%s demos=%s bifrost=%s all=%s\n",
            gbm_pass ? "pass" : "FAIL",
            surf_pass ? "pass" : "FAIL",
            egl_pass ? "pass" : "FAIL",
            gles2_pass ? "pass" : "FAIL",
            gallium_pass ? "pass" : "FAIL",
            demos_pass ? "pass" : "FAIL",
+           bifrost_pass ? "pass" : "FAIL",
            all_pass ? "pass" : "FAIL");
 
     return all_pass ? 0 : -1;
