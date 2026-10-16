@@ -52,3 +52,6 @@
 [submodule "components/cherry_mesa"]
 	path = components/cherry_mesa
 	url = git@github.com:Surest-ok/cherry_mesa.git
+[submodule "bsp"]
+	path = bsp
+	url = git@github.com:Surest-ok/cherry_bsp.git
