@@ -322,6 +322,77 @@ static bool test_fbdev_emulation(void)
     return true;
 }
 
+
+static bool test_bifrost_display_and_tiler(void)
+{
+    struct drm_device *render = cherry_drm_get_render();
+    if (!render) return false;
+
+    /* 1. Verify Bifrost UAPI Parameters */
+    struct drm_panfrost_get_param param;
+    param.param = DRM_PANFROST_PARAM_BIFROST_VERSION;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_PANFROST_GET_PARAM, &param) != 0 || param.value != 7) return false;
+
+    param.param = DRM_PANFROST_PARAM_TILE_SIZE;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_PANFROST_GET_PARAM, &param) != 0 || param.value != 16) return false;
+
+    param.param = DRM_PANFROST_PARAM_HAS_DISPLAY;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_PANFROST_GET_PARAM, &param) != 0 || param.value != 1) return false;
+
+    /* 2. Test Panfrost Bifrost KMS Display Pipeline */
+    struct drm_mode_card_res res;
+    memset(&res, 0, sizeof(res));
+    if (cherry_drm_ioctl(render, DRM_IOCTL_MODE_GETRESOURCES, &res) != 0) return false;
+    if (res.count_crtcs == 0 || res.count_connectors == 0) return false;
+
+    /* Create Dumb Scanout Buffer on Mali */
+    struct drm_mode_create_dumb c_dumb;
+    memset(&c_dumb, 0, sizeof(c_dumb));
+    c_dumb.width = 640;
+    c_dumb.height = 480;
+    c_dumb.bpp = 32;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_MODE_CREATE_DUMB, &c_dumb) != 0) return false;
+
+    struct drm_mode_fb_cmd fb_cmd;
+    memset(&fb_cmd, 0, sizeof(fb_cmd));
+    fb_cmd.width = 640;
+    fb_cmd.height = 480;
+    fb_cmd.pitch = c_dumb.pitch;
+    fb_cmd.bpp = 32;
+    fb_cmd.depth = 24;
+    fb_cmd.handle = c_dumb.handle;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_MODE_ADDFB, &fb_cmd) != 0 || fb_cmd.fb_id == 0) return false;
+
+    /* Set Panfrost CRTC */
+    struct drm_mode_crtc crtc_req;
+    memset(&crtc_req, 0, sizeof(crtc_req));
+    crtc_req.crtc_id = render->crtc.crtc_id;
+    crtc_req.fb_id = fb_cmd.fb_id;
+    crtc_req.mode_valid = 1;
+    crtc_req.mode = render->connector.modes[0];
+    if (cherry_drm_ioctl(render, DRM_IOCTL_MODE_SETCRTC, &crtc_req) != 0) return false;
+
+    /* Bifrost PageFlip & DirtyFB */
+    struct drm_mode_fb_dirty_cmd dirty;
+    memset(&dirty, 0, sizeof(dirty));
+    dirty.fb_id = fb_cmd.fb_id;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_MODE_DIRTYFB, &dirty) != 0) return false;
+
+    struct drm_mode_crtc_page_flip flip;
+    memset(&flip, 0, sizeof(flip));
+    flip.crtc_id = render->crtc.crtc_id;
+    flip.fb_id = fb_cmd.fb_id;
+    if (cherry_drm_ioctl(render, DRM_IOCTL_MODE_PAGE_FLIP, &flip) != 0) return false;
+
+    /* Clean up */
+    uint32_t fb_id = fb_cmd.fb_id;
+    cherry_drm_ioctl(render, DRM_IOCTL_MODE_RMFB, &fb_id);
+    struct drm_mode_destroy_dumb d_dumb = { .handle = c_dumb.handle };
+    cherry_drm_ioctl(render, DRM_IOCTL_MODE_DESTROY_DUMB, &d_dumb);
+
+    return true;
+}
+
 int cherry_drm_run_tests(void)
 {
     pr_info("cherry_drm: starting acceptance test suite...\n");
@@ -335,10 +406,12 @@ int cherry_drm_run_tests(void)
     bool prime_pass = test_prime_buffer_sharing();
     bool fb_pass    = test_fbdev_emulation();
 
-    bool all_pass = v_pass && c_pass && gem_pass && kms_pass &&
-                    virt_pass && mali_pass && prime_pass && fb_pass;
+    bool bifrost_pass = test_bifrost_display_and_tiler();
 
-    printk("cherry_drm: [drm-verify] version=%s caps=%s gem=%s kms=%s virtio=%s mali=%s prime=%s fbdev=%s all=%s\n",
+    bool all_pass = v_pass && c_pass && gem_pass && kms_pass &&
+                    virt_pass && mali_pass && prime_pass && fb_pass && bifrost_pass;
+
+    printk("cherry_drm: [drm-verify] version=%s caps=%s gem=%s kms=%s virtio=%s mali=%s prime=%s fbdev=%s bifrost=%s all=%s\n",
            v_pass ? "pass" : "FAIL",
            c_pass ? "pass" : "FAIL",
            gem_pass ? "pass" : "FAIL",
@@ -347,6 +420,7 @@ int cherry_drm_run_tests(void)
            mali_pass ? "pass" : "FAIL",
            prime_pass ? "pass" : "FAIL",
            fb_pass ? "pass" : "FAIL",
+           bifrost_pass ? "pass" : "FAIL",
            all_pass ? "pass" : "FAIL");
 
     /* Register shell commands */

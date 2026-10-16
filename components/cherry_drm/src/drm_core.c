@@ -29,8 +29,21 @@ extern int drm_mode_create_dumb_ioctl(struct drm_device *dev, struct drm_mode_cr
 extern int drm_mode_map_dumb_ioctl(struct drm_device *dev, struct drm_mode_map_dumb *args);
 extern int drm_mode_destroy_dumb_ioctl(struct drm_device *dev, struct drm_mode_destroy_dumb *args);
 
-static struct vfs_cdev s_card0_cdev;
-static struct vfs_cdev s_render_cdev;
+static struct vfs_cdev    s_card0_cdev;
+static struct vfs_cdev    s_card1_cdev;
+static struct vfs_cdev    s_render_cdev;
+static struct drm_device *s_primary_display = NULL;
+
+struct drm_device *cherry_drm_get_primary(void)
+{
+    if (s_primary_display) return s_primary_display;
+    return cherry_virtio_gpu_get_device();
+}
+
+void cherry_drm_set_primary(struct drm_device *dev)
+{
+    if (dev) s_primary_display = dev;
+}
 
 /* Master IOCTL Dispatcher */
 int cherry_drm_ioctl(struct drm_device *dev, unsigned int cmd, void *arg)
@@ -80,7 +93,7 @@ int cherry_drm_ioctl(struct drm_device *dev, unsigned int cmd, void *arg)
     }
 
     case DRM_IOCTL_SET_CLIENT_CAP:
-        return 0; /* Acknowledge universal planes & atomic capabilities */
+        return 0;
 
     case DRM_IOCTL_GEM_CLOSE:
         return drm_gem_close_ioctl(dev, (struct drm_gem_close *)arg);
@@ -94,7 +107,7 @@ int cherry_drm_ioctl(struct drm_device *dev, unsigned int cmd, void *arg)
     case DRM_IOCTL_SYNCOBJ_CREATE: {
         struct drm_syncobj_create *so = (struct drm_syncobj_create *)arg;
         if (!so) return -EINVAL;
-        so->handle = 1; /* virtual syncobj */
+        so->handle = 1;
         return 0;
     }
     case DRM_IOCTL_SYNCOBJ_DESTROY:
@@ -126,11 +139,21 @@ int cherry_drm_ioctl(struct drm_device *dev, unsigned int cmd, void *arg)
     case DRM_IOCTL_MODE_RMFB:
         return drm_mode_rmfb_ioctl(dev, *(uint32_t *)arg);
 
-    case DRM_IOCTL_MODE_PAGE_FLIP:
-        return drm_mode_page_flip_ioctl(dev, (struct drm_mode_crtc_page_flip *)arg);
+    case DRM_IOCTL_MODE_PAGE_FLIP: {
+        int r = drm_mode_page_flip_ioctl(dev, (struct drm_mode_crtc_page_flip *)arg);
+        if (r == 0 && dev->driver && strcmp(dev->driver->name, "panfrost") == 0) {
+            cherry_mali_bifrost_scanout_flush(dev);
+        }
+        return r;
+    }
 
-    case DRM_IOCTL_MODE_DIRTYFB:
-        return drm_mode_dirtyfb_ioctl(dev, (struct drm_mode_fb_dirty_cmd *)arg);
+    case DRM_IOCTL_MODE_DIRTYFB: {
+        int r = drm_mode_dirtyfb_ioctl(dev, (struct drm_mode_fb_dirty_cmd *)arg);
+        if (r == 0 && dev->driver && strcmp(dev->driver->name, "panfrost") == 0) {
+            cherry_mali_bifrost_scanout_flush(dev);
+        }
+        return r;
+    }
 
     case DRM_IOCTL_MODE_CREATE_DUMB:
         return drm_mode_create_dumb_ioctl(dev, (struct drm_mode_create_dumb *)arg);
@@ -157,11 +180,10 @@ int cherry_drm_ioctl(struct drm_device *dev, unsigned int cmd, void *arg)
     }
 }
 
-/* VFS Character Device Wrapper for /dev/dri/card0 & /dev/card0 */
+/* VFS Character Device Operations */
 static int drm_cdev_open(struct vfs_cdev *cdev, int flags)
 {
-    (void)cdev;
-    (void)flags;
+    (void)cdev; (void)flags;
     return 0;
 }
 
@@ -174,33 +196,34 @@ static int drm_cdev_close(struct vfs_cdev *cdev)
 static int drm_card0_ioctl(struct vfs_cdev *cdev, unsigned int cmd, unsigned long arg)
 {
     (void)cdev;
-    struct drm_device *dev = cherry_drm_get_primary();
-    return cherry_drm_ioctl(dev, cmd, (void *)arg);
+    return cherry_drm_ioctl(cherry_drm_get_primary(), cmd, (void *)arg);
+}
+
+static int drm_card1_ioctl(struct vfs_cdev *cdev, unsigned int cmd, unsigned long arg)
+{
+    (void)cdev;
+    return cherry_drm_ioctl(cherry_drm_get_render(), cmd, (void *)arg);
 }
 
 static int drm_render_ioctl(struct vfs_cdev *cdev, unsigned int cmd, unsigned long arg)
 {
     (void)cdev;
-    struct drm_device *dev = cherry_drm_get_render();
-    return cherry_drm_ioctl(dev, cmd, (void *)arg);
+    return cherry_drm_ioctl(cherry_drm_get_render(), cmd, (void *)arg);
 }
 
 static const struct vfs_cdev_ops s_card0_ops = {
-    .open = drm_cdev_open,
-    .close = drm_cdev_close,
-    .read = NULL,
-    .write = NULL,
-    .ioctl = drm_card0_ioctl,
-    .poll = NULL,
+    .open = drm_cdev_open, .close = drm_cdev_close,
+    .read = NULL, .write = NULL, .ioctl = drm_card0_ioctl, .poll = NULL,
+};
+
+static const struct vfs_cdev_ops s_card1_ops = {
+    .open = drm_cdev_open, .close = drm_cdev_close,
+    .read = NULL, .write = NULL, .ioctl = drm_card1_ioctl, .poll = NULL,
 };
 
 static const struct vfs_cdev_ops s_render_ops = {
-    .open = drm_cdev_open,
-    .close = drm_cdev_close,
-    .read = NULL,
-    .write = NULL,
-    .ioctl = drm_render_ioctl,
-    .poll = NULL,
+    .open = drm_cdev_open, .close = drm_cdev_close,
+    .read = NULL, .write = NULL, .ioctl = drm_render_ioctl, .poll = NULL,
 };
 
 int cherry_drm_init(void)
@@ -210,10 +233,10 @@ int cherry_drm_init(void)
 
     pr_info("cherry_drm: initializing direct rendering manager (DRM) subsystem...\n");
 
-    /* 1. Initialize VirtIO-GPU Driver (Primary Display & KMS) */
+    /* 1. Initialize VirtIO-GPU Driver (PCI Primary Display & KMS) */
     cherry_virtio_gpu_init();
 
-    /* 2. Initialize ARM Mali (Panfrost) Driver (Render Node) */
+    /* 2. Initialize ARM Mali (Panfrost) Driver (Bifrost v7 KMS & Render Node) */
     cherry_mali_panfrost_init();
 
     /* 3. Register VFS character devices */
@@ -221,11 +244,15 @@ int cherry_drm_init(void)
     s_card0_cdev.ops = &s_card0_ops;
     vfs_cdev_register(&s_card0_cdev, "card0");
 
+    memset(&s_card1_cdev, 0, sizeof(s_card1_cdev));
+    s_card1_cdev.ops = &s_card1_ops;
+    vfs_cdev_register(&s_card1_cdev, "card1");
+
     memset(&s_render_cdev, 0, sizeof(s_render_cdev));
     s_render_cdev.ops = &s_render_ops;
     vfs_cdev_register(&s_render_cdev, "renderD128");
 
     s_inited = true;
-    pr_info("cherry_drm: registered /dev/card0 and /dev/renderD128 successfully\n");
+    pr_info("cherry_drm: registered /dev/card0, /dev/card1 and /dev/renderD128 successfully\n");
     return 0;
 }

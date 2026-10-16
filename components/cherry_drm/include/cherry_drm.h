@@ -113,6 +113,7 @@ struct drm_connector {
     uint32_t            connection;
     uint32_t            count_modes;
     struct drm_mode_modeinfo modes[4];
+    char                name[32];
 };
 
 /* KMS Encoder */
@@ -156,6 +157,9 @@ struct drm_device {
 int cherry_drm_init(void);
 int cherry_drm_run_tests(void);
 struct drm_device *cherry_drm_get_primary(void);
+void cherry_drm_set_primary(struct drm_device *dev);
+struct drm_device *cherry_virtio_gpu_get_device(void);
+int cherry_mali_bifrost_scanout_flush(struct drm_device *dev);
 struct drm_device *cherry_drm_get_render(void);
 
 /* Core IOCTL Engine */
