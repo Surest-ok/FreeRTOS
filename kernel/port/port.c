@@ -178,7 +178,7 @@ StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack,
     pxTopOfStack--;
     *pxTopOfStack = 0x2828282828282828ULL;        /* X28 */
     pxTopOfStack--;
-    *pxTopOfStack = (StackType_t)0x00;            /* XZR padding */
+    *pxTopOfStack = (StackType_t)0x00;            /* TPIDR_EL0 (initially 0 for task/ELF) */
     pxTopOfStack--;
     *pxTopOfStack = (StackType_t)0x00;            /* X30 (LR) */
 

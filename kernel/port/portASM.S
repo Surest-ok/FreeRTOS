@@ -35,6 +35,7 @@
 #endif
     .extern _freertos_vector_table
     .extern cherry_syscall_dispatch_trap
+    .extern arch_fixup_alignment_fault
 
     .global FreeRTOS_IRQ_Handler
     .global FreeRTOS_SWI_Handler
@@ -87,7 +88,9 @@
     STP     X24, X25, [SP, #-0x10]!
     STP     X26, X27, [SP, #-0x10]!
     STP     X28, X29, [SP, #-0x10]!
-    STP     X30, XZR, [SP, #-0x10]!
+    /* Save X30 and TPIDR_EL0 (thread pointer for user/POSIX ELF tasks) */
+    MRS     X1, TPIDR_EL0
+    STP     X30, X1, [SP, #-0x10]!
 
     /* Save the SPSR and ELR (EL1 or EL2). */
     MRS     X1, CurrentEL
@@ -233,8 +236,9 @@
     MSR     ELR_EL1, X2
 14:
 
-    /* Restore general purpose registers */
-    LDP     X30, XZR, [SP], #0x10
+    /* Restore general purpose registers and TPIDR_EL0 */
+    LDP     X30, X1, [SP], #0x10
+    MSR     TPIDR_EL0, X1
     LDP     X28, X29, [SP], #0x10
     LDP     X26, X27, [SP], #0x10
     LDP     X24, X25, [SP], #0x10
@@ -281,6 +285,18 @@ FreeRTOS_SWI_Handler:
     CMP     X17, #0x15
     B.EQ    1f
 
+    /* Check for Alignment Fault (Data Abort EC=0x25 / 0x24 with DFSC=0x21) */
+    CMP     X17, #0x25
+    B.EQ    61f
+    CMP     X17, #0x24
+    B.EQ    61f
+    B       62f
+61:
+    AND     X17, X16, #0x3F
+    CMP     X17, #0x21
+    B.EQ    alignment_fixup_trap
+62:
+
 #if ( configPORT_SMP_DIAGNOSTICS == 1 )
     GET_CORE_ID  X15
     LDR     X0, =ullPortSyncAbortEsr
@@ -303,6 +319,91 @@ FreeRTOS_SWI_Handler:
     STR     X1, [X0, X15, LSL #3]
 52:
 #endif
+    B       FreeRTOS_Abort
+
+alignment_fixup_trap:
+    LDP     X16, X17, [SP], #0x10       /* Restore original X16, X17 */
+
+    /* Save full syscall frame on SP_EL0 */
+    MSR     SPSEL, #0
+    SUB     SP, SP, #0x110
+    STP     X0,  X1,  [SP, #0x00]
+    STP     X2,  X3,  [SP, #0x10]
+    STP     X4,  X5,  [SP, #0x20]
+    STP     X6,  X7,  [SP, #0x30]
+    STP     X8,  X9,  [SP, #0x40]
+    STP     X10, X11, [SP, #0x50]
+    STP     X12, X13, [SP, #0x60]
+    STP     X14, X15, [SP, #0x70]
+    STP     X16, X17, [SP, #0x80]
+    STP     X18, X19, [SP, #0x90]
+    STP     X20, X21, [SP, #0xA0]
+    STP     X22, X23, [SP, #0xB0]
+    STP     X24, X25, [SP, #0xC0]
+    STP     X26, X27, [SP, #0xD0]
+    STP     X28, X29, [SP, #0xE0]
+    STR     X30,      [SP, #0xF0]
+
+    ADD     X0,  SP,  #0x110
+    STR     X0,       [SP, #0xF8]       /* sp */
+
+    MRS     X18, CurrentEL
+    TBZ     X18, #3, 71f
+    MRS     X16, ELR_EL2
+    MRS     X17, SPSR_EL2
+    MRS     X1,  ESR_EL2
+    MRS     X3,  FAR_EL2
+    B       72f
+71:
+    MRS     X16, ELR_EL1
+    MRS     X17, SPSR_EL1
+    MRS     X1,  ESR_EL1
+    MRS     X3,  FAR_EL1
+72:
+    STP     X16, X17, [SP, #0x100]      /* pc, pstate */
+
+    /* Call arch_fixup_alignment_fault(frame, esr, elr, far) */
+    MOV     X0, SP
+    MOV     X2, X16
+    BL      arch_fixup_alignment_fault
+    CBZ     W0, alignment_fixup_failed
+
+    /* Success: update ELR with advanced PC */
+    LDR     X16, [SP, #0x100]
+    MRS     X18, CurrentEL
+    TBZ     X18, #3, 73f
+    MSR     ELR_EL2, X16
+    B       74f
+73:
+    MSR     ELR_EL1, X16
+74:
+
+    /* Restore registers and return */
+    LDR     X16,      [SP, #0xF8]       /* Target SP (with any writeback applied) */
+    MOV     X17, SP                     /* Frame pointer */
+    MOV     SP,  X16                    /* Switch to target SP */
+    LDR     X30,      [X17, #0xF0]
+    LDP     X28, X29, [X17, #0xE0]
+    LDP     X26, X27, [X17, #0xD0]
+    LDP     X24, X25, [X17, #0xC0]
+    LDP     X22, X23, [X17, #0xB0]
+    LDP     X20, X21, [X17, #0xA0]
+    LDP     X18, X19, [X17, #0x90]
+    LDP     X14, X15, [X17, #0x70]
+    LDP     X12, X13, [X17, #0x60]
+    LDP     X10, X11, [X17, #0x50]
+    LDP     X8,  X9,  [X17, #0x40]
+    LDP     X6,  X7,  [X17, #0x30]
+    LDP     X4,  X5,  [X17, #0x20]
+    LDP     X2,  X3,  [X17, #0x10]
+    LDP     X0,  X1,  [X17, #0x00]
+    LDP     X16, X17, [X17, #0x80]
+    MSR     SPSEL, #1
+    ERET
+
+alignment_fixup_failed:
+    ADD     SP, SP, #0x110
+    MSR     SPSEL, #1
     B       FreeRTOS_Abort
 
 1:
