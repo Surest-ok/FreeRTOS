@@ -1,19 +1,19 @@
-# FreeRTOS SMP for ARMv8-A (AArch64) - CherryOS 集成平台
+# FreeRTOS SMP for ARMv8-A (AArch64) - 模块化 CherryOS 集成平台
 
-本项目为基于 **ARMv8-A (AArch64, Cortex-A53)** 架构与 **QEMU virt (GICv3)** 虚拟化平台的现代化 **FreeRTOS SMP 操作系统集成运行环境**。
+本项目为基于 **ARMv8-A (AArch64, Cortex-A53)** 架构与 **QEMU virt (GICv3)** 虚拟化平台的现代化 **FreeRTOS SMP 模块化操作系统集成运行环境**。
 
 > [!NOTE]
-> **集成平台定位**：本仓库遵循 **“FreeRTOS 专注多核底座与集成”** 的轻量化设计原则，承担 CPU 裸机引导、GICv3 中断控制器、ARM Generic Timer、PSCI 多核冷启动、FreeRTOS V11 SMP 任务调度与多核压测验收。所有操作系统上层能力均全面组件化，拆分至独立的组件仓库开发维护，并通过通用内核抽象层（`cherry_kal`）与 FreeRTOS 解耦集成。
+> **模块化架构定位**：本系统遵循 **“模块化解耦与可组合性”** 设计原则，是一套完全模块化的现代操作系统集成基线，而非一体化 Unikernel。架构遵循 **“FreeRTOS 专注多核底座与任务调度”** 原则，负责 CPU 裸机引导、GICv3 中断路由、ARM Generic Timer、PSCI 多核启动及任务调度；上层所有核心操作系统能力（文件系统、网络栈、存储驱动、进程模型、动态链接器、图形与安全机制）均作为独立的 Git 子模块模块化拆分、独立维护，并通过通用内核抽象层（`cherry_kal`）进行高度解耦与按需集成。
 
 ---
 
-## 1. 组件生态与独立仓库矩阵
+## 1. 模块化生态与独立组件仓库矩阵
 
-所有 Cherry 操作系统核心子系统与板级支持包均已解耦并发布至独立的 Git 子模块仓库中：
+所有 Cherry 操作系统核心子系统与板级支持包均已彻底解耦并发布至独立的 Git 模块化仓库中：
 
-| 组件名称 | 功能定位与核心特性 | 独立仓库地址 | 本地路径 |
+| 模块名称 | 功能定位与核心特性 | 独立仓库地址 | 本地路径 |
 | :--- | :--- | :--- | :--- |
-| **`bsp`** | QEMU virt ARM64 板级支持包（startup.S、GICv3、PL011 UART、设备注册） | [Surest-ok/qemu-virt-arm64](https://github.com/Surest-ok/qemu-virt-arm64) | [`bsp`](bsp) |
+| **`bsp`** | QEMU virt ARM64 模块化板级支持包（startup.S、GICv3、PL011 UART、设备注册） | [Surest-ok/qemu-virt-arm64](https://github.com/Surest-ok/qemu-virt-arm64) | [`bsp`](bsp) |
 | **`cherry_vfs`** | Linux 兼容 Inode/Dentry 虚拟文件系统、平台总线与设备驱动框架 (`cdev`/`bdev`/`sockdev`) | [Surest-ok/cherry_vfs](https://github.com/Surest-ok/cherry_vfs) | [`components/cherry_vfs`](components/cherry_vfs) |
 | **`cherry_process`** | 轻量级进程模型 (PCB)、POSIX Syscall 层、完全解耦 ELF64 动态链接器、Ubuntu GNU Bash 执行与 BusyBox 应用集 | [Surest-ok/cherry_process](https://github.com/Surest-ok/cherry_process) | [`components/cherry_process`](components/cherry_process) |
 | **`cherry_ahci`** | Serial ATA AHCI 1.3+ 存储控制器，支持多端口 SATA/AHCI 设备枚举与 `/dev/sda`、`/dev/sdb` 块设备对接 | [Surest-ok/cherry_ahci](https://github.com/Surest-ok/cherry_ahci) | [`components/cherry_ahci`](components/cherry_ahci) |
@@ -35,7 +35,7 @@
 
 ---
 
-## 2. 整体集成架构
+## 2. 模块化集成架构
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Linux System V ABI / cherry_syscall
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│                    CherryOS 现代化组件层 (独立组件仓库)                 │
+│                    CherryOS 现代化模块化组件层 (独立组件仓库)           │
 │  cherry_process · cherry_vfs  · cherry_net   · cherry_nvme · cherry_fs│
 │  cherry_ext4    · cherry_ahci · cherry_sdio  · cherry_pci  · ...       │
 └───────────────────────────────────┬────────────────────────────────────┘
@@ -87,14 +87,14 @@
 
 ```text
 freertos-workspace/
-├── SConstruct                  # SCons 顶层构建编排脚本（组件联动编译与 QEMU/测试目标）
+├── SConstruct                  # SCons 顶层构建编排脚本（模块联动编译与 QEMU/测试目标）
 ├── Makefile                    # 快捷构建命令行封装
 ├── kernel/                     # FreeRTOS V11 SMP 官方内核源码及 AArch64 端口实现
 │   ├── FreeRTOS-Kernel/        # 核心任务调度器 (tasks.c, queue.c, list.c 等)
 │   └── port/                   # GCC/ARM_AARCH64_SRE 移植层 (port.c, portASM.S)
 ├── arch/                       # 体系结构抽象层 (原子操作、自旋锁、中断与屏障)
 ├── bsp/                        # 板级支持包 (Git 子模块: Surest-ok/qemu-virt-arm64)
-├── components/                 # CherryOS 现代化操作系统组件库 (18 个独立子模块仓库)
+├── components/                 # CherryOS 现代化操作系统模块库 (18 个独立子模块仓库)
 ├── scripts/                    # 构建辅助脚本 (build_ubuntu_rootfs.py, run-qemu.sh 等)
 └── tests/                      # 自动化测试编排脚本 (accept_qemu_sched.py)
 ```
@@ -113,7 +113,7 @@ sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu qemu-system-
 pip3 install scons
 ```
 
-### 5.2 完整代码拉取（含全部 19 个子模块）
+### 5.2 完整代码拉取（含全部 19 个模块化子模块）
 
 克隆主仓库并递归拉取所有依赖子模块：
 
