@@ -1,0 +1,4 @@
+[submodule "bsp"]
+	path = bsp
+	url = https://github.com/Surest-ok/qemu-virt-arm64.git
+	branch = freertos-smp-base
