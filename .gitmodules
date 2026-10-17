@@ -39,19 +39,19 @@
 	url = https://github.com/Surest-ok/cherry_vfs.git
 [submodule "components/cherry_usbd"]
 	path = components/cherry_usbd
-	url = git@github.com:Surest-ok/cherry_usbd.git
+	url = https://github.com/Surest-ok/cherry_usbd.git
 [submodule "components/cherry_kmod"]
 	path = components/cherry_kmod
-	url = git@github.com:Surest-ok/cherry_kmod.git
+	url = https://github.com/Surest-ok/cherry_kmod.git
 [submodule "components/cherry_ebpf"]
 	path = components/cherry_ebpf
-	url = git@github.com:Surest-ok/cherry_ebpf.git
+	url = https://github.com/Surest-ok/cherry_ebpf.git
 [submodule "components/cherry_drm"]
 	path = components/cherry_drm
-	url = git@github.com:Surest-ok/cherry_drm.git
+	url = https://github.com/Surest-ok/cherry_drm.git
 [submodule "components/cherry_mesa"]
 	path = components/cherry_mesa
-	url = git@github.com:Surest-ok/cherry_mesa.git
+	url = https://github.com/Surest-ok/cherry_mesa.git
 [submodule "bsp"]
 	path = bsp
-	url = git@github.com:Surest-ok/cherry_bsp.git
+	url = https://github.com/Surest-ok/qemu-virt-arm64.git
