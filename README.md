@@ -37,11 +37,8 @@
 
 ## 2. 模块化集成架构
 
-> [!TIP]
-> 架构图由 [Archify](https://github.com/tt-a1i/archify) 生成。点击可查看 [交互式 HTML 架构图](docs/diagrams/cherry-modular-os-architecture.html) 进行全景探索、高亮路径追踪与节点检查。
-
 <p align="center">
-  <img src="docs/diagrams/cherry-modular-os-architecture.svg" alt="Cherry Modular OS 现代化模块化架构" width="100%" />
+  <img src="docs/diagrams/cherry-modular-os-architecture.png" alt="Cherry Modular OS 现代化模块化架构" width="100%" />
 </p>
 
 ---
