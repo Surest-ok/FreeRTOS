@@ -281,6 +281,7 @@ qemu_cmd = (
     f"-device ich9-ahci,id=ahci0 "
     f"-drive if=none,id=sata0,file=build/test_sata.img,format=raw "
     f"-device ide-hd,drive=sata0,bus=ahci0.0 "
+    + (f"-drive if=none,id=sata1,file=build/ubuntu_rootfs.ext4,format=raw -device ide-hd,drive=sata1,bus=ahci0.1 " if os.path.exists("build/ubuntu_rootfs.ext4") else "") +
     f"-device virtio-gpu-pci,id=gpu0 "
     f"-kernel {elf_target[0].abspath} "
     f"-nographic -monitor none -serial stdio"

@@ -507,6 +507,8 @@ FreeRTOS_Abort:
     MRS     X1, ELR_EL1
     MRS     X2, FAR_EL1
     MRS     X3, SPSR_EL1
+    MOV     X4, X30
+    MOV     X5, SP
     MSR     SPSEL, #1
     BL      vPortFatalException
 1:

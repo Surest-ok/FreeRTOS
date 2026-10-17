@@ -66,6 +66,8 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         with open(sata_img, "wb") as f:
             f.truncate(64 * 1024 * 1024)
 
+    ubuntu_img = Path("build/ubuntu_rootfs.ext4")
+
     machine_opt = "virt,gic-version=3,its=on"
     return [
         "qemu-system-aarch64",
@@ -97,6 +99,16 @@ def qemu_command(args: argparse.Namespace) -> list[str]:
         f"if=none,id=sata0,file={sata_img},format=raw",
         "-device",
         "ide-hd,drive=sata0,bus=ahci0.0",
+        *(
+            [
+                "-drive",
+                f"if=none,id=sata1,file={ubuntu_img},format=raw",
+                "-device",
+                "ide-hd,drive=sata1,bus=ahci0.1",
+            ]
+            if ubuntu_img.exists()
+            else []
+        ),
         "-device",
         "virtio-gpu-pci,id=gpu0",
         "-kernel",
