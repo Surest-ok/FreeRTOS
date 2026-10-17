@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </linearGradient>
+
+    <!-- Header Gradient -->
+    <linearGradient id="header-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+
+    <!-- Card Gradients -->
+    <linearGradient id="app-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EFF6FF"/>
+      <stop offset="100%" stop-color="#DBEAFE"/>
+    </linearGradient>
+    <linearGradient id="kernel-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F0FDF4"/>
+      <stop offset="100%" stop-color="#DCFCE7"/>
+    </linearGradient>
+    <linearGradient id="arch-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FAF5FF"/>
+      <stop offset="100%" stop-color="#F3E8FF"/>
+    </linearGradient>
+    <linearGradient id="bsp-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="hw-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F1F5F9"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="shadow-sm" x="-2%" y="-4%" width="104%" height="112%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <filter id="shadow-md" x="-2%" y="-4%" width="104%" height="112%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <style>
+    .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Roboto, sans-serif; }
+    .title { font-weight: 700; fill: #FFFFFF; font-size: 20px; }
+    .subtitle { font-weight: 400; fill: #94A3B8; font-size: 13px; }
+    .badge { font-weight: 600; font-size: 11px; }
+    .card-title { font-weight: 700; font-size: 15px; }
+    .card-sub { font-weight: 500; font-size: 12px; }
+    .item-title { font-weight: 600; font-size: 13px; }
+    .item-desc { font-weight: 400; font-size: 11px; fill: #475569; }
+    .tag { font-weight: 600; font-size: 10.5px; }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="780" fill="url(#bg-grad)" rx="16"/>
+  <rect width="1198" height="778" x="1" y="1" fill="none" stroke="#E2E8F0" stroke-width="2" rx="15"/>
+
+  <!-- ==================== HEADER BAR ==================== -->
+  <g transform="translate(32, 24)">
+    <rect width="1136" height="64" rx="12" fill="url(#header-grad)" filter="url(#shadow-md)"/>
+    
+    <text x="24" y="32" class="font-sans title">FreeRTOS SMP 64位模块化多核系统架构</text>
+    <text x="24" y="50" class="font-sans subtitle">Modular Architecture for ARMv8-A (AArch64) on QEMU virt Platform</text>
+    
+    <!-- Header Badges -->
+    <g transform="translate(730, 18)">
+      <rect x="0" y="0" width="84" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <text x="42" y="18" text-anchor="middle" class="font-sans badge" fill="#38BDF8">ARMv8-A</text>
+      
+      <rect x="94" y="0" width="94" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <text x="141" y="18" text-anchor="middle" class="font-sans badge" fill="#4ADE80">Cortex-A53</text>
+      
+      <rect x="198" y="0" width="76" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <text x="236" y="18" text-anchor="middle" class="font-sans badge" fill="#FBBF24">GICv3</text>
+      
+      <rect x="284" y="0" width="108" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+      <text x="338" y="18" text-anchor="middle" class="font-sans badge" fill="#F472B6">FreeRTOS V11</text>
+    </g>
+  </g>
+
+  <!-- ==================== LAYER 1: USER APPLICATION ==================== -->
+  <g transform="translate(32, 104)">
+    <rect width="1136" height="96" rx="12" fill="url(#app-grad)" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow-sm)"/>
+    
+    <rect x="20" y="14" width="180" height="26" rx="6" fill="#2563EB"/>
+    <text x="110" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">用户多任务应用层 (app.c)</text>
+    <text x="215" y="32" class="font-sans card-sub" fill="#1E40AF">多核并发协同任务 · 周期性心跳探测 · 调度基准探针套件</text>
+    
+    <!-- Col 1 -->
+    <rect x="20" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
+    <circle cx="36" cy="66" r="4" fill="#2563EB"/>
+    <text x="48" y="71" class="font-sans item-title" fill="#1E3A8A">Core0 主控监控任务</text>
+    <text x="180" y="70" class="font-sans tag" fill="#64748B">monitor_task</text>
+
+    <!-- Col 2 -->
+    <rect x="296" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
+    <circle cx="312" cy="66" r="4" fill="#0284C7"/>
+    <text x="324" y="71" class="font-sans item-title" fill="#0369A1">从核绑定工作任务</text>
+    <text x="444" y="70" class="font-sans tag" fill="#64748B">pinned_workers</text>
+
+    <!-- Col 3 -->
+    <rect x="572" y="48" width="268" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
+    <circle cx="588" cy="66" r="4" fill="#0D9488"/>
+    <text x="600" y="71" class="font-sans item-title" fill="#0F766E">跨核同步压测探针</text>
+    <text x="720" y="70" class="font-sans tag" fill="#64748B">cross_core_stress</text>
+
+    <!-- Col 4 -->
+    <rect x="856" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
+    <circle cx="872" cy="66" r="4" fill="#4F46E5"/>
+    <text x="884" y="71" class="font-sans item-title" fill="#3730A3">FreeRTOS 标准调用</text>
+    <text x="1010" y="70" class="font-sans tag" fill="#64748B">FreeRTOS API</text>
+  </g>
+
+  <!-- Link 1 -> 2 -->
+  <line x1="600" y1="200" x2="600" y2="228" stroke="#2563EB" stroke-width="2" stroke-dasharray="4 3"/>
+  <polygon points="596,228 600,235 604,228" fill="#2563EB"/>
+  <rect x="525" y="206" width="150" height="20" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <text x="600" y="220" text-anchor="middle" class="font-sans tag" fill="#1E40AF">FreeRTOS Kernel API</text>
+
+  <!-- ==================== LAYER 2: FREERTOS SMP KERNEL ==================== -->
+  <g transform="translate(32, 236)">
+    <rect width="1136" height="160" rx="12" fill="url(#kernel-grad)" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow-sm)"/>
+    
+    <rect x="20" y="14" width="272" height="26" rx="6" fill="#059669"/>
+    <text x="156" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">FreeRTOS V11 SMP 多核调度内核 (kernel/)</text>
+    <text x="306" y="32" class="font-sans card-sub" fill="#065F46">官方 SMP 对称多核调度 · 核心亲和性分配 · 抢占式轮转 · 跨核原子同步</text>
+
+    <!-- Card A: Task Scheduler -->
+    <rect x="20" y="48" width="352" height="96" rx="8" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1"/>
+    <text x="36" y="72" class="font-sans item-title" fill="#065F46">核心调度引擎 (tasks.c / list.c)</text>
+    <text x="36" y="93" class="font-sans item-desc">• 多核心就绪队列与优先级抢占机制</text>
+    <text x="36" y="111" class="font-sans item-desc">• 核心亲和性绑定 (vTaskCoreAffinitySet)</text>
+    <text x="36" y="129" class="font-sans tag" fill="#059669">vTaskSwitchContext() · Time Slicing 轮转</text>
+
+    <!-- Card B: Synchronization -->
+    <rect x="392" y="48" width="352" height="96" rx="8" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1"/>
+    <text x="408" y="72" class="font-sans item-title" fill="#065F46">多核同步原语 (queue.c / timers.c)</text>
+    <text x="408" y="93" class="font-sans item-desc">• 跨核消息队列 (Queue) 与计数/二值信号量</text>
+    <text x="408" y="111" class="font-sans item-desc">• 递归互斥锁 (Mutex) 与事件组 (Event Groups)</text>
+    <text x="408" y="129" class="font-sans tag" fill="#0D9488">Cross-core Safe · ISR 调度 Yield 触发</text>
+
+    <!-- Card C: SMP Port -->
+    <rect x="764" y="48" width="352" height="96" rx="8" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1"/>
+    <text x="780" y="72" class="font-sans item-title" fill="#065F46">AArch64 移植层实现 (port/)</text>
+    <text x="780" y="93" class="font-sans item-desc">• port.c : 多核 Tick 广播与定时器中断分发</text>
+    <text x="780" y="111" class="font-sans item-desc">• portASM.S : EL1 模式完整通用寄存器压栈恢复</text>
+    <text x="780" y="129" class="font-sans tag" fill="#0284C7">SGI 0 核间中断 Yield · ICC_SRE 系统寄存器</text>
+  </g>
+
+  <!-- Links 2 -> 3 -->
+  <!-- Left Link: Arch -->
+  <line x1="310" y1="396" x2="310" y2="428" stroke="#6366F1" stroke-width="2"/>
+  <polygon points="306,428 310,435 314,428" fill="#6366F1"/>
+  <rect x="235" y="404" width="150" height="20" rx="4" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
+  <text x="310" y="418" text-anchor="middle" class="font-sans tag" fill="#4338CA">ARCH 硬件原语接口</text>
+
+  <!-- Right Link: BSP -->
+  <line x1="890" y1="396" x2="890" y2="428" stroke="#D97706" stroke-width="2"/>
+  <polygon points="886,428 890,435 894,428" fill="#D97706"/>
+  <rect x="815" y="404" width="150" height="20" rx="4" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1"/>
+  <text x="890" y="418" text-anchor="middle" class="font-sans tag" fill="#92400E">BSP 板级驱动调用</text>
+
+  <!-- ==================== LAYER 3: DUAL MODULAR SUBSYSTEMS ==================== -->
+  
+  <!-- LEFT: ARCHITECTURE ABSTRACTION LAYER (arch/) -->
+  <g transform="translate(32, 436)">
+    <rect width="556" height="190" rx="12" fill="url(#arch-grad)" stroke="#C4B5FD" stroke-width="1.5" filter="url(#shadow-sm)"/>
+    
+    <rect x="20" y="14" width="220" height="26" rx="6" fill="#6366F1"/>
+    <text x="130" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">模块化体系结构层 (arch/)</text>
+    <text x="250" y="32" class="font-sans card-sub" fill="#4338CA">ARMv8-A 硬件原语抽象</text>
+
+    <!-- Arch Grid 2x2 -->
+    <!-- Cell 1 -->
+    <rect x="20" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="34" y="70" class="font-sans item-title" fill="#3730A3">核心识别与 MPIDR</text>
+    <text x="34" y="90" class="font-sans item-desc">arch_curr_cpu() 核心编号多核映射</text>
+
+    <!-- Cell 2 -->
+    <rect x="288" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="302" y="70" class="font-sans item-title" fill="#3730A3">原子指令与自旋锁</text>
+    <text x="302" y="90" class="font-sans item-desc">LL/SC (ldaxr/stlxr) · 原子锁原语</text>
+
+    <!-- Cell 3 -->
+    <rect x="20" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="34" y="138" class="font-sans item-title" fill="#3730A3">内存屏障与关中断</text>
+    <text x="34" y="158" class="font-sans item-desc">DMB / DSB / ISB · IRQ 上下文保护</text>
+
+    <!-- Cell 4 -->
+    <rect x="288" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
+    <text x="302" y="138" class="font-sans item-title" fill="#3730A3">共享线程句柄状态</text>
+    <text x="302" y="158" class="font-sans item-desc">arch_thread_handle_t 状态抽象</text>
+  </g>
+
+  <!-- RIGHT: BOARD SUPPORT PACKAGE (bsp/) -->
+  <g transform="translate(612, 436)">
+    <rect width="556" height="190" rx="12" fill="url(#bsp-grad)" stroke="#FDE68A" stroke-width="1.5" filter="url(#shadow-sm)"/>
+    
+    <rect x="20" y="14" width="210" height="26" rx="6" fill="#D97706"/>
+    <text x="125" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">模块化板级支持包 (bsp/)</text>
+    <text x="240" y="32" class="font-sans card-sub" fill="#92400E">QEMU virt 外设驱动与引导</text>
+
+    <!-- BSP Grid 2x2 -->
+    <!-- Cell 1 -->
+    <rect x="20" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
+    <text x="34" y="70" class="font-sans item-title" fill="#78350F">冷启动引导 (startup.S)</text>
+    <text x="34" y="90" class="font-sans item-desc">EL1 向量表配置 · PSCI CPU_ON</text>
+
+    <!-- Cell 2 -->
+    <rect x="288" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
+    <text x="302" y="70" class="font-sans item-title" fill="#78350F">GICv3 中断控制 (gic.c)</text>
+    <text x="302" y="90" class="font-sans item-desc">系统寄存器 ICC_SRE · SGI 0 IPI 路由</text>
+
+    <!-- Cell 3 -->
+    <rect x="20" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
+    <text x="34" y="138" class="font-sans item-title" fill="#78350F">通用物理定时器 (gtimer.c)</text>
+    <text x="34" y="158" class="font-sans item-desc">ARM Generic Timer CNTP/CNTV 基准</text>
+
+    <!-- Cell 4 -->
+    <rect x="288" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
+    <text x="302" y="138" class="font-sans item-title" fill="#78350F">PL011 串口驱动 (uart.c)</text>
+    <text x="302" y="158" class="font-sans item-desc">串口终端通信与多核格式化输出</text>
+  </g>
+
+  <!-- Links 3 -> 4 -->
+  <line x1="310" y1="626" x2="310" y2="646" stroke="#64748B" stroke-width="1.5"/>
+  <polygon points="306,646 310,652 314,646" fill="#64748B"/>
+  
+  <line x1="890" y1="626" x2="890" y2="646" stroke="#64748B" stroke-width="1.5"/>
+  <polygon points="886,646 890,652 894,646" fill="#64748B"/>
+
+  <!-- ==================== LAYER 4: HARDWARE PLATFORM ==================== -->
+  <g transform="translate(32, 654)">
+    <rect width="1136" height="96" rx="12" fill="url(#hw-grad)" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadow-sm)"/>
+    
+    <rect x="20" y="14" width="240" height="26" rx="6" fill="#334155"/>
+    <text x="140" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">目标硬件 / 虚拟机平台 (Hardware Layer)</text>
+    <text x="275" y="32" class="font-sans card-sub" fill="#334155">QEMU virt (ARMv8-A AArch64) · 对称多核 Cortex-A53 · GICv3 分布式中断架构</text>
+
+    <!-- Col 1 -->
+    <rect x="20" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
+    <circle cx="36" cy="66" r="4" fill="#334155"/>
+    <text x="48" y="71" class="font-sans item-title" fill="#0F172A">Cortex-A53 多核集群</text>
+    <text x="176" y="70" class="font-sans tag" fill="#64748B">1 ~ 32 Cores SMP</text>
+
+    <!-- Col 2 -->
+    <rect x="296" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
+    <circle cx="312" cy="66" r="4" fill="#0284C7"/>
+    <text x="324" y="71" class="font-sans item-title" fill="#0F172A">ARM GICv3 中断硬件</text>
+    <text x="456" y="70" class="font-sans tag" fill="#64748B">Dist / Redist / CPU</text>
+
+    <!-- Col 3 -->
+    <rect x="572" y="48" width="268" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
+    <circle cx="588" cy="66" r="4" fill="#D97706"/>
+    <text x="600" y="71" class="font-sans item-title" fill="#0F172A">PSCI 固件接口规范</text>
+    <text x="734" y="70" class="font-sans tag" fill="#64748B">SMC / HVC CPU_ON</text>
+
+    <!-- Col 4 -->
+    <rect x="856" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
+    <circle cx="872" cy="66" r="4" fill="#059669"/>
+    <text x="884" y="71" class="font-sans item-title" fill="#0F172A">PL011 UART / GTimer</text>
+    <text x="1034" y="70" class="font-sans tag" fill="#64748B">MMIO Base</text>
+  </g>
+</svg>
