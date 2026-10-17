@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" role="img" aria-label="模块组织">
+<title>模块组织</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="470"/>
+<rect class="layer" x="16" y="16" width="928" height="110" rx="10"/>
+<text class="tag" x="28" y="34" text-anchor="start">主仓库</text>
+<rect class="dat" x="28" y="44" width="216" height="66" rx="8"/>
+<text class="h" x="136.0" y="73.5" text-anchor="middle">SConstruct</text>
+<text class="s" x="136.0" y="91.5" text-anchor="middle">构建编排 · QEMU · 测试</text>
+<rect class="dat" x="258" y="44" width="216" height="66" rx="8"/>
+<text class="h" x="366.0" y="73.5" text-anchor="middle">kernel/ · arch/</text>
+<text class="s" x="366.0" y="91.5" text-anchor="middle">FreeRTOS SMP 与 AArch64 移植</text>
+<rect class="dat" x="487" y="44" width="216" height="66" rx="8"/>
+<text class="h" x="595.0" y="73.5" text-anchor="middle">bsp/（子模块）</text>
+<text class="s" x="595.0" y="91.5" text-anchor="middle">qemu-virt-arm64</text>
+<rect class="dat" x="716" y="44" width="216" height="66" rx="8"/>
+<text class="h" x="824.0" y="73.5" text-anchor="middle">tests/acceptance/</text>
+<text class="s" x="824.0" y="91.5" text-anchor="middle">自动化验收</text>
+<rect class="layer" x="16" y="140" width="928" height="168" rx="10"/>
+<text class="tag" x="28" y="158" text-anchor="start">components/ · 18 个独立仓库（git 子模块）</text>
+<rect class="vir" x="28" y="168" width="140" height="34" rx="6"/>
+<text class="m" x="98.0" y="190" text-anchor="middle">cherry_kal</text>
+<rect class="ker" x="180" y="168" width="140" height="34" rx="6"/>
+<text class="m" x="250.0" y="190" text-anchor="middle">cherry_printk</text>
+<rect class="ker" x="332" y="168" width="140" height="34" rx="6"/>
+<text class="m" x="402.0" y="190" text-anchor="middle">cherry_timer</text>
+<rect class="ker" x="484" y="168" width="140" height="34" rx="6"/>
+<text class="m" x="554.0" y="190" text-anchor="middle">cherry_vfs</text>
+<rect class="ker" x="636" y="168" width="140" height="34" rx="6"/>
+<text class="m" x="706.0" y="190" text-anchor="middle">cherry_shell</text>
+<rect class="ker" x="788" y="168" width="140" height="34" rx="6"/>
+<text class="m" x="858.0" y="190" text-anchor="middle">cherry_pci</text>
+<rect class="ker" x="28" y="212" width="140" height="34" rx="6"/>
+<text class="m" x="98.0" y="234" text-anchor="middle">cherry_sdio</text>
+<rect class="ker" x="180" y="212" width="140" height="34" rx="6"/>
+<text class="m" x="250.0" y="234" text-anchor="middle">cherry_ahci</text>
+<rect class="ker" x="332" y="212" width="140" height="34" rx="6"/>
+<text class="m" x="402.0" y="234" text-anchor="middle">cherry_nvme</text>
+<rect class="ker" x="484" y="212" width="140" height="34" rx="6"/>
+<text class="m" x="554.0" y="234" text-anchor="middle">cherry_ext4</text>
+<rect class="ker" x="636" y="212" width="140" height="34" rx="6"/>
+<text class="m" x="706.0" y="234" text-anchor="middle">cherry_fstools</text>
+<rect class="ker" x="788" y="212" width="140" height="34" rx="6"/>
+<text class="m" x="858.0" y="234" text-anchor="middle">cherry_net</text>
+<rect class="ker" x="28" y="256" width="140" height="34" rx="6"/>
+<text class="m" x="98.0" y="278" text-anchor="middle">cherry_process</text>
+<rect class="ker" x="180" y="256" width="140" height="34" rx="6"/>
+<text class="m" x="250.0" y="278" text-anchor="middle">cherry_usbd</text>
+<rect class="ker" x="332" y="256" width="140" height="34" rx="6"/>
+<text class="m" x="402.0" y="278" text-anchor="middle">cherry_kmod</text>
+<rect class="ker" x="484" y="256" width="140" height="34" rx="6"/>
+<text class="m" x="554.0" y="278" text-anchor="middle">cherry_ebpf</text>
+<rect class="ker" x="636" y="256" width="140" height="34" rx="6"/>
+<text class="m" x="706.0" y="278" text-anchor="middle">cherry_drm</text>
+<rect class="ker" x="788" y="256" width="140" height="34" rx="6"/>
+<text class="m" x="858.0" y="278" text-anchor="middle">cherry_mesa</text>
+<path class="ln" d="M250,308 L250,340" marker-end="url(#a)"/>
+<path class="ln" d="M710,308 L710,340" marker-end="url(#a)"/>
+<rect class="vir" x="28" y="342" width="444" height="108" rx="8"/>
+<text class="h" x="250.0" y="376.5" text-anchor="middle">依赖规则</text>
+<text class="s" x="250.0" y="394.5" text-anchor="middle">组件之间只通过公开头文件和 VFS 交互</text>
+<text class="s" x="250.0" y="410.5" text-anchor="middle">组件只调用 cherry_kal，不直接调用 FreeRTOS</text>
+<text class="s" x="250.0" y="426.5" text-anchor="middle">换一个底层 RTOS 只需重写 cherry_kal</text>
+<rect class="dat" x="488" y="342" width="444" height="108" rx="8"/>
+<text class="h" x="710.0" y="376.5" text-anchor="middle">构建</text>
+<text class="s" x="710.0" y="394.5" text-anchor="middle">每个组件一个 SConscript，编译成 lib&lt;组件&gt;.a</text>
+<text class="s" x="710.0" y="410.5" text-anchor="middle">bsp/SConscript 把内核与全部组件链接成</text>
+<text class="s" x="710.0" y="426.5" text-anchor="middle">build/bsp/freertos_smp.elf</text>
+</svg>

@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="820" viewBox="0 0 960 820" role="img" aria-label="FreeRTOS SMP 系统架构">
+<title>FreeRTOS SMP 系统架构</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="820"/>
+<rect class="layer" x="16" y="16" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="34" text-anchor="start">用户程序</text>
+<rect class="app" x="28" y="42" width="292" height="64" rx="8"/>
+<text class="h" x="174.0" y="70.5" text-anchor="middle">BusyBox</text>
+<text class="s" x="174.0" y="88.5" text-anchor="middle">29 个常用命令 · 管道 · 重定向</text>
+<rect class="app" x="334" y="42" width="292" height="64" rx="8"/>
+<text class="h" x="480.0" y="70.5" text-anchor="middle">GNU Bash</text>
+<text class="s" x="480.0" y="88.5" text-anchor="middle">动态链接 glibc</text>
+<rect class="app" x="640" y="42" width="292" height="64" rx="8"/>
+<text class="h" x="786.0" y="70.5" text-anchor="middle">你的 ELF 程序</text>
+<text class="s" x="786.0" y="88.5" text-anchor="middle">静态 / 动态 / 非 PIE</text>
+<rect class="acc" x="370" y="128" width="220" height="26" rx="13.0"/>
+<text class="acct" x="480.0" y="145.5" text-anchor="middle">POSIX 系统调用</text>
+<rect class="layer" x="16" y="162" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="180" text-anchor="start">系统服务</text>
+<rect class="ker" x="28" y="188" width="216" height="64" rx="8"/>
+<text class="h" x="136.0" y="216.5" text-anchor="middle">cherry_process</text>
+<text class="s" x="136.0" y="234.5" text-anchor="middle">进程 · ELF 加载 · 信号 · VMA</text>
+<rect class="ker" x="258" y="188" width="216" height="64" rx="8"/>
+<text class="h" x="366.0" y="216.5" text-anchor="middle">cherry_shell</text>
+<text class="s" x="366.0" y="234.5" text-anchor="middle">直接调用 C 函数 · 符号表</text>
+<rect class="ker" x="487" y="188" width="216" height="64" rx="8"/>
+<text class="h" x="595.0" y="216.5" text-anchor="middle">cherry_kmod</text>
+<text class="s" x="595.0" y="234.5" text-anchor="middle">内核模块加载与重定位</text>
+<rect class="ker" x="716" y="188" width="216" height="64" rx="8"/>
+<text class="h" x="824.0" y="216.5" text-anchor="middle">cherry_ebpf</text>
+<text class="s" x="824.0" y="234.5" text-anchor="middle">eBPF 虚拟机 · 探针</text>
+<rect class="layer" x="16" y="278" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="296" text-anchor="start">子系统</text>
+<rect class="ker" x="28" y="304" width="170" height="64" rx="8"/>
+<text class="h" x="113.0" y="332.5" text-anchor="middle">cherry_vfs</text>
+<text class="s" x="113.0" y="350.5" text-anchor="middle">VFS · 设备模型 · poll/epoll</text>
+<rect class="ker" x="212" y="304" width="170" height="64" rx="8"/>
+<text class="h" x="297.0" y="332.5" text-anchor="middle">cherry_ext4 · fstools</text>
+<text class="s" x="297.0" y="350.5" text-anchor="middle">ext4 · MBR · mount · fsck</text>
+<rect class="ker" x="395" y="304" width="170" height="64" rx="8"/>
+<text class="h" x="480.0" y="332.5" text-anchor="middle">cherry_net</text>
+<text class="s" x="480.0" y="350.5" text-anchor="middle">TCP/IP · BSD 套接字</text>
+<rect class="ker" x="579" y="304" width="170" height="64" rx="8"/>
+<text class="h" x="664.0" y="332.5" text-anchor="middle">cherry_drm · mesa</text>
+<text class="s" x="664.0" y="350.5" text-anchor="middle">显示 · 3D 管线</text>
+<rect class="ker" x="762" y="304" width="170" height="64" rx="8"/>
+<text class="h" x="847.0" y="332.5" text-anchor="middle">cherry_usbd</text>
+<text class="s" x="847.0" y="350.5" text-anchor="middle">USB 设备栈</text>
+<rect class="layer" x="16" y="394" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="412" text-anchor="start">设备驱动</text>
+<rect class="ker" x="28" y="420" width="170" height="64" rx="8"/>
+<text class="h" x="113.0" y="448.5" text-anchor="middle">cherry_pci</text>
+<text class="s" x="113.0" y="466.5" text-anchor="middle">ECAM 枚举 · MSI-X · ITS</text>
+<rect class="ker" x="212" y="420" width="170" height="64" rx="8"/>
+<text class="h" x="297.0" y="448.5" text-anchor="middle">cherry_ahci</text>
+<text class="s" x="297.0" y="466.5" text-anchor="middle">SATA → /dev/sdX</text>
+<rect class="ker" x="395" y="420" width="170" height="64" rx="8"/>
+<text class="h" x="480.0" y="448.5" text-anchor="middle">cherry_nvme</text>
+<text class="s" x="480.0" y="466.5" text-anchor="middle">→ /dev/nvme0n1</text>
+<rect class="ker" x="579" y="420" width="170" height="64" rx="8"/>
+<text class="h" x="664.0" y="448.5" text-anchor="middle">cherry_sdio</text>
+<text class="s" x="664.0" y="466.5" text-anchor="middle">SDHCI → /dev/mmcblk0</text>
+<rect class="ker" x="762" y="420" width="170" height="64" rx="8"/>
+<text class="h" x="847.0" y="448.5" text-anchor="middle">virtio-net</text>
+<text class="s" x="847.0" y="466.5" text-anchor="middle">多队列网卡</text>
+<rect class="vir" x="28" y="512" width="904" height="56" rx="8"/>
+<text class="h" x="480.0" y="536.5" text-anchor="middle">cherry_kal 内核抽象层</text>
+<text class="s" x="480.0" y="554.5" text-anchor="middle">任务 · 锁 · 等待队列 · 工作队列 · 看门狗 · 日志（cherry_printk） · 定时器（cherry_timer）</text>
+<rect class="layer" x="16" y="582" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="600" text-anchor="start">FreeRTOS SMP 底座</text>
+<rect class="dat" x="28" y="608" width="292" height="64" rx="8"/>
+<text class="h" x="174.0" y="636.5" text-anchor="middle">FreeRTOS V11 SMP 内核</text>
+<text class="s" x="174.0" y="654.5" text-anchor="middle">任务调度 · 队列 · 信号量 · 互斥锁</text>
+<rect class="dat" x="334" y="608" width="292" height="64" rx="8"/>
+<text class="h" x="480.0" y="636.5" text-anchor="middle">AArch64 移植层</text>
+<text class="s" x="480.0" y="654.5" text-anchor="middle">上下文切换 · 跨核 Yield（SGI）</text>
+<rect class="dat" x="640" y="608" width="292" height="64" rx="8"/>
+<text class="h" x="786.0" y="636.5" text-anchor="middle">BSP（EL1）</text>
+<text class="s" x="786.0" y="654.5" text-anchor="middle">启动 · GICv3 · 定时器 · PL011 · PSCI</text>
+<path class="ln" d="M480,686 L480,708" marker-end="url(#a)"/>
+<rect class="layer" x="16" y="710" width="928" height="96" rx="10"/>
+<text class="tag" x="28" y="728" text-anchor="start">硬件 · QEMU virt</text>
+<rect class="hw" x="28" y="736" width="170" height="56" rx="8"/>
+<text class="h" x="113.0" y="768.5" text-anchor="middle">Cortex-A53 × N</text>
+<rect class="hw" x="212" y="736" width="170" height="56" rx="8"/>
+<text class="h" x="297.0" y="768.5" text-anchor="middle">GICv3 + ITS</text>
+<rect class="hw" x="395" y="736" width="170" height="56" rx="8"/>
+<text class="h" x="480.0" y="768.5" text-anchor="middle">PCIe 设备</text>
+<rect class="hw" x="579" y="736" width="170" height="56" rx="8"/>
+<text class="h" x="664.0" y="768.5" text-anchor="middle">Generic Timer</text>
+<rect class="hw" x="762" y="736" width="170" height="56" rx="8"/>
+<text class="h" x="847.0" y="768.5" text-anchor="middle">PL011 串口</text>
+</svg>

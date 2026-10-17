@@ -1,140 +1,171 @@
-# FreeRTOS SMP for ARMv8-A (AArch64) - 模块化 CherryOS 集成平台
+# FreeRTOS SMP for AArch64
 
-本项目为基于 **ARMv8-A (AArch64, Cortex-A53)** 架构与 **QEMU virt (GICv3)** 虚拟化平台的现代化 **FreeRTOS SMP 模块化操作系统集成运行环境**。
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Kernel](https://img.shields.io/badge/kernel-FreeRTOS%20V11%20SMP-informational)](kernel)
+[![Arch](https://img.shields.io/badge/arch-AArch64-informational)](docs/architecture.md)
+[![Platform](https://img.shields.io/badge/platform-QEMU%20virt-orange)](docs/getting-started.md)
 
-> [!NOTE]
-> **模块化架构定位**：本系统遵循 **“模块化解耦与可组合性”** 设计原则，是一套完全模块化的现代操作系统集成基线。架构遵循 **“FreeRTOS 专注多核底座与任务调度”** 原则，负责 CPU 裸机引导、GICv3 中断路由、ARM Generic Timer、PSCI 多核启动及任务调度；上层所有核心操作系统能力（文件系统、网络栈、存储驱动、进程模型、动态链接器、图形与安全机制）均作为独立的 Git 子模块模块化拆分、独立维护，并通过通用内核抽象层（`cherry_kal`）进行高度解耦与按需集成。
+本仓库是运行在 AArch64 上的 FreeRTOS SMP 系统。FreeRTOS 只负责多核启动、中断和任务调度；文件系统、网络、存储驱动、进程模型、Shell 等操作系统能力都是独立的组件，各自一个仓库，通过内核抽象层 `cherry_kal` 接到内核上，可以按需组合。
 
----
+在 QEMU `virt` 上，它能从 ext4 根文件系统启动 BusyBox 和动态链接的 GNU Bash。
 
-## 1. 模块化生态与独立组件仓库矩阵
+<p align="center"><img src="docs/images/architecture.svg" alt="FreeRTOS SMP 系统架构" width="900"></p>
 
-所有 Cherry 操作系统核心子系统与板级支持包均已彻底解耦并发布至独立的 Git 模块化仓库中：
+## 分支
 
-| 模块名称 | 功能定位与核心特性 | 独立仓库地址 | 本地路径 |
-| :--- | :--- | :--- | :--- |
-| **`bsp`** | QEMU virt ARM64 模块化板级支持包（startup.S、GICv3、PL011 UART、设备注册） | [Surest-ok/qemu-virt-arm64](https://github.com/Surest-ok/qemu-virt-arm64) | [`bsp`](bsp) |
-| **`cherry_vfs`** | Linux 兼容 Inode/Dentry 虚拟文件系统、平台总线与设备驱动框架 (`cdev`/`bdev`/`sockdev`) | [Surest-ok/cherry_vfs](https://github.com/Surest-ok/cherry_vfs) | [`components/cherry_vfs`](components/cherry_vfs) |
-| **`cherry_process`** | 轻量级进程模型 (PCB)、POSIX Syscall 层、完全解耦 ELF64 动态链接器、Ubuntu GNU Bash 执行与 BusyBox 应用集 | [Surest-ok/cherry_process](https://github.com/Surest-ok/cherry_process) | [`components/cherry_process`](components/cherry_process) |
-| **`cherry_ahci`** | Serial ATA AHCI 1.3+ 存储控制器，支持多端口 SATA/AHCI 设备枚举与 `/dev/sda`、`/dev/sdb` 块设备对接 | [Surest-ok/cherry_ahci](https://github.com/Surest-ok/cherry_ahci) | [`components/cherry_ahci`](components/cherry_ahci) |
-| **`cherry_ext4`** | Ext4 日志文件系统原生驱动、JBD2 事务管理、`ext4_mkfs` 与 `ext4_fsck` 修复工具 | [Surest-ok/cherry_ext4](https://github.com/Surest-ok/cherry_ext4) | [`components/cherry_ext4`](components/cherry_ext4) |
-| **`cherry_fstools`** | MBR 分区解析、分区子块设备映射、`mount`/`umount` 与 `fs` 核心存储实用工具 | [Surest-ok/cherry_fs](https://github.com/Surest-ok/cherry_fs) | [`components/cherry_fstools`](components/cherry_fstools) |
-| **`cherry_net`** | 多核多队列 (MQ-RSS) TCP/IP 协议栈、VirtIO-Net PCI 硬件加速驱动与 BSD 套接字 | [Surest-ok/cherry_net](https://github.com/Surest-ok/cherry_net) | [`components/cherry_net`](components/cherry_net) |
-| **`cherry_pci`** | PCIe ECAM 主机桥枚举、BAR 资源分配、MSI/MSI-X 与 GICv3 ITS 中断分发驱动 | [Surest-ok/cherry_pci](https://github.com/Surest-ok/cherry_pci) | [`components/cherry_pci`](components/cherry_pci) |
-| **`cherry_nvme`** | PCIe NVMe 1.4+ 固态存储子系统、PRP 分页内存映射与 `/dev/nvme0n1` 块设备对接 | [Surest-ok/cherry_nvme](https://github.com/Surest-ok/cherry_nvme) | [`components/cherry_nvme`](components/cherry_nvme) |
-| **`cherry_sdio`** | SD / SDIO / eMMC 协议栈、SDHCI PCI 控制器驱动与 `/dev/mmcblk0` 块设备驱动 | [Surest-ok/cherry_sdio](https://github.com/Surest-ok/cherry_sdio) | [`components/cherry_sdio`](components/cherry_sdio) |
-| **`cherry_printk`** | 多核并发无交错 Linux 规范日志引擎，纳秒级关中断入队与异步开中断输出 | [Surest-ok/cherry_printk](https://github.com/Surest-ok/cherry_printk) | [`components/cherry_printk`](components/cherry_printk) |
-| **`cherry_timer`** | 硬件纳秒时钟基准、Per-CPU 独立队列、Linux 标准 `timer_list` 与 `hrtimer` 定时器 | [Surest-ok/cherry_timer](https://github.com/Surest-ok/cherry_timer) | [`components/cherry_timer`](components/cherry_timer) |
-| **`cherry_shell`** | VxWorks 风格终端 C 函数直接调用、多参数无缝传递与 `addr2sym` 双向符号反查引擎 | [Surest-ok/cherry_shell](https://github.com/Surest-ok/cherry_shell) | [`components/cherry_shell`](components/cherry_shell) |
-| **`cherry_kal`** | 通用内核抽象层 (OSAL)，将具体底层 RTOS 接口标准化为 Linux 语义 | [Surest-ok/cherry_kal](https://github.com/Surest-ok/cherry_kal) | [`components/cherry_kal`](components/cherry_kal) |
-| **`cherry_usbd`** | USB 2.0/3.0 设备协议栈、Virtual UDC 环回驱动、CDC-ACM、MSC BOT 与 HID 引擎 | [Surest-ok/cherry_usbd](https://github.com/Surest-ok/cherry_usbd) | [`components/cherry_usbd`](components/cherry_usbd) |
-| **`cherry_kmod`** | Linux 规范内核模块动态装载与符号重定位引擎 | [Surest-ok/cherry_kmod](https://github.com/Surest-ok/cherry_kmod) | [`components/cherry_kmod`](components/cherry_kmod) |
-| **`cherry_ebpf`** | eBPF 虚拟机、内核探针 (kprobe/tracepoint) 与执行跟踪引擎 | [Surest-ok/cherry_ebpf](https://github.com/Surest-ok/cherry_ebpf) | [`components/cherry_ebpf`](components/cherry_ebpf) |
-| **`cherry_drm`** | Direct Rendering Manager 显示与帧缓冲驱动框架 | [Surest-ok/cherry_drm](https://github.com/Surest-ok/cherry_drm) | [`components/cherry_drm`](components/cherry_drm) |
-| **`cherry_mesa`** | 3D 渲染与图形管线用户态支撑库 | [Surest-ok/cherry_mesa](https://github.com/Surest-ok/cherry_mesa) | [`components/cherry_mesa`](components/cherry_mesa) |
+| 分支 | 内容 |
+| --- | --- |
+| `master` | FreeRTOS SMP 内核、AArch64 移植层、arch 抽象层和 BSP，以及多核调度验收 |
+| `cherry-vfs` | 加入第一批组件：`cherry_kal`、`cherry_printk`、`cherry_timer`、`cherry_vfs`、`cherry_shell` |
+| `cherry-pci-sdio` | 再加入 `cherry_pci`（含 GICv3 ITS）和 `cherry_sdio` |
+| `cherry-ext4-fstools` | 再加入 `cherry_ext4` 和 `cherry_fstools` |
+| `vibe-coding-dev` | 组件拆成 18 个独立仓库（子模块），加入网络、NVMe、AHCI、进程与用户空间等 |
+| `technical-blogs` | 从零移植的技术博客，以及 FreeRTOS、LK、ThreadX 共用 arch 层的对比实验 |
 
----
+当前分支：**`vibe-coding-dev`**。
 
-## 2. 模块化集成架构
+## 特性
 
-<p align="center">
-  <img src="docs/diagrams/cherry-modular-os-architecture.png" alt="Cherry Modular OS 现代化模块化架构" width="100%" />
-</p>
+- **FreeRTOS V11 SMP 底座**：1–32 核 Cortex-A53，GICv3 中断，Generic Timer 时钟，PSCI 拉起从核，跨核 Yield 走 SGI。
+- **组件化**：18 个组件各自一个 git 仓库，只依赖 `cherry_kal` 提供的任务、锁、等待队列、工作队列等原语，不直接调用 FreeRTOS。
+- **存储**：PCIe ECAM 枚举、MSI-X（GICv3 ITS）；AHCI、NVMe、SD/eMMC 块设备；MBR 分区，ext4（带 JBD2 日志）以及 `mkfs` / `fsck`。
+- **网络**：virtio-net 驱动，多队列 TCP/IP 协议栈，BSD 套接字。
+- **进程与用户空间**：进程、`fork` / `execve` / `wait4` / `pipe`、信号、`mmap`，加载静态、动态和非 PIE 的 ELF，可运行 BusyBox 与 GNU Bash。
+- **调试与扩展**：直接调用 C 函数的 Shell、内核模块加载、eBPF 虚拟机与探针、统一格式的多核日志。
+- **自动化验收**：一条命令在 QEMU 上启动全部设备并检查调度、跨核同步和各组件的自检结果。
 
----
+## 快速开始
 
-## 3. 核心功能特性
-
-### 3.1 纯净 EL1 内核运行模式
-移除冗余 EL2 Hypervisor 实现，内核运行在标准的 Exception Level 1 (EL1)。启动引导流程精简可靠，具备更清晰的异常向量表与内存映射。
-
-### 3.2 多端口 SATA/AHCI 与根文件系统挂载
-- **SATA Port 0 (`/dev/sda`)**：挂载标准 `rootfs.ext4`，承载系统基础命令、驱动模块与 BusyBox 应用。
-- **SATA Port 1 (`/dev/sdb`)**：挂载 64MB `ubuntu_rootfs.ext4` 到根目录 `/`，提供原生 Ubuntu AArch64 用户空间文件体系。
-
-### 3.3 原生 GNU Bash 与动态链接应用加载
-- **ELF64 动态链接器支持**：内核原生解析 GNU `PT_INTERP`，自动加载 `/lib/ld-linux-aarch64.so.1` 动态链接器，映射 `libc.so.6` 与 `libtinfo.so.6`。
-- **System V ABI 与 POSIX 系统调用**：完整支持用户态 `argc`/`argv`/`envp`、`brk`/`mmap`/`munmap`、`ioctl`（TTY 终端控制）、`rt_sigaction`/`rt_sigprocmask`、`getpid`/`getppid`、`fork`/`execve`/`wait4`、`pipe` 等核心调用。
-- **原生 Bash 执行**：支持 `bash -c "echo ..."` 单行命令执行与 `/bin/test_bash.sh` 复杂脚本运行（循环变量展开、`$((12+30))` 算术求值、退出码精确捕获）。
-
-### 3.4 工业级 BusyBox 多调用工具集
-内置 29 种 BusyBox 工具（`ls`, `cat`, `echo`, `sh`, `ps`, `pwd`, `mkdir`, `rm`, `kill`, `head`, `tail`, `wc`, `grep`, `sleep` 等），支持管道通信、重定向与多核任务调度观察。
-
----
-
-## 4. 目录结构
-
-```text
-freertos-workspace/
-├── SConstruct                  # SCons 顶层构建编排脚本（模块联动编译与 QEMU/测试目标）
-├── Makefile                    # 快捷构建命令行封装
-├── kernel/                     # FreeRTOS V11 SMP 官方内核源码及 AArch64 端口实现
-│   ├── FreeRTOS-Kernel/        # 核心任务调度器 (tasks.c, queue.c, list.c 等)
-│   └── port/                   # GCC/ARM_AARCH64_SRE 移植层 (port.c, portASM.S)
-├── arch/                       # 体系结构抽象层 (原子操作、自旋锁、中断与屏障)
-├── bsp/                        # 板级支持包 (Git 子模块: Surest-ok/qemu-virt-arm64)
-├── components/                 # CherryOS 现代化操作系统模块库 (18 个独立子模块仓库)
-├── scripts/                    # 构建辅助脚本 (build_ubuntu_rootfs.py, run-qemu.sh 等)
-└── tests/                      # 自动化测试编排脚本 (accept_qemu_sched.py)
-```
-
----
-
-## 5. 快速上手与功能复现
-
-### 5.1 环境准备
-
-确保主机（Ubuntu 20.04 / 22.04 或 WSL2）已安装交叉编译器、QEMU 与 SCons：
+需要 Ubuntu 20.04 或更新版本（实体机、虚拟机、WSL2 都可以）。
 
 ```bash
+# 1. 安装依赖
 sudo apt-get update
-sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu qemu-system-arm python3 python3-pip e2fsprogs
+sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu qemu-system-arm \
+                        python3 python3-pip e2fsprogs
 pip3 install scons
-```
 
-### 5.2 完整代码拉取（含全部 19 个模块化子模块）
-
-克隆主仓库并递归拉取所有依赖子模块：
-
-```bash
+# 2. 获取代码（组件是子模块，必须带 --recursive）
 git clone --recursive -b vibe-coding-dev https://github.com/Surest-ok/FreeRTOS.git
 cd FreeRTOS
-```
 
-### 5.3 编译与构建
+# 3. 构建，生成 build/bsp/freertos_smp.elf
+scons -j$(nproc)
 
-```bash
-# 1. 编译全系统内核镜像 (生成 build/bsp/freertos_smp.elf)
-scons
-
-# 2. 构建 Ubuntu 根文件系统镜像（用于原生 GNU Bash 动态执行验证）
+# 4. 生成 Ubuntu 用户空间镜像 build/ubuntu_rootfs.ext4（GNU Bash 和验收测试都需要）
 python3 scripts/build_ubuntu_rootfs.py
+
+# 5. 在 QEMU 上运行（默认 2 核）
+scons run
 ```
 
-### 5.4 自动化验收测试
-
-运行包含 FreeRTOS 多核调度、全组件联动与 GNU Bash / BusyBox 执行的端到端自动化验收：
+退出 QEMU：先按 `Ctrl+A`，松开后再按 `X`。
 
 ```bash
-# 1. 运行全功能自动化验收（默认双核 SMP，包含多磁盘挂载与原生应用执行）
+# 6. 运行自动化验收
 scons test
-
-# 2. 运行高压力跨核同步压测 (Cross-core Stress)
-scons SCHED_MODE=cross test
-
-# 3. 指定核心数编译并交互式运行 QEMU (例如 4 核心)
-scons CORES=4 run
-# (使用 Ctrl+A, X 退出 QEMU 模拟器)
 ```
 
-**验收通过标志输出**：
+完整的步骤、每一步的预期输出和常见问题见 [上手指南](docs/getting-started.md)。
+
+## 架构一览
+
+主仓库只包含 FreeRTOS SMP 内核、AArch64 移植层、BSP 和构建脚本；其余能力都在 `components/` 下的子模块里。
+
+<p align="center"><img src="docs/images/modules.svg" alt="模块组织" width="900"></p>
+
+系统启动后先由 BSP 初始化串口、中断和定时器并拉起从核，然后按依赖顺序初始化各组件，最后挂载根文件系统：
+
+<p align="center"><img src="docs/images/boot.svg" alt="启动流程" width="900"></p>
+
+存储与网络的分层、各组件的职责见 [架构说明](docs/architecture.md)。
+
+## 组件
+
+| 组件 | 作用 | 仓库 |
+| --- | --- | --- |
+| `bsp` | QEMU virt 板级支持：启动、GICv3、Generic Timer、PL011、平台设备 | [qemu-virt-arm64](https://github.com/Surest-ok/qemu-virt-arm64) |
+| `cherry_kal` | 内核抽象层：任务、锁、等待队列、工作队列、看门狗 | [cherry_kal](https://github.com/Surest-ok/cherry_kal) |
+| `cherry_printk` | 多核日志，每行完整输出不交错 | [cherry_printk](https://github.com/Surest-ok/cherry_printk) |
+| `cherry_timer` | 每核定时器队列，`timer_list` 与高精度定时器 | [cherry_timer](https://github.com/Surest-ok/cherry_timer) |
+| `cherry_vfs` | 虚拟文件系统、设备模型（字符 / 块 / 套接字设备）、`poll` / `epoll` / `select` | [cherry_vfs](https://github.com/Surest-ok/cherry_vfs) |
+| `cherry_pci` | PCIe ECAM 枚举、BAR 分配、MSI / MSI-X（GICv3 ITS） | [cherry_pci](https://github.com/Surest-ok/cherry_pci) |
+| `cherry_ahci` | SATA AHCI，多端口，`/dev/sda`、`/dev/sdb` | [cherry_ahci](https://github.com/Surest-ok/cherry_ahci) |
+| `cherry_nvme` | NVMe，`/dev/nvme0n1` | [cherry_nvme](https://github.com/Surest-ok/cherry_nvme) |
+| `cherry_sdio` | SD / SDIO / eMMC，SDHCI 控制器，`/dev/mmcblk0` | [cherry_sdio](https://github.com/Surest-ok/cherry_sdio) |
+| `cherry_ext4` | ext4 文件系统、JBD2 日志、`mkfs` / `fsck` | [cherry_ext4](https://github.com/Surest-ok/cherry_ext4) |
+| `cherry_fstools` | MBR 分区、`mount` / `umount` 等存储工具 | [cherry_fs](https://github.com/Surest-ok/cherry_fs) |
+| `cherry_net` | 多队列 TCP/IP、virtio-net 驱动、BSD 套接字 | [cherry_net](https://github.com/Surest-ok/cherry_net) |
+| `cherry_process` | 进程、POSIX 系统调用、ELF 加载与动态链接、BusyBox | [cherry_process](https://github.com/Surest-ok/cherry_process) |
+| `cherry_shell` | 直接调用 C 函数的 Shell，地址与符号互查 | [cherry_shell](https://github.com/Surest-ok/cherry_shell) |
+| `cherry_kmod` | 内核模块加载与符号重定位 | [cherry_kmod](https://github.com/Surest-ok/cherry_kmod) |
+| `cherry_ebpf` | eBPF 虚拟机、校验器、map、探针 | [cherry_ebpf](https://github.com/Surest-ok/cherry_ebpf) |
+| `cherry_usbd` | USB 设备栈：CDC-ACM、MSC、HID；在 QEMU 上用虚拟 UDC 环回 | [cherry_usbd](https://github.com/Surest-ok/cherry_usbd) |
+| `cherry_drm` | DRM/KMS 显示：virtio-gpu，`/dev/dri/card0`、`/dev/fb0` | [cherry_drm](https://github.com/Surest-ok/cherry_drm) |
+| `cherry_mesa` | 3D 图形：GBM、EGL、OpenGL ES 2.0，virgl 与软件光栅 | [cherry_mesa](https://github.com/Surest-ok/cherry_mesa) |
+
+每个组件的接口和用法见各自仓库的 README，组件之间的关系见 [组件说明](docs/components.md)。
+
+## 构建选项
+
+选项写在 `scons` 命令行上，例如 `scons CORES=4 run`：
+
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `CORES` | `2` | 核数，同时决定 FreeRTOS 的 `configNUMBER_OF_CORES` 和 QEMU 的 `-smp` |
+| `SCHED_MODE` | `full` | 验收模式：`full`，或跨核压测 `cross`、`cross-sem`、`cross-queue`、`cross-mutex`、`cross-spin` |
+| `LOG_LEVEL` | `6` | 日志级别 0–7，7 打开 SMP 诊断 |
+| `TICK_BROADCAST` | `1` | 时钟中断是否广播到所有核 |
+| `TIMEOUT` | `90` | 验收测试的超时，秒 |
+| `CROSS_COMPILE` | `aarch64-linux-gnu-` | 交叉工具链前缀 |
+| `BUILD_DIR` | `build` | 构建目录 |
+
+`make` 是 `scons` 的一层薄封装：`make all`、`make run`、`make sched-full`、`make sched-cross`、`make clean`。
+
+## 测试
+
+```bash
+scons test                     # 全功能验收：调度、同步与各组件自检
+scons SCHED_MODE=cross test    # 跨核同步压测
+scons CORES=4 test             # 换核数
+```
+
+<p align="center"><img src="docs/images/testing.svg" alt="自动化验收" width="900"></p>
+
+判定规则和日志位置见 [测试](docs/testing.md)。
+
+## 目录结构
+
 ```text
-cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass elf_glibc=pass nopie=pass dyn=pass all=pass
-[SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
+.
+├── SConstruct          构建编排：组件、QEMU 运行与验收目标
+├── Makefile            scons 的快捷封装
+├── kernel/             FreeRTOS V11 SMP 内核（tasks.c、queue.c 等）与 AArch64 移植层（port/）
+├── arch/               体系结构抽象：原子操作、自旋锁、屏障，以及编译规则（rules.py）
+├── include/            内核配置（FreeRTOSConfig.h）与公共头文件
+├── bsp/                板级支持包（子模块）
+├── components/         18 个组件（子模块）
+├── scripts/            Ubuntu 根文件系统构建、QEMU 启动脚本
+├── tests/acceptance/   自动化验收脚本
+└── docs/               文档与插图
 ```
 
----
+## 现状与限制
 
-## 6. 许可证
+- 只在 QEMU `virt` 上运行过，还没有在实体板卡上验证。
+- 当前版本约一半的验收运行会在 `cherry_drm` 初始化之后崩溃（跳转到地址 0），见 [测试](docs/testing.md#已知问题)。
+- Ubuntu 用户空间镜像只包含 Bash 及其依赖库，由 `scripts/build_ubuntu_rootfs.py` 在本机生成，需要能访问 `ports.ubuntu.com`。
+- QEMU 以 `-nographic` 启动，看不到图形输出，显示和 3D 组件靠自检和 Shell 命令验证；QEMU `virt` 没有 USB 设备控制器，`cherry_usbd` 在虚拟 UDC 上环回运行。
 
-本项目遵循 [MIT 许可证](LICENSE)。FreeRTOS 原版内核代码遵循其官方 [MIT 许可证](https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/main/LICENSE.md)。
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [上手指南](docs/getting-started.md) | 环境、获取代码、构建、运行、验收、常见问题 |
+| [架构说明](docs/architecture.md) | 分层、启动流程、存储与网络栈、中断与多核 |
+| [组件说明](docs/components.md) | 组件的依赖关系、怎样新增一个组件 |
+| [测试](docs/testing.md) | 验收模式、判定规则、日志 |
+
+## 许可证
+
+[MIT](LICENSE)。`kernel/` 下的 FreeRTOS 内核源码同样采用 MIT 许可证，版权归其原作者所有。

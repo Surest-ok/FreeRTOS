@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" role="img" aria-label="存储与网络">
+<title>存储与网络</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="470"/>
+<rect class="layer" x="16" y="16" width="568" height="438" rx="10"/>
+<text class="tag" x="28" y="34" text-anchor="start">存储</text>
+<rect class="app" x="32" y="44" width="536" height="52" rx="8"/>
+<text class="h" x="300.0" y="74.5" text-anchor="middle">open · read · write · mount</text>
+<rect class="ker" x="32" y="108" width="536" height="52" rx="8"/>
+<text class="h" x="300.0" y="130.5" text-anchor="middle">cherry_vfs</text>
+<text class="s" x="300.0" y="148.5" text-anchor="middle">inode · dentry · 挂载表 · 块设备层</text>
+<rect class="ker" x="32" y="172" width="262" height="52" rx="8"/>
+<text class="h" x="163.0" y="194.5" text-anchor="middle">cherry_ext4</text>
+<text class="s" x="163.0" y="212.5" text-anchor="middle">ext4 · JBD2 日志</text>
+<rect class="ker" x="306" y="172" width="262" height="52" rx="8"/>
+<text class="h" x="437.0" y="194.5" text-anchor="middle">cherry_fstools</text>
+<text class="s" x="437.0" y="212.5" text-anchor="middle">MBR 分区 · mkfs · fsck</text>
+<rect class="ker" x="32" y="236" width="171" height="60" rx="8"/>
+<text class="h" x="117.5" y="262.5" text-anchor="middle">cherry_ahci</text>
+<text class="s" x="117.5" y="280.5" text-anchor="middle">/dev/sda · sdb</text>
+<rect class="ker" x="215" y="236" width="171" height="60" rx="8"/>
+<text class="h" x="300.5" y="262.5" text-anchor="middle">cherry_nvme</text>
+<text class="s" x="300.5" y="280.5" text-anchor="middle">/dev/nvme0n1</text>
+<rect class="ker" x="397" y="236" width="171" height="60" rx="8"/>
+<text class="h" x="482.5" y="262.5" text-anchor="middle">cherry_sdio</text>
+<text class="s" x="482.5" y="280.5" text-anchor="middle">/dev/mmcblk0</text>
+<rect class="ker" x="32" y="308" width="536" height="52" rx="8"/>
+<text class="h" x="300.0" y="330.5" text-anchor="middle">cherry_pci</text>
+<text class="s" x="300.0" y="348.5" text-anchor="middle">ECAM 枚举 · BAR 分配 · MSI-X 经 GICv3 ITS</text>
+<rect class="hw" x="32" y="372" width="171" height="64" rx="8"/>
+<text class="h" x="117.5" y="408.5" text-anchor="middle">ich9-ahci</text>
+<rect class="hw" x="215" y="372" width="171" height="64" rx="8"/>
+<text class="h" x="300.5" y="408.5" text-anchor="middle">nvme</text>
+<rect class="hw" x="397" y="372" width="171" height="64" rx="8"/>
+<text class="h" x="482.5" y="408.5" text-anchor="middle">sdhci-pci</text>
+<path class="ln" d="M300,96 L300,106" marker-end="url(#a)"/>
+<path class="ln" d="M300,160 L300,170" marker-end="url(#a)"/>
+<path class="ln" d="M300,224 L300,234" marker-end="url(#a)"/>
+<path class="ln" d="M300,296 L300,306" marker-end="url(#a)"/>
+<path class="ln" d="M300,360 L300,370" marker-end="url(#a)"/>
+<rect class="layer" x="600" y="16" width="344" height="438" rx="10"/>
+<text class="tag" x="612" y="34" text-anchor="start">网络</text>
+<rect class="app" x="616" y="44" width="312" height="52" rx="8"/>
+<text class="h" x="772.0" y="74.5" text-anchor="middle">socket · connect · send · recv</text>
+<rect class="ker" x="616" y="108" width="312" height="116" rx="8"/>
+<text class="h" x="772.0" y="146.5" text-anchor="middle">cherry_net</text>
+<text class="s" x="772.0" y="164.5" text-anchor="middle">BSD 套接字</text>
+<text class="s" x="772.0" y="180.5" text-anchor="middle">TCP · UDP · IPv4 / IPv6</text>
+<text class="s" x="772.0" y="196.5" text-anchor="middle">多队列收发，每核一个队列</text>
+<rect class="ker" x="616" y="236" width="312" height="60" rx="8"/>
+<text class="h" x="772.0" y="262.5" text-anchor="middle">virtio-net 驱动</text>
+<text class="s" x="772.0" y="280.5" text-anchor="middle">经 cherry_pci 发现</text>
+<rect class="ker" x="616" y="308" width="312" height="52" rx="8"/>
+<text class="h" x="772.0" y="330.5" text-anchor="middle">cherry_pci</text>
+<text class="s" x="772.0" y="348.5" text-anchor="middle">MSI-X 中断</text>
+<rect class="hw" x="616" y="372" width="312" height="64" rx="8"/>
+<text class="h" x="772.0" y="400.5" text-anchor="middle">virtio-net-pci</text>
+<text class="s" x="772.0" y="418.5" text-anchor="middle">QEMU user 网络</text>
+<path class="ln" d="M772,96 L772,106" marker-end="url(#a)"/>
+<path class="ln" d="M772,224 L772,234" marker-end="url(#a)"/>
+<path class="ln" d="M772,296 L772,306" marker-end="url(#a)"/>
+<path class="ln" d="M772,360 L772,370" marker-end="url(#a)"/>
+</svg>

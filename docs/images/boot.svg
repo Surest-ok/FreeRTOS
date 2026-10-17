@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-label="启动流程">
+<title>启动流程</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="330"/>
+<rect class="ker" x="28" y="40" width="140" height="92" rx="8"/>
+<text class="h" x="98.0" y="74.5" text-anchor="middle">startup.S</text>
+<text class="s" x="98.0" y="92.5" text-anchor="middle">EL2 → EL1</text>
+<text class="s" x="98.0" y="108.5" text-anchor="middle">栈 · BSS · 向量表</text>
+<rect class="ker" x="180" y="40" width="140" height="92" rx="8"/>
+<text class="h" x="250.0" y="74.5" text-anchor="middle">ukernel_start</text>
+<text class="s" x="250.0" y="92.5" text-anchor="middle">串口 · 日志</text>
+<text class="s" x="250.0" y="108.5" text-anchor="middle">GICv3 · 定时器</text>
+<path class="ln" d="M168,86 L179,86" marker-end="url(#a)"/>
+<rect class="ker" x="332" y="40" width="140" height="92" rx="8"/>
+<text class="h" x="402.0" y="74.5" text-anchor="middle">FreeRTOS 调度</text>
+<text class="s" x="402.0" y="92.5" text-anchor="middle">主核开始调度</text>
+<text class="s" x="402.0" y="108.5" text-anchor="middle">启动监控任务</text>
+<path class="ln" d="M320,86 L331,86" marker-end="url(#a)"/>
+<rect class="ker" x="484" y="40" width="140" height="92" rx="8"/>
+<text class="h" x="554.0" y="74.5" text-anchor="middle">PSCI CPU_ON</text>
+<text class="s" x="554.0" y="92.5" text-anchor="middle">监控任务</text>
+<text class="s" x="554.0" y="108.5" text-anchor="middle">拉起从核</text>
+<path class="ln" d="M472,86 L483,86" marker-end="url(#a)"/>
+<rect class="app" x="636" y="40" width="140" height="92" rx="8"/>
+<text class="h" x="706.0" y="74.5" text-anchor="middle">组件初始化</text>
+<text class="s" x="706.0" y="92.5" text-anchor="middle">逐个 init</text>
+<text class="s" x="706.0" y="108.5" text-anchor="middle">并运行自检</text>
+<path class="ln" d="M624,86 L635,86" marker-end="url(#a)"/>
+<rect class="app" x="788" y="40" width="140" height="92" rx="8"/>
+<text class="h" x="858.0" y="74.5" text-anchor="middle">Shell</text>
+<text class="s" x="858.0" y="92.5" text-anchor="middle">cherry_shell_start</text>
+<text class="s" x="858.0" y="108.5" text-anchor="middle">串口交互</text>
+<path class="ln" d="M776,86 L787,86" marker-end="url(#a)"/>
+<text class="h" x="28" y="168" text-anchor="start">组件初始化顺序（bsp/src/app.c）</text>
+<rect class="dat" x="28" y="186" width="63.199999999999996" height="30" rx="6"/>
+<text class="m" x="59.599999999999994" y="205.5" text-anchor="middle">printk</text>
+<path class="ln" d="M93.19999999999999,201 L110.19999999999999,201" marker-end="url(#a)"/>
+<rect class="dat" x="113.19999999999999" y="186" width="55.0" height="30" rx="6"/>
+<text class="m" x="140.7" y="205.5" text-anchor="middle">timer</text>
+<path class="ln" d="M170.2,201 L187.2,201" marker-end="url(#a)"/>
+<rect class="dat" x="190.2" y="186" width="38.599999999999994" height="30" rx="6"/>
+<text class="m" x="209.5" y="205.5" text-anchor="middle">vfs</text>
+<path class="ln" d="M230.79999999999998,201 L247.79999999999998,201" marker-end="url(#a)"/>
+<rect class="dat" x="250.79999999999998" y="186" width="38.599999999999994" height="30" rx="6"/>
+<text class="m" x="270.09999999999997" y="205.5" text-anchor="middle">pci</text>
+<path class="ln" d="M291.4,201 L308.4,201" marker-end="url(#a)"/>
+<rect class="dat" x="311.4" y="186" width="46.8" height="30" rx="6"/>
+<text class="m" x="334.79999999999995" y="205.5" text-anchor="middle">sdio</text>
+<path class="ln" d="M360.2,201 L377.2,201" marker-end="url(#a)"/>
+<rect class="dat" x="380.2" y="186" width="46.8" height="30" rx="6"/>
+<text class="m" x="403.59999999999997" y="205.5" text-anchor="middle">ahci</text>
+<path class="ln" d="M429.0,201 L446.0,201" marker-end="url(#a)"/>
+<rect class="dat" x="449.0" y="186" width="46.8" height="30" rx="6"/>
+<text class="m" x="472.4" y="205.5" text-anchor="middle">ext4</text>
+<path class="ln" d="M497.79999999999995,201 L514.8,201" marker-end="url(#a)"/>
+<rect class="dat" x="517.8" y="186" width="71.39999999999999" height="30" rx="6"/>
+<text class="m" x="553.5" y="205.5" text-anchor="middle">fstools</text>
+<path class="ln" d="M591.1999999999999,201 L608.1999999999999,201" marker-end="url(#a)"/>
+<rect class="app" x="611.1999999999999" y="186" width="105" height="30" rx="6"/>
+<text class="s" x="663.6999999999999" y="205.5" text-anchor="middle">挂载根文件系统</text>
+<path class="ln" d="M718.1999999999999,201 L735.1999999999999,201" marker-end="url(#a)"/>
+<rect class="vir" x="738.1999999999999" y="186" width="87.8" height="30" rx="6"/>
+<text class="m" x="782.0999999999999" y="205.5" text-anchor="middle">workqueue</text>
+<path class="ln" d="M827.9999999999999,201 L844.9999999999999,201" marker-end="url(#a)"/>
+<rect class="vir" x="847.9999999999999" y="186" width="63.199999999999996" height="30" rx="6"/>
+<text class="m" x="879.5999999999999" y="205.5" text-anchor="middle">health</text>
+<rect class="dat" x="28" y="230" width="71.39999999999999" height="30" rx="6"/>
+<text class="m" x="63.699999999999996" y="249.5" text-anchor="middle">process</text>
+<path class="ln" d="M101.39999999999999,245 L118.39999999999999,245" marker-end="url(#a)"/>
+<rect class="dat" x="121.39999999999999" y="230" width="38.599999999999994" height="30" rx="6"/>
+<text class="m" x="140.7" y="249.5" text-anchor="middle">net</text>
+<path class="ln" d="M162.0,245 L179.0,245" marker-end="url(#a)"/>
+<rect class="dat" x="182.0" y="230" width="46.8" height="30" rx="6"/>
+<text class="m" x="205.4" y="249.5" text-anchor="middle">nvme</text>
+<path class="ln" d="M230.8,245 L247.8,245" marker-end="url(#a)"/>
+<rect class="dat" x="250.8" y="230" width="46.8" height="30" rx="6"/>
+<text class="m" x="274.2" y="249.5" text-anchor="middle">usbd</text>
+<path class="ln" d="M299.6,245 L316.6,245" marker-end="url(#a)"/>
+<rect class="dat" x="319.6" y="230" width="46.8" height="30" rx="6"/>
+<text class="m" x="343.0" y="249.5" text-anchor="middle">kmod</text>
+<path class="ln" d="M368.40000000000003,245 L385.40000000000003,245" marker-end="url(#a)"/>
+<rect class="dat" x="388.40000000000003" y="230" width="46.8" height="30" rx="6"/>
+<text class="m" x="411.8" y="249.5" text-anchor="middle">ebpf</text>
+<path class="ln" d="M437.20000000000005,245 L454.20000000000005,245" marker-end="url(#a)"/>
+<rect class="dat" x="457.20000000000005" y="230" width="38.599999999999994" height="30" rx="6"/>
+<text class="m" x="476.50000000000006" y="249.5" text-anchor="middle">drm</text>
+<path class="ln" d="M497.80000000000007,245 L514.8000000000001,245" marker-end="url(#a)"/>
+<rect class="dat" x="517.8000000000001" y="230" width="46.8" height="30" rx="6"/>
+<text class="m" x="541.2" y="249.5" text-anchor="middle">mesa</text>
+<path class="ln" d="M566.6,245 L583.6,245" marker-end="url(#a)"/>
+<rect class="dat" x="586.6" y="230" width="55.0" height="30" rx="6"/>
+<text class="m" x="614.1" y="249.5" text-anchor="middle">shell</text>
+<text class="s" x="28" y="294" text-anchor="start">紫色两项由 cherry_kal 提供，其余为 components/ 下的同名组件；/dev/sdb 上有 Ubuntu 镜像时挂到 /。</text>
+</svg>
