@@ -75,7 +75,7 @@ void ukernel_wake_secondary_cores(void)
 void ukernel_start(void)
 {
     uart_init();
-    uart_log(6, "freertos", "FreeRTOS SMP unikernel boot\r\n");
+    uart_log(6, "freertos", "FreeRTOS SMP modular boot\r\n");
 
     gic_init(0);
     gtimer_init();
