@@ -1,269 +1,354 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780">
-  <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#F8FAFC"/>
-    </linearGradient>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1156 718" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="blueprint" data-quality-profile="showcase" data-node-ui="" data-reader-fit="intrinsic-height" data-reader-min-text="7.5" data-reader-primary-text="14">
+        <title id="archify-diagram-title">FreeRTOS SMP AArch64 Baseline Architecture</title>
+        <desc id="archify-diagram-description">Dual-Core SMP Scheduling &amp; GICv3 ITS on QEMU Virt ARM64</desc>
+        <!-- Definitions -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
+          </marker>
+          <marker id="arrowhead-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-emphasis" />
+          </marker>
+          <marker id="arrowhead-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-security" />
+          </marker>
+          <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-dashed" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+        <style>
+          svg[data-node-ui] [data-node-id] > rect:not(.c-mask) { stroke-width: 1.25px; }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-frontend { fill: color-mix(in srgb, var(--frontend-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--frontend-stroke) 72%, var(--mask)); }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-backend { fill: color-mix(in srgb, var(--backend-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--backend-stroke) 72%, var(--mask)); }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-database { fill: color-mix(in srgb, var(--database-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--database-stroke) 72%, var(--mask)); }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-cloud { fill: color-mix(in srgb, var(--cloud-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--cloud-stroke) 72%, var(--mask)); }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-security { fill: color-mix(in srgb, var(--security-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--security-stroke) 72%, var(--mask)); }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-messagebus { fill: color-mix(in srgb, var(--messagebus-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--messagebus-stroke) 72%, var(--mask)); }
+          :is([data-theme="dark"] svg[data-node-ui], svg[data-node-ui][data-theme="dark"]) [data-node-id] > rect:not(.c-mask).c-external { fill: color-mix(in srgb, var(--external-stroke) 13%, var(--mask)); stroke: color-mix(in srgb, var(--external-stroke) 72%, var(--mask)); }
+          svg[data-node-ui]:is([data-preset="classic"], [data-preset="signal-flow"], [data-preset="editorial"]) .c-region { fill: color-mix(in srgb, var(--cloud-stroke) 3%, transparent); stroke: color-mix(in srgb, var(--cloud-stroke) 42%, var(--lane-stroke)); stroke-dasharray: none; }
+          svg[data-node-ui] .c-security-group { stroke: color-mix(in srgb, var(--security-stroke) 58%, var(--lane-stroke)); }
+          svg[data-node-ui]:is([data-preset="classic"], [data-preset="signal-flow"], [data-preset="editorial"]) .c-security-group { stroke-dasharray: 4 3; }
+          svg[data-node-ui]:is([data-preset="classic"], [data-preset="signal-flow"], [data-preset="editorial"]) .c-lane { stroke: var(--lane-stroke); stroke-dasharray: none; }
+          svg[data-node-ui] [data-graph-role="structural-frame-label-mask"] { rx: 5px; fill: color-mix(in srgb, var(--cloud-stroke) 10%, var(--mask)); stroke: color-mix(in srgb, var(--cloud-stroke) 38%, var(--mask)); stroke-width: .8px; }
+          svg[data-node-ui] [data-composition-frame-kind="security-group"] > [data-graph-role="structural-frame-label-mask"] { fill: color-mix(in srgb, var(--security-stroke) 9%, var(--mask)); stroke: color-mix(in srgb, var(--security-stroke) 36%, var(--mask)); }
+          svg[data-node-ui] .phase-rule { opacity: .5; stroke-dasharray: none; }
+          svg[data-node-ui] .phase-chip { stroke: var(--lane-stroke); stroke-width: .75px; }
+          svg[data-node-ui] g[data-edge-from] > rect.c-mask { rx: 7px; stroke: var(--lane-stroke); stroke-width: .75px; }
+          svg[data-node-ui][data-preset="blueprint"] :is([data-graph-role="structural-frame-label-mask"], g[data-edge-from] > rect.c-mask, .phase-chip) { rx: 2px; }
+          svg[data-node-ui][data-preset="editorial"] :is([data-graph-role="structural-frame-label-mask"], g[data-edge-from] > rect.c-mask, .phase-chip) { rx: 3px; }
+        </style>
 
-    <!-- Header Gradient -->
-    <linearGradient id="header-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="100%" stop-color="#1E293B"/>
-    </linearGradient>
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
 
-    <!-- Card Gradients -->
-    <linearGradient id="app-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#EFF6FF"/>
-      <stop offset="100%" stop-color="#DBEAFE"/>
-    </linearGradient>
-    <linearGradient id="kernel-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#F0FDF4"/>
-      <stop offset="100%" stop-color="#DCFCE7"/>
-    </linearGradient>
-    <linearGradient id="arch-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FAF5FF"/>
-      <stop offset="100%" stop-color="#F3E8FF"/>
-    </linearGradient>
-    <linearGradient id="bsp-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFFBEB"/>
-      <stop offset="100%" stop-color="#FEF3C7"/>
-    </linearGradient>
-    <linearGradient id="hw-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#F1F5F9"/>
-      <stop offset="100%" stop-color="#E2E8F0"/>
-    </linearGradient>
+        <!-- Boundaries (behind everything) -->
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="QEMU Virt ARM64 Platform (virt-aarch64)" x="34" y="46" width="1082" height="274" rx="12" class="c-region" stroke-width="1"/>
 
-    <!-- Drop Shadows -->
-    <filter id="shadow-sm" x="-2%" y="-4%" width="104%" height="112%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06"/>
-    </filter>
-    <filter id="shadow-md" x="-2%" y="-4%" width="104%" height="112%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.08"/>
-    </filter>
-  </defs>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="1" data-composition-frame-label="FreeRTOS SMP Kernel &amp; Port Layer" x="34" y="396" width="882" height="108" rx="8" class="c-security-group" stroke-width="1"/>
 
-  <style>
-    .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Roboto, sans-serif; }
-    .title { font-weight: 700; fill: #FFFFFF; font-size: 20px; }
-    .subtitle { font-weight: 400; fill: #94A3B8; font-size: 13px; }
-    .badge { font-weight: 600; font-size: 11px; }
-    .card-title { font-weight: 700; font-size: 15px; }
-    .card-sub { font-weight: 500; font-size: 12px; }
-    .item-title { font-weight: 600; font-size: 13px; }
-    .item-desc { font-weight: 400; font-size: 11px; fill: #475569; }
-    .tag { font-weight: 600; font-size: 10.5px; }
-  </style>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="2" data-composition-frame-label="Acceptance Test Framework" x="164" y="546" width="462" height="104" rx="12" class="c-region" stroke-width="1"/>
 
-  <!-- Background Canvas -->
-  <rect width="1200" height="780" fill="url(#bg-grad)" rx="16"/>
-  <rect width="1198" height="778" x="1" y="1" fill="none" stroke="#E2E8F0" stroke-width="2" rx="15"/>
+        <!-- Connection paths (before components for correct z-order) -->
+        <g data-graph-role="automatic-crossover" style="--step:0">
+          <path data-graph-role="automatic-crossover-underlay" d="M 176 130 L 176 240" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="cpu0" data-edge-to="gicv3" data-edge-label="IPI Send" data-edge-key="0" data-edge-id="c0-gic" data-composition-points="176,130;176,240" data-composition-crossover="halo" data-composition-independent="true" d="M 176 130 L 176 240" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:1">
+          <path data-graph-role="automatic-crossover-underlay" d="M 314 130 L 314 240" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="cpu1" data-edge-to="gicv3" data-edge-label="IPI Recv" data-edge-key="1" data-edge-id="c1-gic" data-composition-points="314,130;314,240" data-composition-crossover="halo" data-composition-independent="true" d="M 314 130 L 314 240" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:2">
+          <path data-graph-role="automatic-crossover-underlay" d="M 590 240 L 590 130" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="bsp_boot" data-edge-to="psci" data-edge-label="Wake Core 1" data-edge-key="2" data-edge-id="boot-psci" data-composition-points="590,240;590,130" data-composition-crossover="halo" data-composition-independent="true" d="M 590 240 L 590 130" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:3">
+          <path data-graph-role="automatic-crossover-underlay" d="M 510 100 L 440 100" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="psci" data-edge-to="cpu1" data-edge-label="CPU_ON" data-edge-key="3" data-edge-id="psci-c1" data-composition-points="510,100;440,100" data-composition-crossover="halo" data-composition-independent="true" d="M 510 100 L 440 100" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:4">
+          <path data-graph-role="automatic-crossover-underlay" d="M 805 130 L 805 229 Q 805 237 797 237 L 362 237 Q 354 237 354 245 L 354 262 Q 354 270 346 270 L 330 270" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="gtimer" data-edge-to="gicv3" data-edge-label="PPI 27 Tick" data-edge-key="4" data-edge-id="tmr-gic" data-composition-points="805,130;805,237;354,237;354,270;330,270" data-composition-crossover="halo" data-composition-independent="true" d="M 805 130 L 805 229 Q 805 237 797 237 L 362 237 Q 354 237 354 245 L 354 262 Q 354 270 346 270 L 330 270" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:5">
+          <path data-graph-role="automatic-crossover-underlay" d="M 670 270 L 1017 270 Q 1025 270 1025 262 L 1025 130" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="bsp_boot" data-edge-to="uart" data-edge-label="PL011 Output" data-edge-key="5" data-edge-id="boot-uart" data-composition-points="670,270;1025,270;1025,130" data-composition-crossover="halo" data-composition-independent="true" d="M 670 270 L 1017 270 Q 1025 270 1025 262 L 1025 130" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:6">
+          <path data-graph-role="automatic-crossover-underlay" d="M 194 300 L 194 420" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="gicv3" data-edge-to="port_smp" data-edge-label="IRQ NS Group 1" data-edge-key="6" data-edge-id="gic-port" data-composition-points="194,300;194,420" data-composition-crossover="halo" data-composition-independent="true" d="M 194 300 L 194 420" class="a-security" data-animate="edge" style="--step:6" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:7">
+          <path data-graph-role="automatic-crossover-underlay" d="M 210 452 L 280 452" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="port_smp" data-edge-to="kernel_core" data-edge-label="Task Switch" data-edge-key="7" data-edge-id="port-core" data-composition-points="210,452;280,452" data-composition-crossover="halo" data-composition-independent="true" d="M 210 452 L 280 452" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:8">
+          <path data-graph-role="automatic-crossover-underlay" d="M 450 452 L 520 452" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="kernel_core" data-edge-to="kernel_ipc" data-edge-label="Sync API" data-edge-key="8" data-edge-id="core-ipc" data-composition-points="450,452;520,452" data-composition-crossover="halo" data-composition-independent="true" d="M 450 452 L 520 452" class="a-default" data-animate="edge" style="--step:8" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:9">
+          <path data-graph-role="automatic-crossover-underlay" d="M 680 452 L 750 452" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="kernel_ipc" data-edge-to="heap" data-edge-label="Alloc" data-edge-key="9" data-edge-id="ipc-heap" data-composition-points="680,452;750,452" data-composition-crossover="halo" data-composition-independent="true" d="M 680 452 L 750 452" class="a-dashed" data-animate="edge" style="--step:9" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:10">
+          <path data-graph-role="automatic-crossover-underlay" d="M 296 570 L 296 484" fill="none" stroke="var(--mask)" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="sched_test" data-edge-to="kernel_core" data-edge-label="Validate SMP" data-edge-key="10" data-edge-id="test-core" data-composition-points="296,570;296,484" data-composition-crossover="halo" data-composition-independent="true" d="M 296 570 L 296 484" class="a-emphasis" data-animate="edge" style="--step:10" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        </g>
+        <g data-graph-role="automatic-crossover" style="--step:11">
+          <path data-graph-role="automatic-crossover-underlay" d="M 520 570 L 520 535 Q 520 527 512 527 L 380 527 Q 372 527 372 519 L 372 484" fill="none" stroke="var(--mask)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          <path data-edge-from="cross_core" data-edge-to="kernel_core" data-edge-label="Stress Probes" data-edge-key="11" data-edge-id="probe-core" data-composition-points="520,570;520,527;372,527;372,484" data-composition-crossover="halo" data-composition-independent="true" d="M 520 570 L 520 535 Q 520 527 512 527 L 380 527 Q 372 527 372 519 L 372 484" class="a-dashed" data-animate="edge" style="--step:11" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
+        </g>
 
-  <!-- ==================== HEADER BAR ==================== -->
-  <g transform="translate(32, 24)">
-    <rect width="1136" height="64" rx="12" fill="url(#header-grad)" filter="url(#shadow-md)"/>
-    
-    <text x="24" y="32" class="font-sans title">FreeRTOS SMP 64位模块化多核系统架构</text>
-    <text x="24" y="50" class="font-sans subtitle">Modular Architecture for ARMv8-A (AArch64) on QEMU virt Platform</text>
-    
-    <!-- Header Badges -->
-    <g transform="translate(730, 18)">
-      <rect x="0" y="0" width="84" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
-      <text x="42" y="18" text-anchor="middle" class="font-sans badge" fill="#38BDF8">ARMv8-A</text>
-      
-      <rect x="94" y="0" width="94" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
-      <text x="141" y="18" text-anchor="middle" class="font-sans badge" fill="#4ADE80">Cortex-A53</text>
-      
-      <rect x="198" y="0" width="76" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
-      <text x="236" y="18" text-anchor="middle" class="font-sans badge" fill="#FBBF24">GICv3</text>
-      
-      <rect x="284" y="0" width="108" height="28" rx="6" fill="#1E293B" stroke="#334155" stroke-width="1"/>
-      <text x="338" y="18" text-anchor="middle" class="font-sans badge" fill="#F472B6">FreeRTOS V11</text>
-    </g>
-  </g>
+        <!-- Components -->
+        <g id="node-cpu0" data-node-id="cpu0" data-node-label="Cortex-A53 Core 0" tabindex="0" role="button" aria-label="Focus Cortex-A53 Core 0, Primary / Scheduler, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Primary / Scheduler" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>Cortex-A53 Core 0 · Primary / Scheduler · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="50" y="70" width="160" height="60" rx="8" class="c-mask"/>
+          <rect x="50" y="70" width="160" height="60" rx="8" class="c-backend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(56 76) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="130" y="98" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Cortex-A53 Core 0</text>
+        <text data-detail="context" x="130" y="114" class="t-muted" font-size="9" text-anchor="middle">Primary / Scheduler</text>
+        </g>
 
-  <!-- ==================== LAYER 1: USER APPLICATION ==================== -->
-  <g transform="translate(32, 104)">
-    <rect width="1136" height="96" rx="12" fill="url(#app-grad)" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow-sm)"/>
-    
-    <rect x="20" y="14" width="180" height="26" rx="6" fill="#2563EB"/>
-    <text x="110" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">用户多任务应用层 (app.c)</text>
-    <text x="215" y="32" class="font-sans card-sub" fill="#1E40AF">多核并发协同任务 · 周期性心跳探测 · 调度基准探针套件</text>
-    
-    <!-- Col 1 -->
-    <rect x="20" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
-    <circle cx="36" cy="66" r="4" fill="#2563EB"/>
-    <text x="48" y="71" class="font-sans item-title" fill="#1E3A8A">Core0 主控监控任务</text>
-    <text x="180" y="70" class="font-sans tag" fill="#64748B">monitor_task</text>
+        <g id="node-cpu1" data-node-id="cpu1" data-node-label="Cortex-A53 Core 1" tabindex="0" role="button" aria-label="Focus Cortex-A53 Core 1, Secondary / Worker, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Secondary / Worker" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>Cortex-A53 Core 1 · Secondary / Worker · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="280" y="70" width="160" height="60" rx="8" class="c-mask"/>
+          <rect x="280" y="70" width="160" height="60" rx="8" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(286 76) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="360" y="98" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Cortex-A53 Core 1</text>
+        <text data-detail="context" x="360" y="114" class="t-muted" font-size="9" text-anchor="middle">Secondary / Worker</text>
+        </g>
 
-    <!-- Col 2 -->
-    <rect x="296" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
-    <circle cx="312" cy="66" r="4" fill="#0284C7"/>
-    <text x="324" y="71" class="font-sans item-title" fill="#0369A1">从核绑定工作任务</text>
-    <text x="444" y="70" class="font-sans tag" fill="#64748B">pinned_workers</text>
+        <g id="node-psci" data-node-id="psci" data-node-label="PSCI Firmware" tabindex="0" role="button" aria-label="Focus PSCI Firmware, HVC #0 CPU_ON, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="security" data-node-sublabel="HVC #0 CPU_ON" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>PSCI Firmware · HVC #0 CPU_ON · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="510" y="70" width="150" height="60" rx="8" class="c-mask"/>
+          <rect x="510" y="70" width="150" height="60" rx="8" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="decision" class="semantic-sigil s-security" transform="translate(516 76) scale(0.6875)">
+            <path d="M8 2.2 13.8 8 8 13.8 2.2 8Z"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="585" y="98" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PSCI Firmware</text>
+        <text data-detail="context" x="585" y="114" class="t-muted" font-size="9" text-anchor="middle">HVC #0 CPU_ON</text>
+        </g>
 
-    <!-- Col 3 -->
-    <rect x="572" y="48" width="268" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
-    <circle cx="588" cy="66" r="4" fill="#0D9488"/>
-    <text x="600" y="71" class="font-sans item-title" fill="#0F766E">跨核同步压测探针</text>
-    <text x="720" y="70" class="font-sans tag" fill="#64748B">cross_core_stress</text>
+        <g id="node-gtimer" data-node-id="gtimer" data-node-label="Generic Timer" tabindex="0" role="button" aria-label="Focus Generic Timer, CNTVCT / 1000Hz, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="CNTVCT / 1000Hz" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>Generic Timer · CNTVCT / 1000Hz · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="730" y="70" width="150" height="60" rx="8" class="c-mask"/>
+          <rect x="730" y="70" width="150" height="60" rx="8" class="c-cloud" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="clock" class="semantic-sigil s-cloud" transform="translate(736 76) scale(0.6875)">
+            <circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="805" y="98" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Generic Timer</text>
+        <text data-detail="context" x="805" y="114" class="t-muted" font-size="9" text-anchor="middle">CNTVCT / 1000Hz</text>
+        </g>
 
-    <!-- Col 4 -->
-    <rect x="856" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1"/>
-    <circle cx="872" cy="66" r="4" fill="#4F46E5"/>
-    <text x="884" y="71" class="font-sans item-title" fill="#3730A3">FreeRTOS 标准调用</text>
-    <text x="1010" y="70" class="font-sans tag" fill="#64748B">FreeRTOS API</text>
-  </g>
+        <g id="node-uart" data-node-id="uart" data-node-label="PL011 UART" tabindex="0" role="button" aria-label="Focus PL011 UART, Spinlock Safe I/O, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="external" data-node-sublabel="Spinlock Safe I/O" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>PL011 UART · Spinlock Safe I/O · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="950" y="70" width="150" height="60" rx="8" class="c-mask"/>
+          <rect x="950" y="70" width="150" height="60" rx="8" class="c-external" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="stop" class="semantic-sigil s-external" transform="translate(956 76) scale(0.6875)">
+            <circle cx="8" cy="8" r="5.3"/>
+            <rect x="6.1" y="6.1" width="3.8" height="3.8" rx=".5" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="1025" y="98" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">PL011 UART</text>
+        <text data-detail="context" x="1025" y="114" class="t-muted" font-size="9" text-anchor="middle">Spinlock Safe I/O</text>
+        </g>
 
-  <!-- Link 1 -> 2 -->
-  <line x1="600" y1="200" x2="600" y2="228" stroke="#2563EB" stroke-width="2" stroke-dasharray="4 3"/>
-  <polygon points="596,228 600,235 604,228" fill="#2563EB"/>
-  <rect x="525" y="206" width="150" height="20" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
-  <text x="600" y="220" text-anchor="middle" class="font-sans tag" fill="#1E40AF">FreeRTOS Kernel API</text>
+        <g id="node-gicv3" data-node-id="gicv3" data-node-label="ARM GICv3 ITS" tabindex="0" role="button" aria-label="Focus ARM GICv3 ITS, GICD / GICR / SRE, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="security" data-node-sublabel="GICD / GICR / SRE" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>ARM GICv3 ITS · GICD / GICR / SRE · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="160" y="240" width="170" height="60" rx="8" class="c-mask"/>
+          <rect x="160" y="240" width="170" height="60" rx="8" class="c-security" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(166 246) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="245" y="268" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ARM GICv3 ITS</text>
+        <text data-detail="context" x="245" y="284" class="t-muted" font-size="9" text-anchor="middle">GICD / GICR / SRE</text>
+        </g>
 
-  <!-- ==================== LAYER 2: FREERTOS SMP KERNEL ==================== -->
-  <g transform="translate(32, 236)">
-    <rect width="1136" height="160" rx="12" fill="url(#kernel-grad)" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow-sm)"/>
-    
-    <rect x="20" y="14" width="272" height="26" rx="6" fill="#059669"/>
-    <text x="156" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">FreeRTOS V11 SMP 多核调度内核 (kernel/)</text>
-    <text x="306" y="32" class="font-sans card-sub" fill="#065F46">官方 SMP 对称多核调度 · 核心亲和性分配 · 抢占式轮转 · 跨核原子同步</text>
+        <g id="node-bsp_boot" data-node-id="bsp_boot" data-node-label="BSP Bootloader" tabindex="0" role="button" aria-label="Focus BSP Bootloader, EL1 Entry &amp; VBAR, QEMU Virt ARM64 Platform (virt-aarch64)" aria-pressed="false" data-node-kind="database" data-node-sublabel="EL1 Entry &amp; VBAR" data-node-context="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <title>BSP Bootloader · EL1 Entry &amp; VBAR · QEMU Virt ARM64 Platform (virt-aarch64)</title>
+          <rect x="510" y="240" width="160" height="60" rx="8" class="c-mask"/>
+          <rect x="510" y="240" width="160" height="60" rx="8" class="c-database" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="start" class="semantic-sigil s-database" transform="translate(516 246) scale(0.6875)">
+            <circle cx="8" cy="8" r="5"/>
+            <path d="m7 5.4 3.6 2.6L7 10.6Z" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="590" y="268" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">BSP Bootloader</text>
+        <text data-detail="context" x="590" y="284" class="t-muted" font-size="9" text-anchor="middle">EL1 Entry &amp; VBAR</text>
+        </g>
 
-    <!-- Card A: Task Scheduler -->
-    <rect x="20" y="48" width="352" height="96" rx="8" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1"/>
-    <text x="36" y="72" class="font-sans item-title" fill="#065F46">核心调度引擎 (tasks.c / list.c)</text>
-    <text x="36" y="93" class="font-sans item-desc">• 多核心就绪队列与优先级抢占机制</text>
-    <text x="36" y="111" class="font-sans item-desc">• 核心亲和性绑定 (vTaskCoreAffinitySet)</text>
-    <text x="36" y="129" class="font-sans tag" fill="#059669">vTaskSwitchContext() · Time Slicing 轮转</text>
+        <g id="node-port_smp" data-node-id="port_smp" data-node-label="AArch64 SMP Port" tabindex="0" role="button" aria-label="Focus AArch64 SMP Port, SRE / Vector Tables, FreeRTOS SMP Kernel &amp; Port Layer" aria-pressed="false" data-node-kind="backend" data-node-sublabel="SRE / Vector Tables" data-node-context="FreeRTOS SMP Kernel &amp; Port Layer">
+          <title>AArch64 SMP Port · SRE / Vector Tables · FreeRTOS SMP Kernel &amp; Port Layer</title>
+          <rect x="50" y="420" width="160" height="64" rx="8" class="c-mask"/>
+          <rect x="50" y="420" width="160" height="64" rx="8" class="c-backend" data-animate="node" style="--step:7" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(56 426) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="130" y="450" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">AArch64 SMP Port</text>
+        <text data-detail="context" x="130" y="466" class="t-muted" font-size="9" text-anchor="middle">SRE / Vector Tables</text>
+        </g>
 
-    <!-- Card B: Synchronization -->
-    <rect x="392" y="48" width="352" height="96" rx="8" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1"/>
-    <text x="408" y="72" class="font-sans item-title" fill="#065F46">多核同步原语 (queue.c / timers.c)</text>
-    <text x="408" y="93" class="font-sans item-desc">• 跨核消息队列 (Queue) 与计数/二值信号量</text>
-    <text x="408" y="111" class="font-sans item-desc">• 递归互斥锁 (Mutex) 与事件组 (Event Groups)</text>
-    <text x="408" y="129" class="font-sans tag" fill="#0D9488">Cross-core Safe · ISR 调度 Yield 触发</text>
+        <g id="node-kernel_core" data-node-id="kernel_core" data-node-label="FreeRTOS SMP Core" tabindex="0" role="button" aria-label="Focus FreeRTOS SMP Core, Dual-Core Scheduler, FreeRTOS SMP Kernel &amp; Port Layer" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Dual-Core Scheduler" data-node-context="FreeRTOS SMP Kernel &amp; Port Layer">
+          <title>FreeRTOS SMP Core · Dual-Core Scheduler · FreeRTOS SMP Kernel &amp; Port Layer</title>
+          <rect x="280" y="420" width="170" height="64" rx="8" class="c-mask"/>
+          <rect x="280" y="420" width="170" height="64" rx="8" class="c-backend" data-animate="node" style="--step:8" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="active" class="semantic-sigil s-backend" transform="translate(286 426) scale(0.6875)">
+            <path d="M2 8h3l1.5-3.5L9 12l1.6-4H14"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="365" y="450" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">FreeRTOS SMP Core</text>
+        <text data-detail="context" x="365" y="466" class="t-muted" font-size="9" text-anchor="middle">Dual-Core Scheduler</text>
+        </g>
 
-    <!-- Card C: SMP Port -->
-    <rect x="764" y="48" width="352" height="96" rx="8" fill="#FFFFFF" stroke="#A7F3D0" stroke-width="1"/>
-    <text x="780" y="72" class="font-sans item-title" fill="#065F46">AArch64 移植层实现 (port/)</text>
-    <text x="780" y="93" class="font-sans item-desc">• port.c : 多核 Tick 广播与定时器中断分发</text>
-    <text x="780" y="111" class="font-sans item-desc">• portASM.S : EL1 模式完整通用寄存器压栈恢复</text>
-    <text x="780" y="129" class="font-sans tag" fill="#0284C7">SGI 0 核间中断 Yield · ICC_SRE 系统寄存器</text>
-  </g>
+        <g id="node-kernel_ipc" data-node-id="kernel_ipc" data-node-label="Kernel IPC &amp; Sync" tabindex="0" role="button" aria-label="Focus Kernel IPC &amp; Sync, Queue / Sem / Mutex, FreeRTOS SMP Kernel &amp; Port Layer" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="Queue / Sem / Mutex" data-node-context="FreeRTOS SMP Kernel &amp; Port Layer">
+          <title>Kernel IPC &amp; Sync · Queue / Sem / Mutex · FreeRTOS SMP Kernel &amp; Port Layer</title>
+          <rect x="520" y="420" width="160" height="64" rx="8" class="c-mask"/>
+          <rect x="520" y="420" width="160" height="64" rx="8" class="c-messagebus" data-animate="node" style="--step:9" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(526 426) scale(0.6875)">
+            <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
+            <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
+            <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
+            <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="600" y="450" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Kernel IPC &amp; Sync</text>
+        <text data-detail="context" x="600" y="466" class="t-muted" font-size="9" text-anchor="middle">Queue / Sem / Mutex</text>
+        </g>
 
-  <!-- Links 2 -> 3 -->
-  <!-- Left Link: Arch -->
-  <line x1="310" y1="396" x2="310" y2="428" stroke="#6366F1" stroke-width="2"/>
-  <polygon points="306,428 310,435 314,428" fill="#6366F1"/>
-  <rect x="235" y="404" width="150" height="20" rx="4" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
-  <text x="310" y="418" text-anchor="middle" class="font-sans tag" fill="#4338CA">ARCH 硬件原语接口</text>
+        <g id="node-heap" data-node-id="heap" data-node-label="Heap_4 Allocator" tabindex="0" role="button" aria-label="Focus Heap_4 Allocator, Thread-Safe Memory, FreeRTOS SMP Kernel &amp; Port Layer" aria-pressed="false" data-node-kind="database" data-node-sublabel="Thread-Safe Memory" data-node-context="FreeRTOS SMP Kernel &amp; Port Layer">
+          <title>Heap_4 Allocator · Thread-Safe Memory · FreeRTOS SMP Kernel &amp; Port Layer</title>
+          <rect x="750" y="420" width="150" height="64" rx="8" class="c-mask"/>
+          <rect x="750" y="420" width="150" height="64" rx="8" class="c-database" data-animate="node" style="--step:10" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(756 426) scale(0.6875)">
+            <ellipse cx="8" cy="4" rx="5" ry="2"/>
+            <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="825" y="450" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Heap_4 Allocator</text>
+        <text data-detail="context" x="825" y="466" class="t-muted" font-size="9" text-anchor="middle">Thread-Safe Memory</text>
+        </g>
 
-  <!-- Right Link: BSP -->
-  <line x1="890" y1="396" x2="890" y2="428" stroke="#D97706" stroke-width="2"/>
-  <polygon points="886,428 890,435 894,428" fill="#D97706"/>
-  <rect x="815" y="404" width="150" height="20" rx="4" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1"/>
-  <text x="890" y="418" text-anchor="middle" class="font-sans tag" fill="#92400E">BSP 板级驱动调用</text>
+        <g id="node-sched_test" data-node-id="sched_test" data-node-label="Scheduler Verification" tabindex="0" role="button" aria-label="Focus Scheduler Verification, Affinity &amp; Priority Suite, Acceptance Test Framework" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Affinity &amp; Priority Suite" data-node-context="Acceptance Test Framework">
+          <title>Scheduler Verification · Affinity &amp; Priority Suite · Acceptance Test Framework</title>
+          <rect x="180" y="570" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="180" y="570" width="180" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:10" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="success" class="semantic-sigil s-frontend" transform="translate(186 576) scale(0.6875)">
+            <circle cx="8" cy="8" r="5.3"/>
+            <path d="m5.2 8 1.8 1.8 3.8-4"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="270" y="598" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Scheduler Verification</text>
+        <text data-detail="context" x="270" y="614" class="t-muted" font-size="9" text-anchor="middle">Affinity &amp; Priority Suite</text>
+        </g>
 
-  <!-- ==================== LAYER 3: DUAL MODULAR SUBSYSTEMS ==================== -->
-  
-  <!-- LEFT: ARCHITECTURE ABSTRACTION LAYER (arch/) -->
-  <g transform="translate(32, 436)">
-    <rect width="556" height="190" rx="12" fill="url(#arch-grad)" stroke="#C4B5FD" stroke-width="1.5" filter="url(#shadow-sm)"/>
-    
-    <rect x="20" y="14" width="220" height="26" rx="6" fill="#6366F1"/>
-    <text x="130" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">模块化体系结构层 (arch/)</text>
-    <text x="250" y="32" class="font-sans card-sub" fill="#4338CA">ARMv8-A 硬件原语抽象</text>
+        <g id="node-cross_core" data-node-id="cross_core" data-node-label="Cross-Core Stress" tabindex="0" role="button" aria-label="Focus Cross-Core Stress, Task Migration Probes, Acceptance Test Framework" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Task Migration Probes" data-node-context="Acceptance Test Framework">
+          <title>Cross-Core Stress · Task Migration Probes · Acceptance Test Framework</title>
+          <rect x="430" y="570" width="180" height="60" rx="8" class="c-mask"/>
+          <rect x="430" y="570" width="180" height="60" rx="8" class="c-frontend" data-animate="node" style="--step:11" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="flag" class="semantic-sigil s-frontend" transform="translate(436 576) scale(0.6875)">
+            <path d="M3 14V2h10l-2 3 2 3H3"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="520" y="598" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Cross-Core Stress</text>
+        <text data-detail="context" x="520" y="614" class="t-muted" font-size="9" text-anchor="middle">Task Migration Probes</text>
+        </g>
 
-    <!-- Arch Grid 2x2 -->
-    <!-- Cell 1 -->
-    <rect x="20" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
-    <text x="34" y="70" class="font-sans item-title" fill="#3730A3">核心识别与 MPIDR</text>
-    <text x="34" y="90" class="font-sans item-desc">arch_curr_cpu() 核心编号多核映射</text>
+        <!-- Connection labels -->
+        <g data-detail="context" data-edge-from="cpu0" data-edge-to="gicv3" data-edge-label="IPI Send" data-edge-key="0" data-edge-id="c0-gic">
+          <rect x="121.60000000000001" y="178" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="145.8" y="188" class="t-edge-default" font-size="8" text-anchor="middle">IPI Send</text>
+        </g>
+        <g data-detail="context" data-edge-from="cpu1" data-edge-to="gicv3" data-edge-label="IPI Recv" data-edge-key="1" data-edge-id="c1-gic">
+          <rect x="259.6" y="178" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="283.8" y="188" class="t-edge-default" font-size="8" text-anchor="middle">IPI Recv</text>
+        </g>
+        <g data-detail="context" data-edge-from="bsp_boot" data-edge-to="psci" data-edge-label="Wake Core 1" data-edge-key="2" data-edge-id="boot-psci">
+          <rect x="521.2" y="178" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="552.6" y="188" class="t-edge-default" font-size="8" text-anchor="middle">Wake Core 1</text>
+        </g>
+        <g data-detail="context" data-edge-from="psci" data-edge-to="cpu1" data-edge-label="CPU_ON" data-edge-key="3" data-edge-id="psci-c1">
+          <rect x="455.6" y="80" width="38.8" height="14" rx="3" class="c-mask"/>
+          <text x="475" y="90" class="t-edge-emphasis" font-size="8" text-anchor="middle">CPU_ON</text>
+        </g>
+        <g data-detail="context" data-edge-from="gtimer" data-edge-to="gicv3" data-edge-label="PPI 27 Tick" data-edge-key="4" data-edge-id="tmr-gic">
+          <rect x="736.2" y="176.5" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="767.6" y="186.5" class="t-edge-default" font-size="8" text-anchor="middle">PPI 27 Tick</text>
+        </g>
+        <g data-detail="context" data-edge-from="bsp_boot" data-edge-to="uart" data-edge-label="PL011 Output" data-edge-key="5" data-edge-id="boot-uart">
+          <rect x="991.2" y="180" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="1025" y="190" class="t-edge-default" font-size="8" text-anchor="middle">PL011 Output</text>
+        </g>
+        <g data-detail="context" data-edge-from="gicv3" data-edge-to="port_smp" data-edge-label="IRQ NS Group 1" data-edge-key="6" data-edge-id="gic-port">
+          <rect x="110.80000000000001" y="353" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="149.4" y="363" class="t-edge-security" font-size="8" text-anchor="middle">IRQ NS Group 1</text>
+        </g>
+        <g data-detail="context" data-edge-from="port_smp" data-edge-to="kernel_core" data-edge-label="Task Switch" data-edge-key="7" data-edge-id="port-core">
+          <rect x="213.6" y="432" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="245" y="442" class="t-edge-default" font-size="8" text-anchor="middle">Task Switch</text>
+        </g>
+        <g data-detail="context" data-edge-from="kernel_core" data-edge-to="kernel_ipc" data-edge-label="Sync API" data-edge-key="8" data-edge-id="core-ipc">
+          <rect x="460.8" y="432" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="485" y="442" class="t-edge-default" font-size="8" text-anchor="middle">Sync API</text>
+        </g>
+        <g data-detail="context" data-edge-from="kernel_ipc" data-edge-to="heap" data-edge-label="Alloc" data-edge-key="9" data-edge-id="ipc-heap">
+          <rect x="698" y="432" width="34" height="14" rx="3" class="c-mask"/>
+          <text x="715" y="442" class="t-edge-dashed" font-size="8" text-anchor="middle">Alloc</text>
+        </g>
+        <g data-detail="context" data-edge-from="sched_test" data-edge-to="kernel_core" data-edge-label="Validate SMP" data-edge-key="10" data-edge-id="test-core">
+          <rect x="262.2" y="550" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="296" y="560" class="t-edge-emphasis" font-size="8" text-anchor="middle">Validate SMP</text>
+        </g>
+        <g data-detail="context" data-edge-from="cross_core" data-edge-to="kernel_core" data-edge-label="Stress Probes" data-edge-key="11" data-edge-id="probe-core">
+          <rect x="409.8" y="507" width="72.4" height="14" rx="3" class="c-mask"/>
+          <text x="446" y="517" class="t-edge-dashed" font-size="8" text-anchor="middle">Stress Probes</text>
+        </g>
 
-    <!-- Cell 2 -->
-    <rect x="288" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
-    <text x="302" y="70" class="font-sans item-title" fill="#3730A3">原子指令与自旋锁</text>
-    <text x="302" y="90" class="font-sans item-desc">LL/SC (ldaxr/stlxr) · 原子锁原语</text>
+        <!-- Boundary labels (foreground masks keep routes out of titles) -->
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="0" data-composition-frame-kind="region" data-composition-frame-label="QEMU Virt ARM64 Platform (virt-aarch64)">
+          <rect data-graph-role="structural-frame-label-mask" x="38" y="50" width="220.6" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="42" y="63" class="t-cloud" font-size="9" font-weight="600">QEMU Virt ARM64 Platform (virt-aarch64)</text>
+        </g>
 
-    <!-- Cell 3 -->
-    <rect x="20" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
-    <text x="34" y="138" class="font-sans item-title" fill="#3730A3">内存屏障与关中断</text>
-    <text x="34" y="158" class="font-sans item-desc">DMB / DSB / ISB · IRQ 上下文保护</text>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="security-group" data-composition-frame-label="FreeRTOS SMP Kernel &amp; Port Layer">
+          <rect data-graph-role="structural-frame-label-mask" x="202" y="400" width="182.79999999999998" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="206" y="413" class="t-security" font-size="9" font-weight="600">FreeRTOS SMP Kernel &amp; Port Layer</text>
+        </g>
 
-    <!-- Cell 4 -->
-    <rect x="288" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#DDD6FE" stroke-width="1"/>
-    <text x="302" y="138" class="font-sans item-title" fill="#3730A3">共享线程句柄状态</text>
-    <text x="302" y="158" class="font-sans item-desc">arch_thread_handle_t 状态抽象</text>
-  </g>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="2" data-composition-frame-kind="region" data-composition-frame-label="Acceptance Test Framework">
+          <rect data-graph-role="structural-frame-label-mask" x="337.79999999999995" y="550" width="145" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="341.79999999999995" y="563" class="t-cloud" font-size="9" font-weight="600">Acceptance Test Framework</text>
+        </g>
 
-  <!-- RIGHT: BOARD SUPPORT PACKAGE (bsp/) -->
-  <g transform="translate(612, 436)">
-    <rect width="556" height="190" rx="12" fill="url(#bsp-grad)" stroke="#FDE68A" stroke-width="1.5" filter="url(#shadow-sm)"/>
-    
-    <rect x="20" y="14" width="210" height="26" rx="6" fill="#D97706"/>
-    <text x="125" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">模块化板级支持包 (bsp/)</text>
-    <text x="240" y="32" class="font-sans card-sub" fill="#92400E">QEMU virt 外设驱动与引导</text>
-
-    <!-- BSP Grid 2x2 -->
-    <!-- Cell 1 -->
-    <rect x="20" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
-    <text x="34" y="70" class="font-sans item-title" fill="#78350F">冷启动引导 (startup.S)</text>
-    <text x="34" y="90" class="font-sans item-desc">EL1 向量表配置 · PSCI CPU_ON</text>
-
-    <!-- Cell 2 -->
-    <rect x="288" y="48" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
-    <text x="302" y="70" class="font-sans item-title" fill="#78350F">GICv3 中断控制 (gic.c)</text>
-    <text x="302" y="90" class="font-sans item-desc">系统寄存器 ICC_SRE · SGI 0 IPI 路由</text>
-
-    <!-- Cell 3 -->
-    <rect x="20" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
-    <text x="34" y="138" class="font-sans item-title" fill="#78350F">通用物理定时器 (gtimer.c)</text>
-    <text x="34" y="158" class="font-sans item-desc">ARM Generic Timer CNTP/CNTV 基准</text>
-
-    <!-- Cell 4 -->
-    <rect x="288" y="116" width="248" height="58" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
-    <text x="302" y="138" class="font-sans item-title" fill="#78350F">PL011 串口驱动 (uart.c)</text>
-    <text x="302" y="158" class="font-sans item-desc">串口终端通信与多核格式化输出</text>
-  </g>
-
-  <!-- Links 3 -> 4 -->
-  <line x1="310" y1="626" x2="310" y2="646" stroke="#64748B" stroke-width="1.5"/>
-  <polygon points="306,646 310,652 314,646" fill="#64748B"/>
-  
-  <line x1="890" y1="626" x2="890" y2="646" stroke="#64748B" stroke-width="1.5"/>
-  <polygon points="886,646 890,652 894,646" fill="#64748B"/>
-
-  <!-- ==================== LAYER 4: HARDWARE PLATFORM ==================== -->
-  <g transform="translate(32, 654)">
-    <rect width="1136" height="96" rx="12" fill="url(#hw-grad)" stroke="#CBD5E1" stroke-width="1.5" filter="url(#shadow-sm)"/>
-    
-    <rect x="20" y="14" width="240" height="26" rx="6" fill="#334155"/>
-    <text x="140" y="31" text-anchor="middle" class="font-sans badge" fill="#FFFFFF">目标硬件 / 虚拟机平台 (Hardware Layer)</text>
-    <text x="275" y="32" class="font-sans card-sub" fill="#334155">QEMU virt (ARMv8-A AArch64) · 对称多核 Cortex-A53 · GICv3 分布式中断架构</text>
-
-    <!-- Col 1 -->
-    <rect x="20" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
-    <circle cx="36" cy="66" r="4" fill="#334155"/>
-    <text x="48" y="71" class="font-sans item-title" fill="#0F172A">Cortex-A53 多核集群</text>
-    <text x="176" y="70" class="font-sans tag" fill="#64748B">1 ~ 32 Cores SMP</text>
-
-    <!-- Col 2 -->
-    <rect x="296" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
-    <circle cx="312" cy="66" r="4" fill="#0284C7"/>
-    <text x="324" y="71" class="font-sans item-title" fill="#0F172A">ARM GICv3 中断硬件</text>
-    <text x="456" y="70" class="font-sans tag" fill="#64748B">Dist / Redist / CPU</text>
-
-    <!-- Col 3 -->
-    <rect x="572" y="48" width="268" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
-    <circle cx="588" cy="66" r="4" fill="#D97706"/>
-    <text x="600" y="71" class="font-sans item-title" fill="#0F172A">PSCI 固件接口规范</text>
-    <text x="734" y="70" class="font-sans tag" fill="#64748B">SMC / HVC CPU_ON</text>
-
-    <!-- Col 4 -->
-    <rect x="856" y="48" width="260" height="36" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1"/>
-    <circle cx="872" cy="66" r="4" fill="#059669"/>
-    <text x="884" y="71" class="font-sans item-title" fill="#0F172A">PL011 UART / GTimer</text>
-    <text x="1034" y="70" class="font-sans tag" fill="#64748B">MMIO Base</text>
-  </g>
-</svg>
+        <!-- Legend -->
+        <g data-legend="" data-legend-bridge="">
+          <text x="40" y="682" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="Frontend" data-legend-x="40" data-legend-baseline="702" data-legend-width="93">
+            <rect x="40" y="693" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
+            <text x="62" y="702" class="t-muted" font-size="10" font-weight="500">Frontend</text>
+          </g>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="155" data-legend-baseline="702" data-legend-width="87">
+            <rect x="155" y="693" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="177" y="702" class="t-muted" font-size="10" font-weight="500">Backend</text>
+          </g>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="264" data-legend-baseline="702" data-legend-width="93">
+            <rect x="264" y="693" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="286" y="702" class="t-muted" font-size="10" font-weight="500">Database</text>
+          </g>
+          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud" data-legend-x="379" data-legend-baseline="702" data-legend-width="74">
+            <rect x="379" y="693" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
+            <text x="401" y="702" class="t-muted" font-size="10" font-weight="500">Cloud</text>
+          </g>
+          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Security" data-legend-x="475" data-legend-baseline="702" data-legend-width="93">
+            <rect x="475" y="693" width="16" height="10" rx="2.5" class="c-security" stroke-width="1"/>
+            <text x="497" y="702" class="t-muted" font-size="10" font-weight="500">Security</text>
+          </g>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Message bus" data-legend-x="590" data-legend-baseline="702" data-legend-width="112">
+            <rect x="590" y="693" width="16" height="10" rx="2.5" class="c-messagebus" stroke-width="1"/>
+            <text x="612" y="702" class="t-muted" font-size="10" font-weight="500">Message bus</text>
+          </g>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External" data-legend-x="724" data-legend-baseline="702" data-legend-width="93">
+            <rect x="724" y="693" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
+            <text x="746" y="702" class="t-muted" font-size="10" font-weight="500">External</text>
+          </g>
+        </g>
+      </svg>

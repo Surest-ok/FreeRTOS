@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP AArch64 Baseline Architecture",
+    "subtitle": "Dual-Core SMP Scheduling & GICv3 ITS on QEMU Virt ARM64",
+    "output": "docs/diagrams/freertos-smp-architecture.html",
+    "visual_preset": "blueprint",
+    "animation": "trace",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "cpu0", "type": "backend", "label": "Cortex-A53 Core 0", "sublabel": "Primary / Scheduler", "pos": [50, 70], "size": [160, 60], "icon": "backend" },
+    { "id": "cpu1", "type": "backend", "label": "Cortex-A53 Core 1", "sublabel": "Secondary / Worker", "pos": [280, 70], "size": [160, 60], "icon": "backend" },
+    { "id": "psci", "type": "security", "label": "PSCI Firmware", "sublabel": "HVC #0 CPU_ON", "pos": [510, 70], "size": [150, 60], "icon": "decision" },
+    { "id": "gtimer", "type": "cloud", "label": "Generic Timer", "sublabel": "CNTVCT / 1000Hz", "pos": [730, 70], "size": [150, 60], "icon": "clock" },
+    { "id": "uart", "type": "external", "label": "PL011 UART", "sublabel": "Spinlock Safe I/O", "pos": [950, 70], "size": [150, 60], "icon": "stop" },
+    { "id": "gicv3", "type": "security", "label": "ARM GICv3 ITS", "sublabel": "GICD / GICR / SRE", "pos": [160, 240], "size": [170, 60], "icon": "security" },
+    { "id": "bsp_boot", "type": "database", "label": "BSP Bootloader", "sublabel": "EL1 Entry & VBAR", "pos": [510, 240], "size": [160, 60], "icon": "start" },
+    { "id": "port_smp", "type": "backend", "label": "AArch64 SMP Port", "sublabel": "SRE / Vector Tables", "pos": [50, 420], "size": [160, 64], "icon": "backend" },
+    { "id": "kernel_core", "type": "backend", "label": "FreeRTOS SMP Core", "sublabel": "Dual-Core Scheduler", "pos": [280, 420], "size": [170, 64], "icon": "active" },
+    { "id": "kernel_ipc", "type": "messagebus", "label": "Kernel IPC & Sync", "sublabel": "Queue / Sem / Mutex", "pos": [520, 420], "size": [160, 64], "icon": "messagebus" },
+    { "id": "heap", "type": "database", "label": "Heap_4 Allocator", "sublabel": "Thread-Safe Memory", "pos": [750, 420], "size": [150, 64], "icon": "database" },
+    { "id": "sched_test", "type": "frontend", "label": "Scheduler Verification", "sublabel": "Affinity & Priority Suite", "pos": [180, 570], "size": [180, 60], "icon": "success" },
+    { "id": "cross_core", "type": "frontend", "label": "Cross-Core Stress", "sublabel": "Task Migration Probes", "pos": [430, 570], "size": [180, 60], "icon": "flag" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "QEMU Virt ARM64 Platform (virt-aarch64)", "wraps": ["cpu0", "cpu1", "psci", "gtimer", "uart", "gicv3", "bsp_boot"], "pad": 16 },
+    { "kind": "security-group", "label": "FreeRTOS SMP Kernel & Port Layer", "wraps": ["port_smp", "kernel_core", "kernel_ipc", "heap"], "pad": 16 },
+    { "kind": "region", "label": "Acceptance Test Framework", "wraps": ["sched_test", "cross_core"], "pad": 16 }
+  ],
+  "connections": [
+    { "id": "c0-gic", "from": "cpu0", "to": "gicv3", "label": "IPI Send", "fromSide": "bottom", "toSide": "top" },
+    { "id": "c1-gic", "from": "cpu1", "to": "gicv3", "label": "IPI Recv", "fromSide": "bottom", "toSide": "top" },
+    { "id": "boot-psci", "from": "bsp_boot", "to": "psci", "label": "Wake Core 1", "fromSide": "top", "toSide": "bottom" },
+    { "id": "psci-c1", "from": "psci", "to": "cpu1", "label": "CPU_ON", "variant": "emphasis", "fromSide": "left", "toSide": "right" },
+    { "id": "tmr-gic", "from": "gtimer", "to": "gicv3", "label": "PPI 27 Tick", "fromSide": "bottom", "toSide": "right" },
+    { "id": "boot-uart", "from": "bsp_boot", "to": "uart", "label": "PL011 Output", "fromSide": "right", "toSide": "bottom" },
+    { "id": "gic-port", "from": "gicv3", "to": "port_smp", "label": "IRQ NS Group 1", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "port-core", "from": "port_smp", "to": "kernel_core", "label": "Task Switch", "fromSide": "right", "toSide": "left" },
+    { "id": "core-ipc", "from": "kernel_core", "to": "kernel_ipc", "label": "Sync API", "fromSide": "right", "toSide": "left" },
+    { "id": "ipc-heap", "from": "kernel_ipc", "to": "heap", "label": "Alloc", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "test-core", "from": "sched_test", "to": "kernel_core", "label": "Validate SMP", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" },
+    { "id": "probe-core", "from": "cross_core", "to": "kernel_core", "label": "Stress Probes", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "SMP Core Scheduling", "items": ["Dual-core Cortex-A53 SMP execution with dynamic task affinity", "Tick interrupt broadcast across cores using ARM Generic Timer", "Independent per-core idle tasks and spinlock-protected priority queues"] },
+    { "dot": "emerald", "title": "GICv3 Interrupt Subsystem", "items": ["Group 1 Non-Secure interrupt configuration with System Register Enable (SRE)", "Inter-Processor Interrupts (SGI) for cross-core rescheduling", "PPI Virtual Timer for deterministic 1000Hz scheduler tick"] },
+    { "dot": "violet", "title": "Acceptance Verification", "items": ["Automated test suite validates multi-core scheduler correctness", "Affinity, round-robin, semaphore, queue, and mutex stress testing", "Clean regression pass without external dependencies"] }
+  ]
+}
