@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="330" viewBox="0 0 960 330" role="img" aria-label="自动化验收">
+<title>自动化验收</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="330"/>
+<rect class="dat" x="28" y="40" width="170" height="80" rx="8"/>
+<text class="h" x="113.0" y="68.5" text-anchor="middle">make *sched-full</text>
+<text class="s" x="113.0" y="86.5" text-anchor="middle">sched / lk-sched</text>
+<text class="s" x="113.0" y="102.5" text-anchor="middle">threadx-sched</text>
+<rect class="dat" x="228" y="40" width="220" height="80" rx="8"/>
+<text class="h" x="338.0" y="68.5" text-anchor="middle">accept_qemu_sched.py</text>
+<text class="s" x="338.0" y="86.5" text-anchor="middle">启动 QEMU</text>
+<text class="s" x="338.0" y="102.5" text-anchor="middle">读取串口并解析标记</text>
+<rect class="hw" x="478" y="40" width="220" height="80" rx="8"/>
+<text class="h" x="588.0" y="68.5" text-anchor="middle">QEMU</text>
+<text class="s" x="588.0" y="86.5" text-anchor="middle">virt · GICv3</text>
+<text class="s" x="588.0" y="102.5" text-anchor="middle">PL011 串口</text>
+<rect class="ker" x="728" y="40" width="204" height="80" rx="8"/>
+<text class="h" x="830.0" y="76.5" text-anchor="middle">三个内核的同名探针</text>
+<text class="s" x="830.0" y="94.5" text-anchor="middle">调度 · 同步</text>
+<path class="ln" d="M198,80 L226,80" marker-end="url(#a)"/>
+<path class="ln" d="M448,80 L476,80" marker-end="url(#a)"/>
+<path class="ln" d="M698,80 L726,80" marker-end="url(#a)"/>
+<path class="ln" d="M830,120 L830,160" marker-end="url(#a)"/>
+<rect class="layer" x="16" y="162" width="928" height="152" rx="10"/>
+<text class="tag" x="28" y="180" text-anchor="start">串口上的结果标记</text>
+<rect class="app" x="28" y="188" width="292" height="108" rx="8"/>
+<text class="h" x="174.0" y="222.5" text-anchor="middle">[sched-verify]</text>
+<text class="s" x="174.0" y="240.5" text-anchor="middle">full 模式：活跃 · 空闲 · 亲和性</text>
+<text class="s" x="174.0" y="256.5" text-anchor="middle">优先级 · 轮转 · 信号量</text>
+<text class="s" x="174.0" y="272.5" text-anchor="middle">队列 · 互斥锁 · 自旋锁</text>
+<rect class="app" x="334" y="188" width="292" height="108" rx="8"/>
+<text class="h" x="480.0" y="230.5" text-anchor="middle">[xsync-verify]</text>
+<text class="s" x="480.0" y="248.5" text-anchor="middle">cross 模式：跨核信号量</text>
+<text class="s" x="480.0" y="264.5" text-anchor="middle">队列 · 互斥锁 · 自旋锁压测</text>
+<rect class="vir" x="640" y="188" width="292" height="108" rx="8"/>
+<text class="h" x="786.0" y="222.5" text-anchor="middle">SUMMARY</text>
+<text class="s" x="786.0" y="240.5" text-anchor="middle">对应模式的标记全为 pass</text>
+<text class="s" x="786.0" y="256.5" text-anchor="middle">→ result=pass；出现 panic、</text>
+<text class="s" x="786.0" y="272.5" text-anchor="middle">abort 或超时 → result=fail</text>
+</svg>

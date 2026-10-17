@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="310" viewBox="0 0 960 310" role="img" aria-label="调度验证">
+<title>调度验证</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="310"/>
+<rect class="app" x="28" y="110" width="190" height="80" rx="8"/>
+<text class="h" x="123.0" y="138.5" text-anchor="middle">Core 1…N worker</text>
+<text class="s" x="123.0" y="156.5" text-anchor="middle">固定在各自的核上</text>
+<text class="s" x="123.0" y="172.5" text-anchor="middle">持续增加 heartbeat</text>
+<rect class="dat" x="270" y="110" width="210" height="80" rx="8"/>
+<text class="h" x="375.0" y="138.5" text-anchor="middle">FreeRTOS SMP 调度器</text>
+<text class="s" x="375.0" y="156.5" text-anchor="middle">每核当前任务</text>
+<text class="s" x="375.0" y="172.5" text-anchor="middle">SGI 0 跨核 Yield</text>
+<rect class="ker" x="532" y="30" width="190" height="80" rx="8"/>
+<text class="h" x="627.0" y="58.5" text-anchor="middle">SMP 移植层探针</text>
+<text class="s" x="627.0" y="76.5" text-anchor="middle">active / idle 核掩码</text>
+<text class="s" x="627.0" y="92.5" text-anchor="middle">IPI 与切换计数</text>
+<rect class="ker" x="532" y="170" width="190" height="80" rx="8"/>
+<text class="h" x="627.0" y="198.5" text-anchor="middle">Core 0 监控任务</text>
+<text class="s" x="627.0" y="216.5" text-anchor="middle">读取各核 heartbeat</text>
+<text class="s" x="627.0" y="232.5" text-anchor="middle">检查是否持续增长</text>
+<rect class="vir" x="770" y="110" width="162" height="80" rx="8"/>
+<text class="h" x="851.0" y="138.5" text-anchor="middle">[sched-verify]</text>
+<text class="s" x="851.0" y="156.5" text-anchor="middle">每项 pass / fail</text>
+<text class="s" x="851.0" y="172.5" text-anchor="middle">汇总一行输出</text>
+<rect class="dat" x="270" y="232" width="210" height="60" rx="8"/>
+<text class="h" x="375.0" y="258.5" text-anchor="middle">亲和性错误计数</text>
+<text class="s" x="375.0" y="276.5" text-anchor="middle">worker 跑错核时 +1</text>
+<path class="ln" d="M218,150 L268,150" marker-end="url(#a)"/>
+<path class="ln" d="M480,140 L500,140 L500,70 L530,70" marker-end="url(#a)"/>
+<path class="ln" d="M480,160 L500,160 L500,210 L530,210" marker-end="url(#a)"/>
+<path class="ln" d="M722,70 L746,70 L746,140 L768,140" marker-end="url(#a)"/>
+<path class="ln" d="M722,210 L746,210 L746,160 L768,160" marker-end="url(#a)"/>
+<path class="lnd" d="M123,190 L123,262 L268,262" marker-end="url(#a)"/>
+<path class="lnd" d="M480,276 L851,276 L851,192" marker-end="url(#a)"/>
+<text class="s" x="222" y="140" text-anchor="start">亲和性约束</text>
+<text class="s" x="504" y="62" text-anchor="start">状态</text>
+<text class="s" x="504" y="202" text-anchor="start">当前任务</text>
+<text class="s" x="750" y="62" text-anchor="start">IPI</text>
+<text class="s" x="750" y="202" text-anchor="start">heartbeat</text>
+<text class="s" x="130" y="256" text-anchor="start">跑错核</text>
+<text class="s" x="640" y="270" text-anchor="start">affinity</text>
+</svg>

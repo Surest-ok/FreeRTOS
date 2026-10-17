@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" role="img" aria-label="三内核共用 arch 层">
+<title>三内核共用 arch 层</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="560"/>
+<rect class="layer" x="16" y="16" width="928" height="112" rx="10"/>
+<text class="tag" x="28" y="34" text-anchor="start">调度验收程序（输出同一套标记）</text>
+<rect class="app" x="28" y="42" width="292" height="72" rx="8"/>
+<text class="h" x="174.0" y="74.5" text-anchor="middle">FreeRTOS</text>
+<text class="s" x="174.0" y="92.5" text-anchor="middle">bsp/src/app.c</text>
+<rect class="app" x="334" y="42" width="292" height="72" rx="8"/>
+<text class="h" x="480.0" y="74.5" text-anchor="middle">LK</text>
+<text class="s" x="480.0" y="92.5" text-anchor="middle">lk/app/sched_matrix.c</text>
+<rect class="app" x="640" y="42" width="292" height="72" rx="8"/>
+<text class="h" x="786.0" y="74.5" text-anchor="middle">ThreadX</text>
+<text class="s" x="786.0" y="92.5" text-anchor="middle">threadx/app/sched_matrix.c</text>
+<rect class="layer" x="16" y="142" width="928" height="112" rx="10"/>
+<text class="tag" x="28" y="160" text-anchor="start">内核</text>
+<rect class="dat" x="28" y="168" width="292" height="72" rx="8"/>
+<text class="h" x="174.0" y="200.5" text-anchor="middle">FreeRTOS V11 SMP</text>
+<text class="s" x="174.0" y="218.5" text-anchor="middle">kernel/ · kernel/port/</text>
+<rect class="dat" x="334" y="168" width="292" height="72" rx="8"/>
+<text class="h" x="480.0" y="200.5" text-anchor="middle">Little Kernel</text>
+<text class="s" x="480.0" y="218.5" text-anchor="middle">lk/ · 上游主线快照</text>
+<rect class="dat" x="640" y="168" width="292" height="72" rx="8"/>
+<text class="h" x="786.0" y="200.5" text-anchor="middle">ThreadX SMP</text>
+<text class="s" x="786.0" y="218.5" text-anchor="middle">threadx/ · 源码由 THREADX_SRC 指定</text>
+<rect class="vir" x="28" y="268" width="904" height="64" rx="8"/>
+<text class="h" x="480.0" y="296.5" text-anchor="middle">arch 抽象层（arch/，三个内核共用）</text>
+<text class="s" x="480.0" y="314.5" text-anchor="middle">核号与 MPIDR 映射 · 原子操作 · 屏障 · 自旋锁 · IRQ 注册与分发 · 异常记录 · 线程句柄 · 向量表安装</text>
+<rect class="layer" x="16" y="346" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="364" text-anchor="start">各内核自己的启动与驱动</text>
+<rect class="ker" x="28" y="372" width="292" height="64" rx="8"/>
+<text class="h" x="174.0" y="400.5" text-anchor="middle">bsp/</text>
+<text class="s" x="174.0" y="418.5" text-anchor="middle">startup.S · GICv3 · 定时器 · PL011</text>
+<rect class="ker" x="334" y="372" width="292" height="64" rx="8"/>
+<text class="h" x="480.0" y="400.5" text-anchor="middle">lk/platform</text>
+<text class="s" x="480.0" y="418.5" text-anchor="middle">LK 的 QEMU virt 平台</text>
+<rect class="ker" x="640" y="372" width="292" height="64" rx="8"/>
+<text class="h" x="786.0" y="400.5" text-anchor="middle">threadx/port</text>
+<text class="s" x="786.0" y="418.5" text-anchor="middle">低层启动与中断</text>
+<path class="ln" d="M480,450 L480,468" marker-end="url(#a)"/>
+<rect class="layer" x="16" y="470" width="928" height="76" rx="10"/>
+<text class="tag" x="28" y="488" text-anchor="start">硬件 · QEMU virt</text>
+<rect class="hw" x="28" y="492" width="216" height="40" rx="8"/>
+<text class="h" x="136.0" y="516.5" text-anchor="middle">Cortex-A53 × N</text>
+<rect class="hw" x="258" y="492" width="216" height="40" rx="8"/>
+<text class="h" x="366.0" y="516.5" text-anchor="middle">GICv3</text>
+<rect class="hw" x="487" y="492" width="216" height="40" rx="8"/>
+<text class="h" x="595.0" y="516.5" text-anchor="middle">Generic Timer</text>
+<rect class="hw" x="716" y="492" width="216" height="40" rx="8"/>
+<text class="h" x="824.0" y="516.5" text-anchor="middle">PL011</text>
+</svg>

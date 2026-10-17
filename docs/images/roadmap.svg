@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="190" viewBox="0 0 960 190" role="img" aria-label="技术博客路线">
+<title>技术博客路线</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="190"/>
+<rect class="ker" x="28" y="40" width="168" height="100" rx="8"/>
+<text class="h" x="112.0" y="78.5" text-anchor="middle">Phase 1</text>
+<text class="s" x="112.0" y="96.5" text-anchor="middle">裸机引导</text>
+<text class="s" x="112.0" y="112.5" text-anchor="middle">PL011 输出</text>
+<rect class="ker" x="211" y="40" width="168" height="100" rx="8"/>
+<text class="h" x="295.0" y="78.5" text-anchor="middle">Phase 2</text>
+<text class="s" x="295.0" y="96.5" text-anchor="middle">异常向量</text>
+<text class="s" x="295.0" y="112.5" text-anchor="middle">GICv2 → GICv3 · 定时器</text>
+<path class="ln" d="M196,90 L210,90" marker-end="url(#a)"/>
+<rect class="ker" x="394" y="40" width="168" height="100" rx="8"/>
+<text class="h" x="478.0" y="78.5" text-anchor="middle">Phase 3</text>
+<text class="s" x="478.0" y="96.5" text-anchor="middle">集成 FreeRTOS</text>
+<text class="s" x="478.0" y="112.5" text-anchor="middle">单核调度</text>
+<path class="ln" d="M379,90 L393,90" marker-end="url(#a)"/>
+<rect class="ker" x="577" y="40" width="168" height="100" rx="8"/>
+<text class="h" x="661.0" y="78.5" text-anchor="middle">Phase 4</text>
+<text class="s" x="661.0" y="96.5" text-anchor="middle">FreeRTOS SMP</text>
+<text class="s" x="661.0" y="112.5" text-anchor="middle">32 核 · SGI · PSCI</text>
+<path class="ln" d="M562,90 L576,90" marker-end="url(#a)"/>
+<rect class="vir" x="760" y="40" width="168" height="100" rx="8"/>
+<text class="h" x="844.0" y="78.5" text-anchor="middle">arch 抽象层</text>
+<text class="s" x="844.0" y="96.5" text-anchor="middle">FreeRTOS · LK · ThreadX</text>
+<text class="s" x="844.0" y="112.5" text-anchor="middle">共用一层</text>
+<path class="ln" d="M745,90 L759,90" marker-end="url(#a)"/>
+</svg>
