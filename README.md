@@ -1,32 +1,37 @@
-# FreeRTOS SMP for ARMv8-A (AArch64) - Unikernel 集成平台
+# FreeRTOS SMP for ARMv8-A (AArch64) - CherryOS 集成平台
 
-本项目为基于 **ARMv8-A (AArch64) 架构** 与 **QEMU virt 虚拟化平台** 的现代化 **FreeRTOS SMP Unikernel 集成与运行环境**。
+本项目为基于 **ARMv8-A (AArch64, Cortex-A53)** 架构与 **QEMU virt (GICv3)** 虚拟化平台的现代化 **FreeRTOS SMP 操作系统集成运行环境**。
 
 > [!NOTE]
-> **集成平台定位**：本仓库遵循 **“FreeRTOS 只负责多核底座与集成”** 的轻量化设计原则，承担 CPU 裸机引导、GICv3 中断控制器、ARM Generic Timer、PSCI 多核冷启动、FreeRTOS V11 SMP 任务调度及多核压测验收。所有操作系统上层能力均全面组件化，拆分至独立的组件仓库开发维护，并通过通用内核抽象层（`cherry_kal`）与 FreeRTOS 解耦集成。
+> **集成平台定位**：本仓库遵循 **“FreeRTOS 专注多核底座与集成”** 的轻量化设计原则，承担 CPU 裸机引导、GICv3 中断控制器、ARM Generic Timer、PSCI 多核冷启动、FreeRTOS V11 SMP 任务调度与多核压测验收。所有操作系统上层能力均全面组件化，拆分至独立的组件仓库开发维护，并通过通用内核抽象层（`cherry_kal`）与 FreeRTOS 解耦集成。
 
 ---
 
 ## 1. 组件生态与独立仓库矩阵
 
-所有 Cherry 操作系统核心子系统均已解耦并发布至独立的组件仓库中，本仓库作为集成运行时统筹编译与多核联动：
+所有 Cherry 操作系统核心子系统与板级支持包均已解耦并发布至独立的 Git 子模块仓库中：
 
-| 组件名称 | 功能定位与说明 | 独立仓库地址 | 本地路径 |
+| 组件名称 | 功能定位与核心特性 | 独立仓库地址 | 本地路径 |
 | :--- | :--- | :--- | :--- |
+| **`bsp`** | QEMU virt ARM64 板级支持包（startup.S、GICv3、PL011 UART、设备注册） | [Surest-ok/qemu-virt-arm64](https://github.com/Surest-ok/qemu-virt-arm64) | [`bsp`](bsp) |
 | **`cherry_vfs`** | Linux 兼容 Inode/Dentry 虚拟文件系统、平台总线与设备驱动框架 (`cdev`/`bdev`/`sockdev`) | [Surest-ok/cherry_vfs](https://github.com/Surest-ok/cherry_vfs) | [`components/cherry_vfs`](components/cherry_vfs) |
+| **`cherry_process`** | 轻量级进程模型 (PCB)、POSIX Syscall 层、完全解耦 ELF64 动态链接器、Ubuntu GNU Bash 执行与 BusyBox 应用集 | [Surest-ok/cherry_process](https://github.com/Surest-ok/cherry_process) | [`components/cherry_process`](components/cherry_process) |
+| **`cherry_ahci`** | Serial ATA AHCI 1.3+ 存储控制器，支持多端口 SATA/AHCI 设备枚举与 `/dev/sda`、`/dev/sdb` 块设备对接 | [Surest-ok/cherry_ahci](https://github.com/Surest-ok/cherry_ahci) | [`components/cherry_ahci`](components/cherry_ahci) |
+| **`cherry_ext4`** | Ext4 日志文件系统原生驱动、JBD2 事务管理、`ext4_mkfs` 与 `ext4_fsck` 修复工具 | [Surest-ok/cherry_ext4](https://github.com/Surest-ok/cherry_ext4) | [`components/cherry_ext4`](components/cherry_ext4) |
+| **`cherry_fstools`** | MBR 分区解析、分区子块设备映射、`mount`/`umount` 与 `fs` 核心存储实用工具 | [Surest-ok/cherry_fs](https://github.com/Surest-ok/cherry_fs) | [`components/cherry_fstools`](components/cherry_fstools) |
+| **`cherry_net`** | 多核多队列 (MQ-RSS) TCP/IP 协议栈、VirtIO-Net PCI 硬件加速驱动与 BSD 套接字 | [Surest-ok/cherry_net](https://github.com/Surest-ok/cherry_net) | [`components/cherry_net`](components/cherry_net) |
+| **`cherry_pci`** | PCIe ECAM 主机桥枚举、BAR 资源分配、MSI/MSI-X 与 GICv3 ITS 中断分发驱动 | [Surest-ok/cherry_pci](https://github.com/Surest-ok/cherry_pci) | [`components/cherry_pci`](components/cherry_pci) |
+| **`cherry_nvme`** | PCIe NVMe 1.4+ 固态存储子系统、PRP 分页内存映射与 `/dev/nvme0n1` 块设备对接 | [Surest-ok/cherry_nvme](https://github.com/Surest-ok/cherry_nvme) | [`components/cherry_nvme`](components/cherry_nvme) |
+| **`cherry_sdio`** | SD / SDIO / eMMC 协议栈、SDHCI PCI 控制器驱动与 `/dev/mmcblk0` 块设备驱动 | [Surest-ok/cherry_sdio](https://github.com/Surest-ok/cherry_sdio) | [`components/cherry_sdio`](components/cherry_sdio) |
 | **`cherry_printk`** | 多核并发无交错 Linux 规范日志引擎，纳秒级关中断入队与异步开中断输出 | [Surest-ok/cherry_printk](https://github.com/Surest-ok/cherry_printk) | [`components/cherry_printk`](components/cherry_printk) |
 | **`cherry_timer`** | 硬件纳秒时钟基准、Per-CPU 独立队列、Linux 标准 `timer_list` 与 `hrtimer` 定时器 | [Surest-ok/cherry_timer](https://github.com/Surest-ok/cherry_timer) | [`components/cherry_timer`](components/cherry_timer) |
 | **`cherry_shell`** | VxWorks 风格终端 C 函数直接调用、多参数无缝传递与 `addr2sym` 双向符号反查引擎 | [Surest-ok/cherry_shell](https://github.com/Surest-ok/cherry_shell) | [`components/cherry_shell`](components/cherry_shell) |
-| **`cherry_pci`** | PCIe ECAM 主机桥枚举、BAR 资源分配、MSI/MSI-X 与 GICv3 ITS 中断分发驱动 | [Surest-ok/cherry_pci](https://github.com/Surest-ok/cherry_pci) | [`components/cherry_pci`](components/cherry_pci) |
-| **`cherry_sdio`** | SD / SDIO / eMMC 协议栈、SDHCI PCI 控制器驱动与 `/dev/mmcblk0` 块设备驱动 | [Surest-ok/cherry_sdio](https://github.com/Surest-ok/cherry_sdio) | [`components/cherry_sdio`](components/cherry_sdio) |
-| **`cherry_ext4`** | Ext4 日志文件系统原生驱动、JBD2 事务管理、`ext4_mkfs` 与 `ext4_fsck` 修复工具 | [Surest-ok/cherry_ext4](https://github.com/Surest-ok/cherry_ext4) | [`components/cherry_ext4`](components/cherry_ext4) |
-| **`cherry_fs`** | MBR 分区解析、分区子块设备映射、`mount`/`umount` 与 `fs` 引导核心存储实用工具 | [Surest-ok/cherry_fs](https://github.com/Surest-ok/cherry_fs) | [`components/cherry_fstools`](components/cherry_fstools) |
-| **`cherry_net`** | 多核多队列 (MQ-RSS) TCP/IP 协议栈、VirtIO-Net PCI 硬件加速驱动与 BSD 套接字 | [Surest-ok/cherry_net](https://github.com/Surest-ok/cherry_net) | [`components/cherry_net`](components/cherry_net) |
-| **`cherry_nvme`** | PCIe NVMe 1.4+ 固态存储子系统、PRP 分页内存映射与 `/dev/nvme0n1` 块设备对接 | [Surest-ok/cherry_nvme](https://github.com/Surest-ok/cherry_nvme) | [`components/cherry_nvme`](components/cherry_nvme) |
-| **`cherry_ahci`** | Serial ATA AHCI 1.3+ 存储控制器、FIS/PRDT 重基址引擎与 `/dev/sda` 块设备对接 | [Surest-ok/cherry_ahci](https://github.com/Surest-ok/cherry_ahci) | [`components/cherry_ahci`](components/cherry_ahci) |
-| **`cherry_process`** | 轻量级进程模型 (PCB)、POSIX Syscall 层、BusyBox 25+ 应用集与完全解耦 ELF64 加载器 | [Surest-ok/cherry_process](https://github.com/Surest-ok/cherry_process) | [`components/cherry_process`](components/cherry_process) |
-| **`cherry_usbd`** | USB 2.0/3.0 设备协议栈、Virtual UDC 环回驱动、CDC-ACM、MSC BOT 与 HID 引擎 | 独立组件开发中 | [`components/cherry_usbd`](components/cherry_usbd) |
-| **`cherry_kal`** | 通用内核抽象层 (OSAL)，将具体底层 RTOS 接口标准化为 Linux 语义 | 内核适配层（集成于本仓库） | [`components/cherry_kal`](components/cherry_kal) |
+| **`cherry_kal`** | 通用内核抽象层 (OSAL)，将具体底层 RTOS 接口标准化为 Linux 语义 | [Surest-ok/cherry_kal](https://github.com/Surest-ok/cherry_kal) | [`components/cherry_kal`](components/cherry_kal) |
+| **`cherry_usbd`** | USB 2.0/3.0 设备协议栈、Virtual UDC 环回驱动、CDC-ACM、MSC BOT 与 HID 引擎 | [Surest-ok/cherry_usbd](https://github.com/Surest-ok/cherry_usbd) | [`components/cherry_usbd`](components/cherry_usbd) |
+| **`cherry_kmod`** | Linux 规范内核模块动态装载与符号重定位引擎 | [Surest-ok/cherry_kmod](https://github.com/Surest-ok/cherry_kmod) | [`components/cherry_kmod`](components/cherry_kmod) |
+| **`cherry_ebpf`** | eBPF 虚拟机、内核探针 (kprobe/tracepoint) 与执行跟踪引擎 | [Surest-ok/cherry_ebpf](https://github.com/Surest-ok/cherry_ebpf) | [`components/cherry_ebpf`](components/cherry_ebpf) |
+| **`cherry_drm`** | Direct Rendering Manager 显示与帧缓冲驱动框架 | [Surest-ok/cherry_drm](https://github.com/Surest-ok/cherry_drm) | [`components/cherry_drm`](components/cherry_drm) |
+| **`cherry_mesa`** | 3D 渲染与图形管线用户态支撑库 | [Surest-ok/cherry_mesa](https://github.com/Surest-ok/cherry_mesa) | [`components/cherry_mesa`](components/cherry_mesa) |
 
 ---
 
@@ -34,7 +39,7 @@
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│               用户空间应用程序 / ELF64 二进制 / BusyBox 工具集         │
+│             用户态应用 / Ubuntu 原生 GNU Bash / BusyBox 工具集         │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ Linux System V ABI / cherry_syscall
 ┌───────────────────────────────────▼────────────────────────────────────┐
@@ -47,7 +52,7 @@
 │               FreeRTOS SMP 内核与集成层 (本仓库核心职责)               │
 │  - kal_freertos.c : 线程生命周期、互斥锁、信号量、自旋锁映射           │
 │  - FreeRTOS V11.x : SMP 多核调度、时间片轮转、核心亲和性绑定           │
-│  - portASM.S      : GUEST EL1 上下文保存恢复与 SGI 0 核间中断 Yield    │
+│  - portASM.S      : EL1 纯净模式上下文切换与 SGI 0 核间中断 Yield      │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
@@ -59,7 +64,26 @@
 
 ---
 
-## 3. 目录结构
+## 3. 核心功能特性
+
+### 3.1 纯净 EL1 内核运行模式
+移除冗余 EL2 Hypervisor 实现，内核运行在标准的 Exception Level 1 (EL1)。启动引导流程精简可靠，具备更清晰的异常向量表与内存映射。
+
+### 3.2 多端口 SATA/AHCI 与根文件系统挂载
+- **SATA Port 0 (`/dev/sda`)**：挂载标准 `rootfs.ext4`，承载系统基础命令、驱动模块与 BusyBox 应用。
+- **SATA Port 1 (`/dev/sdb`)**：挂载 64MB `ubuntu_rootfs.ext4` 到根目录 `/`，提供原生 Ubuntu AArch64 用户空间文件体系。
+
+### 3.3 原生 GNU Bash 与动态链接应用加载
+- **ELF64 动态链接器支持**：内核原生解析 GNU `PT_INTERP`，自动加载 `/lib/ld-linux-aarch64.so.1` 动态链接器，映射 `libc.so.6` 与 `libtinfo.so.6`。
+- **System V ABI 与 POSIX 系统调用**：完整支持用户态 `argc`/`argv`/`envp`、`brk`/`mmap`/`munmap`、`ioctl`（TTY 终端控制）、`rt_sigaction`/`rt_sigprocmask`、`getpid`/`getppid`、`fork`/`execve`/`wait4`、`pipe` 等核心调用。
+- **原生 Bash 执行**：支持 `bash -c "echo ..."` 单行命令执行与 `/bin/test_bash.sh` 复杂脚本运行（循环变量展开、`$((12+30))` 算术求值、退出码精确捕获）。
+
+### 3.4 工业级 BusyBox 多调用工具集
+内置 29 种 BusyBox 工具（`ls`, `cat`, `echo`, `sh`, `ps`, `pwd`, `mkdir`, `rm`, `kill`, `head`, `tail`, `wc`, `grep`, `sleep` 等），支持管道通信、重定向与多核任务调度观察。
+
+---
+
+## 4. 目录结构
 
 ```text
 freertos-workspace/
@@ -69,88 +93,66 @@ freertos-workspace/
 │   ├── FreeRTOS-Kernel/        # 核心任务调度器 (tasks.c, queue.c, list.c 等)
 │   └── port/                   # GCC/ARM_AARCH64_SRE 移植层 (port.c, portASM.S)
 ├── arch/                       # 体系结构抽象层 (原子操作、自旋锁、中断与屏障)
-├── bsp/                        # 板级支持包 (QEMU virt 裸机启动 startup.S, GICv3, PL011)
-├── components/                 # CherryOS 现代化操作系统组件库 (由独立组件仓库集成)
-│   ├── cherry_kal/             # 内核抽象层 (FreeRTOS OSAL 适配)
-│   ├── cherry_printk/          # 多核并发日志引擎
-│   ├── cherry_timer/           # 高精度多核定时器
-│   ├── cherry_vfs/             # 虚拟文件系统与设备框架
-│   ├── cherry_shell/           # 动态 C 解释器 Shell
-│   ├── cherry_pci/             # PCIe ECAM 与 GICv3 ITS
-│   ├── cherry_sdio/            # SD/SDIO/eMMC 协议栈
-│   ├── cherry_ext4/            # Ext4 文件系统与 JBD2
-│   ├── cherry_fstools/         # 分区挂载管理与核心存储工具
-│   ├── cherry_net/             # 多核多队列 TCP/IP 协议栈
-│   ├── cherry_nvme/            # NVMe 固态存储驱动
-│   ├── cherry_ahci/            # SATA AHCI 存储驱动
-│   ├── cherry_usbd/            # USB 设备协议栈
-│   └── cherry_process/         # 轻量级进程模型、Syscall 与 ELF 加载器
-├── tests/                      # 自动化测试编排脚本 (accept_qemu_sched.py)
-└── docs/                       # 阶段技术博客与演进架构设计文档
+├── bsp/                        # 板级支持包 (Git 子模块: Surest-ok/qemu-virt-arm64)
+├── components/                 # CherryOS 现代化操作系统组件库 (18 个独立子模块仓库)
+├── scripts/                    # 构建辅助脚本 (build_ubuntu_rootfs.py, run-qemu.sh 等)
+└── tests/                      # 自动化测试编排脚本 (accept_qemu_sched.py)
 ```
 
 ---
 
-## 4. 快速上手
+## 5. 快速上手与功能复现
 
-### 4.1 环境准备
+### 5.1 环境准备
 
-确保系统安装了 AArch64 交叉编译器、QEMU 仿真器与 SCons：
+确保主机（Ubuntu 20.04 / 22.04 或 WSL2）已安装交叉编译器、QEMU 与 SCons：
 
 ```bash
-# Ubuntu / Debian
 sudo apt-get update
-sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu qemu-system-arm python3 python3-pip
+sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu qemu-system-arm python3 python3-pip e2fsprogs
 pip3 install scons
 ```
 
-### 4.2 构建与运行
+### 5.2 完整代码拉取（含全部 19 个子模块）
+
+克隆主仓库并递归拉取所有依赖子模块：
 
 ```bash
-# 1. 默认编译 (生成 2 核 SMP Unikernel 镜像 build/bsp/freertos_smp.elf)
-python3 -m SCons
-
-# 2. 指定核心数编译 (例如 4 核心)
-python3 -m SCons CORES=4
-
-# 3. 交互式启动 QEMU 模拟仿真
-python3 -m SCons run
-# (使用 Ctrl+A, X 退出 QEMU)
+git clone --recursive -b vibe-coding-dev https://github.com/Surest-ok/FreeRTOS.git
+cd FreeRTOS
 ```
 
-### 4.3 自动化多核验收验证
-
-项目包含一键式多核自动化验收套件，自动拉起 QEMU 并执行严格的组件与调度探针校验：
+### 5.3 编译与构建
 
 ```bash
-# 1. 运行标准双核调度与全组件验收测试
-python3 -m SCons test
+# 1. 编译全系统内核镜像 (生成 build/bsp/freertos_smp.elf)
+scons
+
+# 2. 构建 Ubuntu 根文件系统镜像（用于原生 GNU Bash 动态执行验证）
+python3 scripts/build_ubuntu_rootfs.py
+```
+
+### 5.4 自动化验收测试
+
+运行包含 FreeRTOS 多核调度、全组件联动与 GNU Bash / BusyBox 执行的端到端自动化验收：
+
+```bash
+# 1. 运行全功能自动化验收（默认双核 SMP，包含多磁盘挂载与原生应用执行）
+scons test
 
 # 2. 运行高压力跨核同步压测 (Cross-core Stress)
-python3 -m SCons SCHED_MODE=cross test
+scons SCHED_MODE=cross test
+
+# 3. 指定核心数编译并交互式运行 QEMU (例如 4 核心)
+scons CORES=4 run
+# (使用 Ctrl+A, X 退出 QEMU 模拟器)
 ```
 
 **验收通过标志输出**：
 ```text
-cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass elf_glibc=pass all=pass
-freertos: [sched-verify] active=pass idle=pass affinity=pass coverage=pass progress=pass prio=pass rr=pass sem=pass queue=pass mutex=pass spin=pass cores=2 seen=0x3 missing=0x0
+cherry_process: [process-verify] spawn=pass wait=pass fd=pass pipe=pass syscall=pass applets=pass sh=pass smp_ps=pass elf_glibc=pass nopie=pass dyn=pass all=pass
 [SCHED-TEST] SUMMARY result=pass mode=full cores=2 markers=1
 ```
-
----
-
-## 5. 阶段技术文档
-
-项目保留了完整的嵌入式多核系统演进文档：
-
-| 阶段文档 | 核心技术主题 |
-| :--- | :--- |
-| [Phase 1 技术博客](docs/phase1-AArch64裸机引导与UART输出.md) | **AArch64 裸机引导与 UART**：`startup.S`、链接脚本、EL2 降级、SCTLR 寄存器与 PL011 驱动 |
-| [Phase 2 (GICv2) 博客](docs/phase2-异常向量表与GICv2中断.md) | **异常向量表与 GICv2**：ARM 16 入口异常模型、中断栈帧保存与通用定时器 SysTick |
-| [Phase 2 (GICv3) 博客](docs/phase2-GICv3中断与通用定时器.md) | **GICv3 升级**：ICC_SRE 接口、Group 1 非安全中断与 Redistributor 配置 |
-| [Phase 3 技术博客](docs/phase3-FreeRTOS集成.md) | **FreeRTOS 单核集成**：任务控制块 (TCB)、SVC 上下文切换与抢占式调度 |
-| [Phase 4 技术博客](docs/phase4-FreeRTOS-SMP.md) | **FreeRTOS SMP 多核架构**：SGI 0 核间中断 Yield、PSCI 多核引导与 32 核调度压测 |
-| [Unikernel 架构规范](docs/unikernel-architecture.md) | **Unikernel 规范**：极简内核引导模型与组件生态融合设计 |
 
 ---
 
