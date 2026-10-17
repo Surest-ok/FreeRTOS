@@ -694,9 +694,8 @@ if ((active_mask & (1ULL << xCoreID)) == 0)
 
 原来的验证只观察一条调度输出，能证明“系统没有立刻崩溃”，但不能覆盖 SMP 调度最容易出错的边界：从核 ready 窗口、IPI 目标过滤、亲和性泄漏、idle 假在线、worker 不前进、UART 竞争输出。现在验证方式改为矩阵化输出，每一行都能被自动化脚本按 `PASS/FAIL` 捕获。
 
-![FreeRTOS SMP scheduler validation](diagrams/freertos-smp-scheduler-validation.png)
+![调度验证](images/scheduler-validation.svg)
 
-可编辑源文件：[freertos-smp-scheduler-validation.excalidraw](diagrams/freertos-smp-scheduler-validation.excalidraw)，SVG 版本：[freertos-smp-scheduler-validation.svg](diagrams/freertos-smp-scheduler-validation.svg)。
 
 ### 6.1 调度验证矩阵
 
@@ -809,7 +808,7 @@ qemu-system-aarch64 -machine virt,gic-version=3,virtualization=on \
 | `bsp/linker.ld` | BSS 堆 + 每核栈 + 邮箱 | Phase 1 基础上 SMP 扩展 |
 | `include/FreeRTOSConfig.h` | SMP 内核配置 | Phase 3 基础上 SMP 扩展 |
 | `tests/acceptance/accept_qemu_sched.py` | QEMU 调度验收脚本，解析 `[sched-verify]` | 新建 |
-| `docs/diagrams/freertos-smp-scheduler-validation.*` | 调度验证 Excalidraw 源、SVG 与 PNG 截图 | 新建 |
+| `docs/images/scheduler-validation.svg` | 调度验证示意图 | 新建 |
 
 本阶段实现了可配置 `CORES` 的 SMP 构建路径。默认 2 核用于快速回归，32 核用于验证调度位图、GICv3 SGI target-list、MPIDR 线性 core id、mailbox 和每核异常栈容量。
 

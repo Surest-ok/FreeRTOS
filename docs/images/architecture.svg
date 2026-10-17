@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="680" viewBox="0 0 960 680" role="img" aria-label="FreeRTOS SMP 系统架构">
+<title>FreeRTOS SMP 系统架构</title>
+
+<style>
+  .bg { fill:#ffffff }
+  text { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif; fill:#1f2328 }
+  .h  { font-size:14px; font-weight:600 }
+  .b  { font-size:12.5px }
+  .s  { font-size:11.5px; fill:#59636e }
+  .m  { font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace; font-size:11.5px; fill:#59636e }
+  .tag { font-size:11px; font-weight:600; fill:#59636e; letter-spacing:.04em }
+  .layer { fill:#f6f8fa; stroke:#d1d9e0; stroke-width:1 }
+  .dash  { fill:none; stroke:#d1d9e0; stroke-width:1; stroke-dasharray:4 3 }
+  .app  { fill:#dafbe1; stroke:#4ac26b }
+  .ker  { fill:#ddf4ff; stroke:#54aeff }
+  .vir  { fill:#fbefff; stroke:#c297ff }
+  .hw   { fill:#fff8c5; stroke:#d4a72c }
+  .dat  { fill:#ffffff; stroke:#afb8c1 }
+  .acc  { fill:#0969da; stroke:#0969da }
+  .acct { fill:#ffffff; font-size:12.5px; font-weight:600 }
+  .ln   { fill:none; stroke:#6e7781; stroke-width:1.3 }
+  .lnd  { fill:none; stroke:#6e7781; stroke-width:1.3; stroke-dasharray:5 4 }
+  .ah   { fill:#6e7781 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill:#0d1117 }
+    text { fill:#e6edf3 }
+    .s, .m, .tag { fill:#9198a1 }
+    .layer { fill:#151b23; stroke:#3d444d }
+    .dash  { stroke:#3d444d }
+    .app { fill:#0f2d1a; stroke:#2ea043 }
+    .ker { fill:#0c2d4a; stroke:#388bfd }
+    .vir { fill:#2a1740; stroke:#a371f7 }
+    .hw  { fill:#2e2405; stroke:#bb8009 }
+    .dat { fill:#0d1117; stroke:#3d444d }
+    .acc { fill:#1f6feb; stroke:#1f6feb }
+    .ln, .lnd { stroke:#8b949e }
+    .ah { fill:#8b949e }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path class="ah" d="M0,0 L10,5 L0,10 z"/>
+  </marker>
+</defs>
+
+<rect class="bg" x="0" y="0" width="960" height="680"/>
+<rect class="layer" x="16" y="16" width="928" height="112" rx="10"/>
+<text class="tag" x="28" y="34" text-anchor="start">应用与验收（bsp/src/app.c）</text>
+<rect class="app" x="28" y="42" width="445" height="72" rx="8"/>
+<text class="h" x="250.5" y="66.5" text-anchor="middle">调度验收探针</text>
+<text class="s" x="250.5" y="84.5" text-anchor="middle">Core 0 监控任务 · 固定核 worker</text>
+<text class="s" x="250.5" y="100.5" text-anchor="middle">优先级 · 轮转 · 信号量 · 队列 · 互斥锁 · 自旋锁</text>
+<rect class="app" x="487" y="42" width="445" height="72" rx="8"/>
+<text class="h" x="709.5" y="66.5" text-anchor="middle">组件自检</text>
+<text class="s" x="709.5" y="84.5" text-anchor="middle">每个组件 init 后运行 run_tests()</text>
+<text class="s" x="709.5" y="100.5" text-anchor="middle">打印 [&lt;组件&gt;-verify] … all=pass</text>
+<rect class="layer" x="16" y="142" width="928" height="108" rx="10"/>
+<text class="tag" x="28" y="160" text-anchor="start">组件（components/）</text>
+<rect class="ker" x="28" y="168" width="216" height="64" rx="8"/>
+<text class="h" x="136.0" y="196.5" text-anchor="middle">cherry_printk</text>
+<text class="s" x="136.0" y="214.5" text-anchor="middle">多核日志，整行不交错</text>
+<rect class="ker" x="258" y="168" width="216" height="64" rx="8"/>
+<text class="h" x="366.0" y="196.5" text-anchor="middle">cherry_timer</text>
+<text class="s" x="366.0" y="214.5" text-anchor="middle">timer_list · hrtimer</text>
+<rect class="ker" x="487" y="168" width="216" height="64" rx="8"/>
+<text class="h" x="595.0" y="196.5" text-anchor="middle">cherry_vfs</text>
+<text class="s" x="595.0" y="214.5" text-anchor="middle">VFS · 设备模型 · ramfs</text>
+<rect class="ker" x="716" y="168" width="216" height="64" rx="8"/>
+<text class="h" x="824.0" y="196.5" text-anchor="middle">cherry_shell</text>
+<text class="s" x="824.0" y="214.5" text-anchor="middle">调用 C 函数 · addr2sym</text>
+<rect class="vir" x="28" y="264" width="904" height="52" rx="8"/>
+<text class="h" x="480.0" y="286.5" text-anchor="middle">cherry_kal 内核抽象层</text>
+<text class="s" x="480.0" y="304.5" text-anchor="middle">kal_mutex · kal_sem · kal_spin · kal_thread · kal_malloc · 时间；组件只依赖它</text>
+<rect class="layer" x="16" y="330" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="348" text-anchor="start">FreeRTOS SMP 底座</text>
+<rect class="dat" x="28" y="356" width="292" height="64" rx="8"/>
+<text class="h" x="174.0" y="384.5" text-anchor="middle">FreeRTOS V11 SMP 内核</text>
+<text class="s" x="174.0" y="402.5" text-anchor="middle">kernel/：任务 · 队列 · 定时器 · heap_4</text>
+<rect class="dat" x="334" y="356" width="292" height="64" rx="8"/>
+<text class="h" x="480.0" y="384.5" text-anchor="middle">AArch64 SMP 移植层</text>
+<text class="s" x="480.0" y="402.5" text-anchor="middle">kernel/port/：上下文切换 · SGI 0 Yield</text>
+<rect class="dat" x="640" y="356" width="292" height="64" rx="8"/>
+<text class="h" x="786.0" y="384.5" text-anchor="middle">arch 抽象层</text>
+<text class="s" x="786.0" y="402.5" text-anchor="middle">arch/：核号 · 原子 · 自旋锁 · IRQ 分发</text>
+<rect class="layer" x="16" y="448" width="928" height="104" rx="10"/>
+<text class="tag" x="28" y="466" text-anchor="start">板级支持包（bsp/）</text>
+<rect class="ker" x="28" y="474" width="292" height="64" rx="8"/>
+<text class="h" x="174.0" y="502.5" text-anchor="middle">startup.S</text>
+<text class="s" x="174.0" y="520.5" text-anchor="middle">EL2 → EL1 · 每核栈 · BSS</text>
+<rect class="ker" x="334" y="474" width="292" height="64" rx="8"/>
+<text class="h" x="480.0" y="502.5" text-anchor="middle">GICv3 · Generic Timer</text>
+<text class="s" x="480.0" y="520.5" text-anchor="middle">中断路由 · 1000 Hz 时钟</text>
+<rect class="ker" x="640" y="474" width="292" height="64" rx="8"/>
+<text class="h" x="786.0" y="502.5" text-anchor="middle">PL011 · PSCI</text>
+<text class="s" x="786.0" y="520.5" text-anchor="middle">串口 · CPU_ON 拉起从核</text>
+<path class="ln" d="M480,552 L480,570" marker-end="url(#a)"/>
+<rect class="layer" x="16" y="572" width="928" height="92" rx="10"/>
+<text class="tag" x="28" y="590" text-anchor="start">硬件 · QEMU virt</text>
+<rect class="hw" x="28" y="596" width="216" height="56" rx="8"/>
+<text class="h" x="136.0" y="620.5" text-anchor="middle">Cortex-A53 × N</text>
+<text class="s" x="136.0" y="638.5" text-anchor="middle">CORES=1…32</text>
+<rect class="hw" x="258" y="596" width="216" height="56" rx="8"/>
+<text class="h" x="366.0" y="628.5" text-anchor="middle">GICv3</text>
+<rect class="hw" x="487" y="596" width="216" height="56" rx="8"/>
+<text class="h" x="595.0" y="628.5" text-anchor="middle">Generic Timer</text>
+<rect class="hw" x="716" y="596" width="216" height="56" rx="8"/>
+<text class="h" x="824.0" y="628.5" text-anchor="middle">PL011 串口</text>
+</svg>
