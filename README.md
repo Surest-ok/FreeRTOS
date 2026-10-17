@@ -37,30 +37,12 @@
 
 ## 2. 模块化集成架构
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│             用户态应用 / Ubuntu 原生 GNU Bash / BusyBox 工具集         │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ Linux System V ABI / cherry_syscall
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                    CherryOS 现代化模块化组件层 (独立组件仓库)           │
-│  cherry_process · cherry_vfs  · cherry_net   · cherry_nvme · cherry_fs│
-│  cherry_ext4    · cherry_ahci · cherry_sdio  · cherry_pci  · ...       │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ cherry_kal (Linux 标准 OSAL 抽象接口)
-┌───────────────────────────────────▼────────────────────────────────────┐
-│               FreeRTOS SMP 内核与集成层 (本仓库核心职责)               │
-│  - kal_freertos.c : 线程生命周期、互斥锁、信号量、自旋锁映射           │
-│  - FreeRTOS V11.x : SMP 多核调度、时间片轮转、核心亲和性绑定           │
-│  - portASM.S      : EL1 纯净模式上下文切换与 SGI 0 核间中断 Yield      │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-┌───────────────────────────────────▼────────────────────────────────────┐
-│                  通用体系结构与硬件抽象层 (arch/ & bsp/)               │
-│  - arch/ : MPIDR 核心编号、AArch64 屏障与内联原子指令 (LL/SC)          │
-│  - bsp/  : PSCI CPU_ON 多核启动、GICv3 (ICC_SRE) 中断、PL011 串口驱动  │
-└────────────────────────────────────────────────────────────────────────┘
-```
+> [!TIP]
+> 架构图由 [Archify](https://github.com/tt-a1i/archify) 生成。点击可查看 [交互式 HTML 架构图](docs/diagrams/cherry-modular-os-architecture.html) 进行全景探索、高亮路径追踪与节点检查。
+
+<p align="center">
+  <img src="docs/diagrams/cherry-modular-os-architecture.svg" alt="Cherry Modular OS 现代化模块化架构" width="100%" />
+</p>
 
 ---
 
