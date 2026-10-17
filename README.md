@@ -26,7 +26,12 @@
 
 ## 2. 模块化系统架构
 
-![FreeRTOS SMP 64位模块化多核系统架构](docs/diagrams/freertos-smp-architecture.png)
+> [!TIP]
+> 架构图由 [Archify](https://github.com/tt-a1i/archify) 生成。点击可查看 [交互式 HTML 架构图](docs/diagrams/freertos-smp-architecture.html) 进行全景探索、高亮路径追踪与节点检查。
+
+<p align="center">
+  <img src="docs/diagrams/freertos-smp-architecture.svg" alt="FreeRTOS SMP 64位模块化多核系统架构" width="100%" />
+</p>
 
 ---
 
