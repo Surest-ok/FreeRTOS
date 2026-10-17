@@ -2,62 +2,64 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Cherry Modular Operating System Architecture",
-    "subtitle": "Decoupled Subsystems, FreeRTOS SMP Core & Ubuntu Rootfs on QEMU Virt ARM64",
+    "title": "Cherry 模块化操作系统系统分层架构图",
+    "subtitle": "工业级五层解耦体系：用户空间、模块化服务、内核抽象、驱动BSP与硬件平台",
     "output": "docs/diagrams/cherry-modular-os-architecture.html",
     "visual_preset": "blueprint",
-    "animation": "trace",
+    "animation": "none",
     "quality_profile": "showcase"
   },
   "components": [
-    { "id": "virt_arm64", "type": "cloud", "label": "QEMU Virt ARM64", "sublabel": "Dual Cortex-A53", "pos": [50, 70], "size": [160, 60], "icon": "cloud" },
-    { "id": "gicv3", "type": "security", "label": "ARM GICv3 ITS", "sublabel": "MSI / SPI / PPI / SGI", "pos": [270, 70], "size": [160, 60], "icon": "security" },
-    { "id": "pci_bus", "type": "external", "label": "PCIe Host Bridge", "sublabel": "ECAM MMIO & MSI-X", "pos": [490, 70], "size": [160, 60], "icon": "stop" },
-    { "id": "storage_hw", "type": "database", "label": "Storage Devices", "sublabel": "AHCI / NVMe / SDIO", "pos": [720, 70], "size": [170, 60], "icon": "database" },
-    { "id": "gpu_hw", "type": "frontend", "label": "Display & GPU", "sublabel": "VirtIO-GPU / Mali", "pos": [950, 70], "size": [160, 60], "icon": "frontend" },
-    { "id": "cherry_bsp", "type": "backend", "label": "Cherry BSP", "sublabel": "Platform Devices", "pos": [160, 240], "size": [170, 60], "icon": "start" },
-    { "id": "cherry_pci", "type": "backend", "label": "Cherry PCI", "sublabel": "BAR Alloc & MSI-X", "pos": [490, 240], "size": [160, 60], "icon": "backend" },
-    { "id": "cherry_storage", "type": "database", "label": "Storage Drivers", "sublabel": "Multi-Port AHCI / NVMe", "pos": [720, 240], "size": [170, 60], "icon": "database" },
-    { "id": "freertos_smp", "type": "backend", "label": "FreeRTOS SMP Core", "sublabel": "Scheduler & Task Port", "pos": [50, 410], "size": [170, 64], "icon": "active" },
-    { "id": "cherry_kal", "type": "security", "label": "CherryKAL OSAL", "sublabel": "Kernel Port Abstraction", "pos": [280, 410], "size": [160, 64], "icon": "decision" },
-    { "id": "cherry_vfs", "type": "database", "label": "CherryVFS Subsystem", "sublabel": "Virtual File System", "pos": [500, 410], "size": [160, 64], "icon": "database" },
-    { "id": "cherry_ext4", "type": "database", "label": "Cherry Ext4 Engine", "sublabel": "JBD2 Journaling & Mount", "pos": [730, 410], "size": [160, 64], "icon": "database" },
-    { "id": "cherry_net", "type": "cloud", "label": "CherryNet TCP/IP", "sublabel": "VirtIO-Net & BSD Sockets", "pos": [950, 410], "size": [160, 64], "icon": "cloud" },
-    { "id": "cherry_kmod", "type": "backend", "label": "Cherry Kmod Loader", "sublabel": "Dynamic ELF Modules", "pos": [50, 580], "size": [170, 60], "icon": "backend" },
-    { "id": "cherry_ebpf", "type": "security", "label": "Cherry eBPF Engine", "sublabel": "Kernel Tracing Probes", "pos": [280, 580], "size": [160, 60], "icon": "security" },
-    { "id": "cherry_process", "type": "backend", "label": "Cherry Process", "sublabel": "POSIX Syscalls & TLS", "pos": [500, 580], "size": [160, 60], "icon": "backend" },
-    { "id": "cherry_shell", "type": "messagebus", "label": "CherryShell CLI", "sublabel": "Interactive Command Line", "pos": [730, 580], "size": [160, 60], "icon": "messagebus" },
-    { "id": "cherry_drm", "type": "frontend", "label": "Cherry DRM / Mesa", "sublabel": "16x16 Tile Display Engine", "pos": [950, 580], "size": [160, 60], "icon": "frontend" },
-    { "id": "ubuntu_root", "type": "database", "label": "Ubuntu Rootfs", "sublabel": "Ext4 Auto-mounted at /", "pos": [240, 750], "size": [170, 60], "icon": "database" },
-    { "id": "bash", "type": "frontend", "label": "Native GNU Bash", "sublabel": "Dynamic Linked ELF64", "pos": [510, 750], "size": [160, 60], "icon": "active" },
-    { "id": "busybox", "type": "frontend", "label": "BusyBox Suite", "sublabel": "29 Core POSIX Applets", "pos": [740, 750], "size": [170, 60], "icon": "success" }
+    { "id": "ubuntu_root", "type": "database", "label": "Ubuntu Rootfs 运行环境", "sublabel": "Ext4 自动挂载至根目录 /", "pos": [60, 70], "size": [250, 60], "icon": "database" },
+    { "id": "bash", "type": "frontend", "label": "原生 GNU Bash Shell", "sublabel": "动态链接加载 (/bin/bash)", "pos": [340, 70], "size": [250, 60], "icon": "active" },
+    { "id": "busybox", "type": "frontend", "label": "BusyBox 核心工具集", "sublabel": "29 个核心 POSIX Applet", "pos": [620, 70], "size": [250, 60], "icon": "success" },
+    { "id": "scripts", "type": "frontend", "label": "自动化测试脚本集", "sublabel": "/bin/test_bash.sh 脚本运行", "pos": [900, 70], "size": [250, 60], "icon": "flag" },
+
+    { "id": "cherry_ext4", "type": "database", "label": "Ext4 日志文件系统引擎", "sublabel": "JBD2 事务日志 / mkfs / fsck 修复", "pos": [60, 220], "size": [250, 64], "icon": "database" },
+    { "id": "cherry_process", "type": "backend", "label": "POSIX 进程与系统调用服务", "sublabel": "PCB 模型 / ELF64 加载器 / SVC #0", "pos": [340, 220], "size": [250, 64], "icon": "backend" },
+    { "id": "cherry_vfs", "type": "database", "label": "CherryVFS 虚拟文件系统", "sublabel": "Linux 兼容 Dentry/Inode 索引与设备表", "pos": [620, 220], "size": [250, 64], "icon": "database" },
+    { "id": "cherry_fstools", "type": "backend", "label": "存储与分区管理工具", "sublabel": "MBR 解析 / 分区块设备映射", "pos": [900, 220], "size": [250, 64], "icon": "start" },
+
+    { "id": "cherry_net", "type": "cloud", "label": "CherryNet 网络协议栈", "sublabel": "多核多队列 / BSD Socket / iPerf2", "pos": [60, 330], "size": [250, 60], "icon": "cloud" },
+    { "id": "cherry_kmod", "type": "backend", "label": "内核模块动态加载子系统", "sublabel": "动态 ELF 模块装载与符号重定位", "pos": [340, 330], "size": [250, 60], "icon": "backend" },
+    { "id": "cherry_ebpf", "type": "security", "label": "Cherry eBPF 动态追踪引擎", "sublabel": "内核探针 (kprobe/tracepoint) 监控", "pos": [620, 330], "size": [250, 60], "icon": "security" },
+    { "id": "cherry_shell", "type": "messagebus", "label": "CherryShell 动态交互终端", "sublabel": "VxWorks 风格符号双向反查命令行", "pos": [900, 330], "size": [250, 60], "icon": "messagebus" },
+
+    { "id": "cherry_kal", "type": "security", "label": "CherryKAL 通用内核抽象层 (OSAL)", "sublabel": "统一提供 Linux 语义任务与互斥锁接口", "pos": [60, 470], "size": [310, 64], "icon": "decision" },
+    { "id": "freertos_smp", "type": "backend", "label": "FreeRTOS V11.x SMP 对称多核实时内核", "sublabel": "双核调度、核心亲和性绑定与 IPC 原语", "pos": [410, 470], "size": [440, 64], "icon": "active" },
+    { "id": "heap_mem", "type": "database", "label": "线程安全动态内存堆管理", "sublabel": "扩展 16MB 连续物理内存动态分配器", "pos": [890, 470], "size": [260, 64], "icon": "database" },
+
+    { "id": "cherry_bsp", "type": "backend", "label": "QEMU virt ARM64 板级支持包", "sublabel": "startup.S / 纯 EL1 运行 / 异常向量表", "pos": [60, 610], "size": [250, 60], "icon": "start" },
+    { "id": "cherry_pci", "type": "security", "label": "PCIe 主机桥与中断控制器", "sublabel": "ECAM 总线扫描 / BAR 分配 / GICv3 ITS", "pos": [340, 610], "size": [250, 60], "icon": "security" },
+    { "id": "storage_drv", "type": "database", "label": "高性能存储控制器驱动集", "sublabel": "多端口 AHCI SATA / NVMe / SDHCI SDIO", "pos": [620, 610], "size": [250, 60], "icon": "database" },
+    { "id": "gpu_net_drv", "type": "frontend", "label": "图形与虚拟化网卡驱动", "sublabel": "VirtIO-Net / VirtIO-GPU / DRM / Mesa", "pos": [900, 610], "size": [250, 60], "icon": "frontend" },
+
+    { "id": "hw_cpu", "type": "cloud", "label": "双核 Cortex-A53 处理器", "sublabel": "ARMv8-A 64-bit SMP 执行核", "pos": [60, 750], "size": [250, 60], "icon": "cloud" },
+    { "id": "hw_gic", "type": "security", "label": "ARM GICv3 (ICC_SRE) 中断系统", "sublabel": "GICD / GICR / ITS MSI / SGI 核间中断", "pos": [340, 750], "size": [250, 60], "icon": "security" },
+    { "id": "hw_storage", "type": "database", "label": "SATA 硬盘与 NVMe/SD 存储介质", "sublabel": "/dev/sda (rootfs) 与 /dev/sdb (ubuntu)", "pos": [620, 750], "size": [250, 60], "icon": "database" },
+    { "id": "hw_pci", "type": "external", "label": "PCIe 虚拟化总线与外设", "sublabel": "QEMU virt PCIe ECAM / VirtIO MMIO", "pos": [900, 750], "size": [250, 60], "icon": "stop" }
   ],
   "boundaries": [
-    { "kind": "region", "label": "QEMU Virt ARM64 Hardware Environment", "wraps": ["virt_arm64", "gicv3", "pci_bus", "storage_hw", "gpu_hw"], "pad": 16 },
-    { "kind": "security-group", "label": "Platform Devices & Storage Controllers", "wraps": ["cherry_bsp", "cherry_pci", "cherry_storage"], "pad": 16 },
-    { "kind": "region", "label": "Kernel Abstraction & Storage VFS Stack", "wraps": ["freertos_smp", "cherry_kal", "cherry_vfs", "cherry_ext4", "cherry_net"], "pad": 16 },
-    { "kind": "security-group", "label": "Decoupled Subsystems & Execution Services", "wraps": ["cherry_kmod", "cherry_ebpf", "cherry_process", "cherry_shell", "cherry_drm"], "pad": 16 },
-    { "kind": "region", "label": "Userland Applications & Ubuntu Environment", "wraps": ["ubuntu_root", "bash", "busybox"], "pad": 16 }
+    { "kind": "region", "label": "第 1 层：用户态应用与 Ubuntu 运行环境 (User Space & Application Layer)", "wraps": ["ubuntu_root", "bash", "busybox", "scripts"], "pad": 16 },
+    { "kind": "security-group", "label": "第 2 层：Cherry 模块化操作系统服务层 (Modular Subsystems Layer)", "wraps": ["cherry_ext4", "cherry_process", "cherry_vfs", "cherry_fstools", "cherry_net", "cherry_kmod", "cherry_ebpf", "cherry_shell"], "pad": 16 },
+    { "kind": "region", "label": "第 3 层：内核抽象与实时多核内核底座层 (Kernel OSAL & RTOS Core Layer)", "wraps": ["cherry_kal", "freertos_smp", "heap_mem"], "pad": 16 },
+    { "kind": "security-group", "label": "第 4 层：板级支持包与硬件外设驱动层 (BSP & Drivers Layer)", "wraps": ["cherry_bsp", "cherry_pci", "storage_drv", "gpu_net_drv"], "pad": 16 },
+    { "kind": "region", "label": "第 5 层：QEMU Virt ARM64 虚拟化硬件环境 (Hardware Platform Layer)", "wraps": ["hw_cpu", "hw_gic", "hw_storage", "hw_pci"], "pad": 16 }
   ],
   "connections": [
-    { "id": "virt-bsp", "from": "virt_arm64", "to": "cherry_bsp", "label": "Init Platform", "fromSide": "bottom", "toSide": "top" },
-    { "id": "pci-drv", "from": "pci_bus", "to": "cherry_pci", "label": "ECAM Scan", "fromSide": "bottom", "toSide": "top" },
-    { "id": "stor-drv", "from": "storage_hw", "to": "cherry_storage", "label": "Controller Init", "fromSide": "bottom", "toSide": "top" },
-    { "id": "bsp-kernel", "from": "cherry_bsp", "to": "freertos_smp", "label": "Start Scheduler", "fromSide": "bottom", "toSide": "top" },
-    { "id": "kernel-kal", "from": "freertos_smp", "to": "cherry_kal", "label": "Kernel OSAL", "fromSide": "right", "toSide": "left" },
-    { "id": "kal-vfs", "from": "cherry_kal", "to": "cherry_vfs", "label": "VFS Hooks", "fromSide": "right", "toSide": "left" },
-    { "id": "stor-ext4", "from": "cherry_storage", "to": "cherry_ext4", "label": "Block I/O", "fromSide": "bottom", "toSide": "top" },
-    { "id": "ext4-vfs", "from": "cherry_ext4", "to": "cherry_vfs", "label": "Mount", "fromSide": "left", "toSide": "right" },
-    { "id": "vfs-proc", "from": "cherry_vfs", "to": "cherry_process", "label": "File Ops", "fromSide": "bottom", "toSide": "top" },
-    { "id": "proc-kmod", "from": "cherry_process", "to": "cherry_kmod", "label": "Module Symbols", "fromSide": "left", "toSide": "right" },
-    { "id": "proc-shell", "from": "cherry_process", "to": "cherry_shell", "label": "CLI Exec", "fromSide": "right", "toSide": "left" },
-    { "id": "root-bash", "from": "ubuntu_root", "to": "bash", "label": "Rootfs Libs", "fromSide": "right", "toSide": "left" },
-    { "id": "proc-bash", "from": "cherry_process", "to": "bash", "label": "SVC #0 Trap", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
-    { "id": "proc-bb", "from": "cherry_process", "to": "busybox", "label": "POSIX Applets", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" }
+    { "id": "bash-to-proc", "from": "bash", "to": "cherry_process", "label": "Linux System V ABI (SVC #0 Syscall Trap)", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "bb-to-vfs", "from": "busybox", "to": "cherry_vfs", "label": "POSIX 文件系统调用接口", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "kmod-to-kal", "from": "cherry_kmod", "to": "cherry_kal", "label": "Linux 语义 OSAL 标准抽象调用", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "ebpf-to-smp", "from": "cherry_ebpf", "to": "freertos_smp", "label": "内核同步原语与多核调度接口", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "kal-to-bsp", "from": "cherry_kal", "to": "cherry_bsp", "label": "板级硬件初始化与设备发现接口", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "smp-to-pci", "from": "freertos_smp", "to": "cherry_pci", "label": "GICv3 ITS / MSI 中断路由绑定", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "bsp-to-cpu", "from": "cherry_bsp", "to": "hw_cpu", "label": "PSCI CPU_ON 从核引导与 EL1 纯净运行", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "pci-to-gic", "from": "cherry_pci", "to": "hw_gic", "label": "PCIe ECAM 配置空间与中断系统映射", "variant": "default", "fromSide": "bottom", "toSide": "top" },
+    { "id": "drv-to-disk", "from": "storage_drv", "to": "hw_storage", "label": "AHCI 端口 0/1 与 NVMe 物理块读写", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "Modular Subsystem Architecture", "items": ["19 fully decoupled git submodules independently versioned and testable", "CherryKAL provides portable hardware and RTOS abstraction layer", "Zero hard-coded dependencies between hardware BSP and upper subsystems"] },
-    { "dot": "emerald", "title": "Native Userland & Ubuntu Rootfs", "items": ["Ext4 auto-mounted at root with full directory hierarchy (/bin, /lib, /etc)", "GNU Bash executes dynamically linked ELF64 binaries using Ubuntu shared libraries", "BusyBox applet suite passes all 29 standard POSIX operational tests"] },
-    { "dot": "violet", "title": "Advanced Peripheral Subsystems", "items": ["Multi-port AHCI SATA & NVMe block device drivers registered to CherryVFS", "VirtIO-GPU and ARM Mali DRM / Mesa drivers powering 16x16 tiled rasterization", "CherryNet multi-core TCP/IP stack with BSD socket compatibility and iPerf2"] }
+    { "dot": "cyan", "title": "纵向五层严格解耦", "items": ["用户空间、模块化服务、内核抽象、驱动BSP与硬件平台严格自顶向下分层", "上层对下层服务形成标准契约依赖，禁止跨层反向侵入", "所有 19 个 Cherry 子模块均作为独立 Git 模块独立开发与维护"] },
+    { "dot": "emerald", "title": "抽象边界标准化", "items": ["System V ABI 与 SVC #0 系统调用陷阱衔接原生 GNU Bash 与用户工具", "CherryKAL 提供标准 Linux 语义 OSAL，抹平底层 RTOS 特性差异", "统一 VFS 虚拟文件系统抽象，支持块设备挂载与多端口 AHCI SATA"] },
+    { "dot": "violet", "title": "纯净多核执行底座", "items": ["移除冗余 EL2 虚拟化开销，内核运行于标准安全 EL1 特权级", "双核 Cortex-A53 亲和性调度、GICv3 ITS 中断分发与 SGI 0 跨核 Yield", "无缝挂载 Ubuntu 完整 rootfs 镜像并支持复杂 Shell 脚本与 POSIX 测试"] }
   ]
 }
