@@ -9,9 +9,12 @@ typedef struct {
     volatile uint32_t value;
 } arch_raw_spinlock_t;
 
-typedef struct {
-    volatile uint32_t owner;
-    volatile uint32_t count;
+typedef union {
+    struct {
+        volatile uint32_t owner;
+        volatile uint32_t count;
+    };
+    volatile uint64_t raw;
 } arch_recursive_spinlock_t;
 
 static inline void arch_raw_spin_lock_init(arch_raw_spinlock_t *lock)
@@ -51,38 +54,65 @@ static inline void arch_raw_spin_unlock(arch_raw_spinlock_t *lock)
     __atomic_store_n(&lock->value, 0U, __ATOMIC_RELEASE);
 }
 
+static inline void arch_recursive_spin_lock_init(arch_recursive_spinlock_t *lock)
+{
+    __atomic_store_n(&lock->raw, 0ULL, __ATOMIC_RELAXED);
+}
+
 static inline void arch_recursive_spin_lock(arch_recursive_spinlock_t *lock)
 {
-    uint32_t owner = arch_curr_cpu_id() + 1U;
+    uint32_t cpu = arch_curr_cpu_id() + 1U;
+    uint64_t val = __atomic_load_n(&lock->raw, __ATOMIC_ACQUIRE);
 
-    if (__atomic_load_n(&lock->owner, __ATOMIC_ACQUIRE) == owner) {
-        __atomic_fetch_add(&lock->count, 1U, __ATOMIC_RELAXED);
+    if ((uint32_t)val == cpu) {
+        lock->count++;
         return;
     }
 
+    uint64_t desired = (1ULL << 32) | (uint64_t)cpu;
     for (;;) {
-        while (__atomic_load_n(&lock->owner, __ATOMIC_ACQUIRE) != 0U) {
+        while (__atomic_load_n(&lock->raw, __ATOMIC_ACQUIRE) != 0ULL) {
             __asm__ volatile("yield");
         }
 
-        uint32_t expected = 0U;
-        if (__atomic_compare_exchange_n(&lock->owner,
+        uint64_t expected = 0ULL;
+        if (__atomic_compare_exchange_n(&lock->raw,
                                         &expected,
-                                        owner,
+                                        desired,
                                         0,
                                         __ATOMIC_ACQ_REL,
                                         __ATOMIC_RELAXED)) {
-            __atomic_store_n(&lock->count, 1U, __ATOMIC_RELEASE);
             return;
         }
     }
 }
 
+static inline int arch_recursive_spin_trylock(arch_recursive_spinlock_t *lock)
+{
+    uint32_t cpu = arch_curr_cpu_id() + 1U;
+    uint64_t val = __atomic_load_n(&lock->raw, __ATOMIC_ACQUIRE);
+
+    if ((uint32_t)val == cpu) {
+        lock->count++;
+        return 1;
+    }
+
+    uint64_t expected = 0ULL;
+    uint64_t desired = (1ULL << 32) | (uint64_t)cpu;
+    return __atomic_compare_exchange_n(&lock->raw,
+                                       &expected,
+                                       desired,
+                                       0,
+                                       __ATOMIC_ACQ_REL,
+                                       __ATOMIC_RELAXED);
+}
+
 static inline void arch_recursive_spin_unlock(arch_recursive_spinlock_t *lock)
 {
-    uint32_t count = __atomic_sub_fetch(&lock->count, 1U, __ATOMIC_RELEASE);
-    if (count == 0U) {
-        __atomic_store_n(&lock->owner, 0U, __ATOMIC_RELEASE);
+    if (lock->count > 1U) {
+        lock->count--;
+    } else {
+        __atomic_store_n(&lock->raw, 0ULL, __ATOMIC_RELEASE);
     }
 }
 

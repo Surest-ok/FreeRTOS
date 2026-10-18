@@ -8,8 +8,8 @@ extern void vPortPlatformSecondaryCoreInit(uint32_t core_id) __attribute__((weak
 uint64_t ulPortInterruptNestings[configNUMBER_OF_CORES] = {0};
 uint64_t ulPortYieldRequireds[configNUMBER_OF_CORES] = {0};
 uint64_t ulPortTaskHasFPUContexts[configNUMBER_OF_CORES] = {0};
-Spinlock_t xTaskSpinlock = {0, 0};
-Spinlock_t xISRSpinlock  = {0, 0};
+Spinlock_t xTaskSpinlock = {.raw = 0ULL};
+Spinlock_t xISRSpinlock  = {.raw = 0ULL};
 static volatile uint64_t ullPortActiveCoreMask;
 static volatile uint64_t ullPortIdleCoreMask;
 static volatile uint64_t ullPortYieldIPICounts[configNUMBER_OF_CORES];
@@ -164,6 +164,6 @@ void vPortSecondaryCoreEntry(void) {
         vPortPlatformSecondaryCoreInit((uint32_t)core_id);
     }
     vPortSetCoreActive(core_id);
-    __asm__ volatile("msr daifclr, #2\nisb\n");
-    vPortRestoreTaskContext(); for(;;) __asm__ volatile("wfi");
+    vPortRestoreTaskContext();
+    for(;;) __asm__ volatile("wfi");
 }

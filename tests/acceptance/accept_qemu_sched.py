@@ -46,7 +46,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def qemu_command(args: argparse.Namespace) -> list[str]:
-    elf = args.elf or Path(f"bsp/kernel-{args.cores}.elf")
+    if args.elf:
+        elf = args.elf
+    elif Path("build/bsp/freertos_smp.elf").exists():
+        elf = Path("build/bsp/freertos_smp.elf")
+    else:
+        elf = Path(f"bsp/kernel-{args.cores}.elf")
     if not elf.exists():
         raise FileNotFoundError(elf)
 
@@ -201,25 +206,30 @@ def main() -> int:
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        text=True,
-        errors="ignore",
-        bufsize=1,
     )
 
     try:
         assert proc.stdout is not None
-        os.set_blocking(proc.stdout.fileno(), False)
+        fd = proc.stdout.fileno()
+        os.set_blocking(fd, False)
         while time.time() < deadline:
-            ready, _, _ = select.select([proc.stdout], [], [], 0.1)
+            ready, _, _ = select.select([fd], [], [], 0.1)
             if not ready:
                 if proc.poll() is not None:
                     break
                 continue
 
-            chunk = proc.stdout.read()
-            if not chunk:
+            try:
+                raw_chunk = os.read(fd, 16384)
+            except (BlockingIOError, InterruptedError):
                 continue
 
+            if not raw_chunk:
+                if proc.poll() is not None:
+                    break
+                continue
+
+            chunk = raw_chunk.decode("utf-8", errors="ignore")
             pending += chunk
             lines = pending.splitlines(True)
             pending = ""
