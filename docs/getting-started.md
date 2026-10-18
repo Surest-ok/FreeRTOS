@@ -113,7 +113,7 @@ scons SCHED_MODE=cross test   # 跨核同步压测
 
 **构建时报找不到 `components/xxx/SConscript`**：子模块没有拉下来，执行 `git submodule update --init --recursive`。
 
-**验收在 `cherry_drm` 初始化后报 `[panic] ... elr=0x0`**：这是当前版本的已知问题，约一半的运行会遇到，重跑即可，见 [测试](testing.md#已知问题)。另外确认已经生成 `build/ubuntu_rootfs.ext4`（第 4 步）。
+**验收测试提示根文件系统相关错误**：确认已经生成 `build/ubuntu_rootfs.ext4`（第 4 步）。
 
 **下载 Ubuntu 包很慢或失败**：脚本把包缓存在 `/tmp`，可以手动把 `bash_5.1-6ubuntu1.1_arm64.deb`、`libtinfo6_6.3-2ubuntu0.3_arm64.deb` 放进 `/tmp` 再运行。
 

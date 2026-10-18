@@ -153,7 +153,6 @@ scons CORES=4 test             # 换核数
 ## 现状与限制
 
 - 只在 QEMU `virt` 上运行过，还没有在实体板卡上验证。
-- 当前版本约一半的验收运行会在 `cherry_drm` 初始化之后崩溃（跳转到地址 0），见 [测试](docs/testing.md#已知问题)。
 - Ubuntu 用户空间镜像只包含 Bash 及其依赖库，由 `scripts/build_ubuntu_rootfs.py` 在本机生成，需要能访问 `ports.ubuntu.com`。
 - QEMU 以 `-nographic` 启动，看不到图形输出，显示和 3D 组件靠自检和 Shell 命令验证；QEMU `virt` 没有 USB 设备控制器，`cherry_usbd` 在虚拟 UDC 上环回运行。
 

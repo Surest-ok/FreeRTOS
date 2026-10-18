@@ -43,7 +43,3 @@ scons CORES=4 TIMEOUT=180 test      # 换核数、放宽超时
 scons test 2>&1 | tee build/test.log
 grep -o '\[[a-z0-9]*-verify\].*' build/test.log
 ```
-
-## 已知问题
-
-- 当前版本约一半的验收运行会在 `cherry_drm` 打印 `virtio-gpu modern 1.0 hardware initialized` 之后崩溃：`[panic] core=0 reason=exception esr=0x2000000 elr=0x0`，即跳转到了地址 0。`full` 与 `cross` 模式都会出现（在 2 核上连续 7 次运行中通过 3 次），正在排查。遇到时保留日志并重跑。
