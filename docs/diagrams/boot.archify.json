@@ -1,0 +1,595 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 启动流程",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/boot.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "1efa14cc640913bbfec4fa5f44af9400435094cc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0001",
+      "type": "backend",
+      "icon": "none",
+      "label": "01  startup.S",
+      "sublabel": "EL2  /  EL1 · 栈 · BSS · 向量表",
+      "pos": [
+        40,
+        55
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0004",
+      "type": "backend",
+      "icon": "none",
+      "label": "02  ukernel_start",
+      "sublabel": "串口 · GICv3 · 定时器 · 创建任务",
+      "pos": [
+        335,
+        55
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0008",
+      "type": "backend",
+      "icon": "none",
+      "label": "03  FreeRTOS 调度",
+      "sublabel": "主核开始调度 · 启动监控任务",
+      "pos": [
+        630,
+        55
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0012",
+      "type": "backend",
+      "icon": "none",
+      "label": "04  PSCI CPU_ON",
+      "sublabel": "监控任务 · 拉起从核",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0016",
+      "type": "backend",
+      "icon": "none",
+      "label": "05  组件初始化",
+      "sublabel": "逐个 init · 并运行自检",
+      "pos": [
+        335,
+        180
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0020",
+      "type": "backend",
+      "icon": "none",
+      "label": "06  Shell",
+      "sublabel": "cherry_shell_start · 串口交互",
+      "pos": [
+        630,
+        180
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0025",
+      "type": "backend",
+      "icon": "none",
+      "label": "01  printk",
+      "sublabel": "",
+      "pos": [
+        40,
+        365
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0028",
+      "type": "backend",
+      "icon": "none",
+      "label": "02  timer",
+      "sublabel": "",
+      "pos": [
+        187,
+        365
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0031",
+      "type": "backend",
+      "icon": "none",
+      "label": "03  vfs",
+      "sublabel": "",
+      "pos": [
+        334,
+        365
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0034",
+      "type": "backend",
+      "icon": "none",
+      "label": "04  pci",
+      "sublabel": "",
+      "pos": [
+        481,
+        365
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0037",
+      "type": "backend",
+      "icon": "none",
+      "label": "05  sdio",
+      "sublabel": "",
+      "pos": [
+        628,
+        365
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0040",
+      "type": "backend",
+      "icon": "none",
+      "label": "06  ahci",
+      "sublabel": "",
+      "pos": [
+        775,
+        365
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0043",
+      "type": "backend",
+      "icon": "none",
+      "label": "07  ext4",
+      "sublabel": "",
+      "pos": [
+        40,
+        421
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0046",
+      "type": "backend",
+      "icon": "none",
+      "label": "08  fstools",
+      "sublabel": "",
+      "pos": [
+        187,
+        421
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0049",
+      "type": "backend",
+      "icon": "none",
+      "label": "09  挂载根文件系统",
+      "sublabel": "",
+      "pos": [
+        334,
+        421
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0051",
+      "type": "security",
+      "icon": "none",
+      "label": "10  workqueue",
+      "sublabel": "",
+      "pos": [
+        481,
+        421
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0054",
+      "type": "security",
+      "icon": "none",
+      "label": "11  health",
+      "sublabel": "",
+      "pos": [
+        628,
+        421
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0057",
+      "type": "backend",
+      "icon": "none",
+      "label": "12  process",
+      "sublabel": "",
+      "pos": [
+        775,
+        421
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0060",
+      "type": "backend",
+      "icon": "none",
+      "label": "13  net",
+      "sublabel": "",
+      "pos": [
+        40,
+        477
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0063",
+      "type": "backend",
+      "icon": "none",
+      "label": "14  nvme",
+      "sublabel": "",
+      "pos": [
+        187,
+        477
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0066",
+      "type": "backend",
+      "icon": "none",
+      "label": "15  usbd",
+      "sublabel": "",
+      "pos": [
+        334,
+        477
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0069",
+      "type": "backend",
+      "icon": "none",
+      "label": "16  kmod",
+      "sublabel": "",
+      "pos": [
+        481,
+        477
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0072",
+      "type": "backend",
+      "icon": "none",
+      "label": "17  ebpf",
+      "sublabel": "",
+      "pos": [
+        628,
+        477
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0075",
+      "type": "backend",
+      "icon": "none",
+      "label": "18  drm",
+      "sublabel": "",
+      "pos": [
+        775,
+        477
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0078",
+      "type": "backend",
+      "icon": "none",
+      "label": "19  mesa",
+      "sublabel": "",
+      "pos": [
+        40,
+        533
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0081",
+      "type": "backend",
+      "icon": "none",
+      "label": "20  shell",
+      "sublabel": "",
+      "pos": [
+        187,
+        533
+      ],
+      "size": [
+        132,
+        40
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "note-e0024",
+      "type": "backend",
+      "icon": "none",
+      "label": "组件初始化顺序  bsp/src/app.c",
+      "sublabel": "",
+      "pos": [
+        40,
+        310
+      ],
+      "size": [
+        867,
+        36
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "note-e0083",
+      "type": "backend",
+      "icon": "none",
+      "label": "说明",
+      "sublabel": "workqueue 与 health 由 cherry_kal 提供；/dev/sdb 有 Ubuntu 镜像时挂载到 /，devfs 挂到 /dev。",
+      "pos": [
+        40,
+        605
+      ],
+      "size": [
+        867,
+        64
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [],
+  "connections": []
+}

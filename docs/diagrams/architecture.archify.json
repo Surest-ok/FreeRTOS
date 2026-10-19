@@ -1,0 +1,574 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 系统架构",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "1efa14cc640913bbfec4fa5f44af9400435094cc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0003",
+      "type": "frontend",
+      "icon": "none",
+      "label": "BusyBox",
+      "sublabel": "29 个常用命令 · 管道",
+      "pos": [
+        56.0,
+        88.6
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0006",
+      "type": "frontend",
+      "icon": "none",
+      "label": "GNU Bash",
+      "sublabel": "动态链接 glibc",
+      "pos": [
+        318.4,
+        88.6
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0009",
+      "type": "frontend",
+      "icon": "none",
+      "label": "你的 ELF 程序",
+      "sublabel": "静态 / 动态 / 非 PIE",
+      "pos": [
+        580.8,
+        88.6
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0014",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_process",
+      "sublabel": "进程 · ELF · 信号",
+      "pos": [
+        56.0,
+        227.8
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0017",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_shell",
+      "sublabel": "调用 C 函数",
+      "pos": [
+        252.8,
+        227.8
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0020",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_kmod",
+      "sublabel": "内核模块",
+      "pos": [
+        449.6,
+        227.8
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0023",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ebpf",
+      "sublabel": "eBPF · 探针",
+      "pos": [
+        646.4,
+        227.8
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0028",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_vfs",
+      "sublabel": "VFS · 设备模型",
+      "pos": [
+        56.0,
+        367.0
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0031",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ext4 · fstools",
+      "sublabel": "ext4 · MBR · mount",
+      "pos": [
+        252.8,
+        367.0
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0034",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_net",
+      "sublabel": "TCP/IP · 套接字",
+      "pos": [
+        449.6,
+        367.0
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0037",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_drm · mesa",
+      "sublabel": "显示 · 3D",
+      "pos": [
+        646.4,
+        367.0
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0040",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_pci",
+      "sublabel": "ECAM · MSI-X · ITS",
+      "pos": [
+        56.0,
+        456.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0043",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ahci · nvme",
+      "sublabel": "/dev/sdX · nvme0n1",
+      "pos": [
+        252.8,
+        456.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0046",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_sdio",
+      "sublabel": "/dev/mmcblk0",
+      "pos": [
+        449.6,
+        456.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0049",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_usbd",
+      "sublabel": "USB 设备栈",
+      "pos": [
+        646.4,
+        456.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0052",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_kal 内核抽象层",
+      "sublabel": "任务 · 锁 · 等待队列 · 工作队列 · 看门狗 · printk · 定时器；组件经它使用内核原语",
+      "pos": [
+        40.0,
+        562.2
+      ],
+      "size": [
+        800.0,
+        67.2
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0057",
+      "type": "backend",
+      "icon": "none",
+      "label": "FreeRTOS V11 SMP",
+      "sublabel": "调度 · 队列 · 互斥锁",
+      "pos": [
+        56.0,
+        679.0
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0060",
+      "type": "backend",
+      "icon": "none",
+      "label": "AArch64 移植层",
+      "sublabel": "上下文切换 · SGI 0",
+      "pos": [
+        318.4,
+        679.0
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0063",
+      "type": "backend",
+      "icon": "none",
+      "label": "BSP  EL1",
+      "sublabel": "启动 · GICv3 · PSCI",
+      "pos": [
+        580.8,
+        679.0
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0068",
+      "type": "external",
+      "icon": "none",
+      "label": "Cortex-A53 × N",
+      "sublabel": "",
+      "pos": [
+        56.0,
+        818.2
+      ],
+      "size": [
+        138.24,
+        51.2
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0070",
+      "type": "external",
+      "icon": "none",
+      "label": "GICv3 + ITS",
+      "sublabel": "",
+      "pos": [
+        213.44,
+        818.2
+      ],
+      "size": [
+        138.24,
+        51.2
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0072",
+      "type": "external",
+      "icon": "none",
+      "label": "PCIe 设备",
+      "sublabel": "",
+      "pos": [
+        370.88,
+        818.2
+      ],
+      "size": [
+        138.24,
+        51.2
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0074",
+      "type": "external",
+      "icon": "none",
+      "label": "Generic Timer",
+      "sublabel": "",
+      "pos": [
+        528.32,
+        818.2
+      ],
+      "size": [
+        138.24,
+        51.2
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0076",
+      "type": "external",
+      "icon": "none",
+      "label": "PL011 串口",
+      "sublabel": "",
+      "pos": [
+        685.76,
+        818.2
+      ],
+      "size": [
+        138.24,
+        51.2
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "用户程序",
+      "wraps": [
+        "block-e0003",
+        "block-e0006",
+        "block-e0009"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "系统服务",
+      "wraps": [
+        "block-e0014",
+        "block-e0017",
+        "block-e0020",
+        "block-e0023"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "子系统与驱动",
+      "wraps": [
+        "block-e0028",
+        "block-e0031",
+        "block-e0034",
+        "block-e0037",
+        "block-e0040",
+        "block-e0043",
+        "block-e0046",
+        "block-e0049"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "FreeRTOS SMP 底座",
+      "wraps": [
+        "block-e0057",
+        "block-e0060",
+        "block-e0063"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "硬件  QEMU virt",
+      "wraps": [
+        "block-e0068",
+        "block-e0070",
+        "block-e0072",
+        "block-e0074",
+        "block-e0076"
+      ],
+      "pad": 16
+    }
+  ],
+  "connections": []
+}

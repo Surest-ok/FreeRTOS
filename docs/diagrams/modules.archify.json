@@ -1,0 +1,552 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 模块组织",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/modules.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "1efa14cc640913bbfec4fa5f44af9400435094cc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0003",
+      "type": "backend",
+      "icon": "none",
+      "label": "SConstruct",
+      "sublabel": "构建 · QEMU · 测试",
+      "pos": [
+        56.0,
+        88.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0006",
+      "type": "backend",
+      "icon": "none",
+      "label": "kernel/ · arch/",
+      "sublabel": "FreeRTOS SMP · 移植",
+      "pos": [
+        252.8,
+        88.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0009",
+      "type": "backend",
+      "icon": "none",
+      "label": "bsp/  子模块",
+      "sublabel": "qemu-virt-arm64",
+      "pos": [
+        449.6,
+        88.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0012",
+      "type": "backend",
+      "icon": "none",
+      "label": "tests/acceptance/",
+      "sublabel": "自动化验收",
+      "pos": [
+        646.4,
+        88.6
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0017",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_kal",
+      "sublabel": "",
+      "pos": [
+        56.0,
+        227.8
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0019",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_printk",
+      "sublabel": "",
+      "pos": [
+        186.13,
+        227.8
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0021",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_timer",
+      "sublabel": "",
+      "pos": [
+        316.27,
+        227.8
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0023",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_vfs",
+      "sublabel": "",
+      "pos": [
+        446.4,
+        227.8
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0025",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_shell",
+      "sublabel": "",
+      "pos": [
+        576.53,
+        227.8
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0027",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_pci",
+      "sublabel": "",
+      "pos": [
+        706.67,
+        227.8
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0029",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_sdio",
+      "sublabel": "",
+      "pos": [
+        56.0,
+        280.6
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0031",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ahci",
+      "sublabel": "",
+      "pos": [
+        186.13,
+        280.6
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0033",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_nvme",
+      "sublabel": "",
+      "pos": [
+        316.27,
+        280.6
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0035",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ext4",
+      "sublabel": "",
+      "pos": [
+        446.4,
+        280.6
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0037",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_fstools",
+      "sublabel": "",
+      "pos": [
+        576.53,
+        280.6
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0039",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_net",
+      "sublabel": "",
+      "pos": [
+        706.67,
+        280.6
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0041",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_process",
+      "sublabel": "",
+      "pos": [
+        56.0,
+        333.4
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0043",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_usbd",
+      "sublabel": "",
+      "pos": [
+        186.13,
+        333.4
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0045",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_kmod",
+      "sublabel": "",
+      "pos": [
+        316.27,
+        333.4
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0047",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ebpf",
+      "sublabel": "",
+      "pos": [
+        446.4,
+        333.4
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0049",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_drm",
+      "sublabel": "",
+      "pos": [
+        576.53,
+        333.4
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0051",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_mesa",
+      "sublabel": "",
+      "pos": [
+        706.67,
+        333.4
+      ],
+      "size": [
+        117.33,
+        40.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0053",
+      "type": "backend",
+      "icon": "none",
+      "label": "依赖规则",
+      "sublabel": "组件通过公开头文件与 VFS 协作；经 cherry_kal 使用内核原语；更换 RTOS 时适配 cherry_kal",
+      "pos": [
+        40,
+        410
+      ],
+      "size": [
+        800,
+        90
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0056",
+      "type": "backend",
+      "icon": "none",
+      "label": "构建",
+      "sublabel": "组件 SConscript 生成静态库；bsp/SConscript 链接内核与组件；产物 build/bsp/freertos_smp.elf",
+      "pos": [
+        40,
+        520
+      ],
+      "size": [
+        800,
+        90
+      ],
+      "sources": [
+        {
+          "path": "docs/images/modules.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "主仓库",
+      "wraps": [
+        "block-e0003",
+        "block-e0006",
+        "block-e0009",
+        "block-e0012"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "components/  18 个独立仓库（git 子模块）",
+      "wraps": [
+        "block-e0017",
+        "block-e0019",
+        "block-e0021",
+        "block-e0023",
+        "block-e0025",
+        "block-e0027",
+        "block-e0029",
+        "block-e0031",
+        "block-e0033",
+        "block-e0035",
+        "block-e0037",
+        "block-e0039",
+        "block-e0041",
+        "block-e0043",
+        "block-e0045",
+        "block-e0047",
+        "block-e0049",
+        "block-e0051"
+      ],
+      "pad": 16
+    }
+  ],
+  "connections": []
+}

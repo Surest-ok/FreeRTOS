@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 存储与网络",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/io-stack.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "1efa14cc640913bbfec4fa5f44af9400435094cc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0005",
+      "type": "backend",
+      "icon": "none",
+      "label": "open · read · write · mount",
+      "sublabel": "",
+      "pos": [
+        56.0,
+        90.2
+      ],
+      "size": [
+        448.0,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0007",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_vfs",
+      "sublabel": "inode · dentry · 块设备层",
+      "pos": [
+        56.0,
+        167.0
+      ],
+      "size": [
+        448.0,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0010",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ext4",
+      "sublabel": "ext4 · JBD2",
+      "pos": [
+        56.0,
+        243.8
+      ],
+      "size": [
+        217.6,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0013",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_fstools",
+      "sublabel": "MBR · mkfs · fsck",
+      "pos": [
+        286.4,
+        243.8
+      ],
+      "size": [
+        217.6,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0016",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_ahci",
+      "sublabel": "/dev/sdX",
+      "pos": [
+        56.0,
+        320.6
+      ],
+      "size": [
+        140.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0019",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_nvme",
+      "sublabel": "/dev/nvme0n1",
+      "pos": [
+        209.6,
+        320.6
+      ],
+      "size": [
+        140.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0022",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_sdio",
+      "sublabel": "/dev/mmcblk0",
+      "pos": [
+        363.2,
+        320.6
+      ],
+      "size": [
+        140.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0025",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_pci",
+      "sublabel": "ECAM · BAR · MSI-X 经 ITS",
+      "pos": [
+        56.0,
+        397.4
+      ],
+      "size": [
+        448.0,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0028",
+      "type": "backend",
+      "icon": "none",
+      "label": "ich9-ahci",
+      "sublabel": "",
+      "pos": [
+        56.0,
+        487.0
+      ],
+      "size": [
+        140.8,
+        64.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0030",
+      "type": "backend",
+      "icon": "none",
+      "label": "nvme",
+      "sublabel": "",
+      "pos": [
+        209.6,
+        487.0
+      ],
+      "size": [
+        140.8,
+        64.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0032",
+      "type": "backend",
+      "icon": "none",
+      "label": "sdhci-pci",
+      "sublabel": "",
+      "pos": [
+        363.2,
+        487.0
+      ],
+      "size": [
+        140.8,
+        64.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0034",
+      "type": "backend",
+      "icon": "none",
+      "label": "socket · send · recv",
+      "sublabel": "",
+      "pos": [
+        555.2,
+        90.2
+      ],
+      "size": [
+        268.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0036",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_net",
+      "sublabel": "BSD 套接字 · TCP/UDP",
+      "pos": [
+        555.2,
+        167.0
+      ],
+      "size": [
+        268.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0039",
+      "type": "backend",
+      "icon": "none",
+      "label": "多队列协议栈",
+      "sublabel": "IPv4 / IPv6 · 每核一队列",
+      "pos": [
+        555.2,
+        243.8
+      ],
+      "size": [
+        268.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0042",
+      "type": "backend",
+      "icon": "none",
+      "label": "virtio-net 驱动",
+      "sublabel": "经 cherry_pci 发现",
+      "pos": [
+        555.2,
+        320.6
+      ],
+      "size": [
+        268.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0045",
+      "type": "backend",
+      "icon": "none",
+      "label": "cherry_pci",
+      "sublabel": "MSI-X 中断",
+      "pos": [
+        555.2,
+        397.4
+      ],
+      "size": [
+        268.8,
+        60.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0048",
+      "type": "backend",
+      "icon": "none",
+      "label": "virtio-net-pci",
+      "sublabel": "QEMU user 网络",
+      "pos": [
+        555.2,
+        487.0
+      ],
+      "size": [
+        268.8,
+        64.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/io-stack.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "存储",
+      "wraps": [
+        "block-e0005",
+        "block-e0007",
+        "block-e0010",
+        "block-e0013",
+        "block-e0016",
+        "block-e0019",
+        "block-e0022",
+        "block-e0025",
+        "block-e0028",
+        "block-e0030",
+        "block-e0032"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "网络",
+      "wraps": [
+        "block-e0034",
+        "block-e0036",
+        "block-e0039",
+        "block-e0042",
+        "block-e0045",
+        "block-e0048"
+      ],
+      "pad": 16
+    }
+  ],
+  "connections": []
+}
