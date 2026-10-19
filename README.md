@@ -11,7 +11,7 @@
 
 <p align="center"><img src="docs/images/architecture.svg" alt="FreeRTOS SMP 系统架构" width="900"></p>
 
-从零移植 FreeRTOS SMP 的博文和对应的最小代码在 [`master`](https://github.com/Surest-ok/FreeRTOS/tree/master) 分支。
+只有 FreeRTOS SMP 内核、移植层和 BSP 的最小版本在 [`master`](https://github.com/Surest-ok/FreeRTOS/tree/master) 分支。
 
 ## 特性
 
