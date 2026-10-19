@@ -5,24 +5,9 @@
 [![Arch](https://img.shields.io/badge/arch-AArch64-informational)](arch)
 [![Platform](https://img.shields.io/badge/platform-QEMU%20virt-orange)](#构建与运行)
 
-从零开始，在 ARMv8-A（Cortex-A53）和 QEMU `virt` 上把 FreeRTOS 移植成 32 核 SMP 系统。仓库里有每个阶段的博文，以及最终可以直接构建运行的代码。
+在 ARMv8-A（Cortex-A53）和 QEMU `virt` 上运行的 FreeRTOS V11 SMP。仓库包含内核、AArch64 SMP 移植层、与内核无关的 arch 抽象层、板级支持包和 SCons 构建，并带有一套在 QEMU 上自动运行的多核调度验收。
 
-<p align="center"><img src="docs/images/roadmap.svg" alt="博文路线" width="900"></p>
-
-## 博文
-
-| 博文 | 内容 |
-| --- | --- |
-| [Phase 1：AArch64 裸机引导与 UART 输出](docs/phase1-AArch64裸机引导与UART输出.md) | 项目结构、`startup.S`、链接脚本、SCTLR 的坑、PL011 驱动与 `vsnprintf` |
-| [Phase 2：异常向量表与 GICv2 中断](docs/phase2-异常向量表与GICv2中断.md) | 16 项异常向量表、中断上下文保存、通用定时器时钟 |
-| [Phase 2：GICv3 中断与通用定时器](docs/phase2-GICv3中断与通用定时器.md) | ICC 系统寄存器、Group 1 非安全中断、Redistributor、从 EL2 降到 EL1 |
-| [Phase 3：集成 FreeRTOS](docs/phase3-FreeRTOS集成.md) | TCB、上下文保存与恢复、SVC 与抢占调度 |
-| [Phase 4：FreeRTOS SMP](docs/phase4-FreeRTOS-SMP.md) | SGI 0 跨核 Yield、自旋锁、PSCI 多核启动、32 核调度验证 |
-| [单镜像架构](docs/unikernel-architecture.md) | 启动、BSP、内核、运行时和应用怎样组织在一个 ELF 里 |
-
-## 代码
-
-博文写到最后得到的就是这份代码：FreeRTOS V11 SMP 内核、AArch64 SMP 移植层、与内核无关的 arch 抽象层、板级支持包，以及一套在 QEMU 上自动运行的多核调度验收。
+## 架构
 
 <p align="center"><img src="docs/images/architecture.svg" alt="系统架构" width="900"></p>
 
@@ -31,7 +16,7 @@
 - **arch 抽象层**：核号与 MPIDR 映射、内联 LL/SC 原子操作、屏障、原始 / 递归自旋锁、IRQ 注册与分发、异常记录。
 - **BSP**：EL2 → EL1 启动，GICv3（系统寄存器接口）、Generic Timer（1000 Hz）、PL011 串口，PSCI `CPU_ON` 拉起从核。
 
-### 启动流程
+## 启动流程
 
 <p align="center"><img src="docs/images/boot.svg" alt="启动流程" width="900"></p>
 
@@ -74,7 +59,18 @@ freertos: [sched-verify] active=PASS idle=PASS affinity=PASS coverage=PASS progr
 [SCHED-TEST] SUMMARY result=PASS mode=full cores=2 markers=2
 ```
 
-各项的含义见 [Phase 4](docs/phase4-FreeRTOS-SMP.md#6-验证)。
+`[sched-verify]` 各项的含义：
+
+| 项 | 通过条件 |
+| --- | --- |
+| `active` | 所有核都已由 PSCI 拉起并完成初始化 |
+| `idle` | 空闲任务的状态符合预期 |
+| `affinity` | 固定核的 worker 没有跑到别的核上 |
+| `coverage` | 每个核都运行过应用任务 |
+| `progress` | 各核的 heartbeat 持续增长 |
+| `prio` | 高优先级任务能抢占低优先级任务 |
+| `rr` | 同优先级任务按时间片轮转 |
+| `sem` / `queue` / `mutex` / `spin` | 同步原语工作正常，没有死锁和竞态 |
 
 ## 目录结构
 
@@ -88,7 +84,7 @@ freertos: [sched-verify] active=PASS idle=PASS affinity=PASS coverage=PASS progr
 ├── bsp/                  startup.S、GICv3、定时器、PL011、验收探针（src/app.c）
 ├── scripts/              直接启动 QEMU 的脚本
 ├── tests/acceptance/     验收脚本 accept_qemu_sched.py
-└── docs/                 博文与插图
+└── docs/images/          插图
 ```
 
 在这份代码上加入文件系统、网络、存储驱动、进程模型等组件的版本在 [`vibe-coding-dev`](https://github.com/Surest-ok/FreeRTOS/tree/vibe-coding-dev) 分支。
