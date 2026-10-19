@@ -1,0 +1,39 @@
+# -*- python -*-
+"""
+SCons script for FreeRTOS Kernel and AArch64 SMP Port
+Builds libfreertos.a
+"""
+from SCons.Script import *
+
+Import('env', 'arch_objs')
+
+kernel_env = env.Clone()
+
+# Kernel and portable include directories
+kernel_env.Append(CPPPATH=[
+    '#include',
+    '#kernel/include',
+    '#kernel/portable/GCC/ARM_AARCH64_SRE',
+    '#arch/include',
+])
+
+kernel_sources = [
+    'tasks.c',
+    'queue.c',
+    'list.c',
+    'timers.c',
+    'event_groups.c',
+    'stream_buffer.c',
+    'MemMang/heap_4.c',
+    'port/port.c',
+    'port/port_smp.c',
+    'port/portASM.S',
+]
+
+kernel_objs = kernel_env.Object(kernel_sources)
+
+# Combine kernel objects and architecture abstraction objects into libfreertos.a
+all_objs = kernel_objs + arch_objs
+kernel_lib = kernel_env.StaticLibrary('freertos', all_objs)
+
+Return('kernel_lib')

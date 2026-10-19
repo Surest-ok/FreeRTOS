@@ -1,76 +1,98 @@
-# FreeRTOS SMP for AArch64 · 技术博客
+# FreeRTOS SMP for AArch64
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](#许可证)
-[![Kernels](https://img.shields.io/badge/kernels-FreeRTOS%20%7C%20LK%20%7C%20ThreadX-informational)](#三个内核共用-arch-层)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Kernel](https://img.shields.io/badge/kernel-FreeRTOS%20V11%20SMP-informational)](kernel)
 [![Arch](https://img.shields.io/badge/arch-AArch64-informational)](arch)
+[![Platform](https://img.shields.io/badge/platform-QEMU%20virt-orange)](#构建与运行)
 
-这个分支记录了在 ARMv8-A（Cortex-A53）和 QEMU `virt` 上从零移植 FreeRTOS SMP 的全过程：从裸机启动、异常与中断，到单核 FreeRTOS，再到 32 核 SMP。最后一步把底层原语抽成一个 arch 层，让 FreeRTOS、Little Kernel（LK）和 ThreadX 三个内核共用，并用同一套验收程序比较它们。
+从零开始，在 ARMv8-A（Cortex-A53）和 QEMU `virt` 上把 FreeRTOS 移植成 32 核 SMP 系统。仓库里有每个阶段的博文，以及最终可以直接构建运行的代码。
 
-<p align="center"><img src="docs/images/roadmap.svg" alt="技术博客路线" width="900"></p>
+<p align="center"><img src="docs/images/roadmap.svg" alt="博文路线" width="900"></p>
 
-## 分支
+## 博文
 
-| 分支 | 内容 |
+| 博文 | 内容 |
 | --- | --- |
-| `master` | FreeRTOS SMP 内核、AArch64 移植层、arch 抽象层和 BSP，以及多核调度验收 |
-| `cherry-vfs` | 加入第一批组件：`cherry_kal`、`cherry_printk`、`cherry_timer`、`cherry_vfs`、`cherry_shell` |
-| `cherry-pci-sdio` | 再加入 `cherry_pci`（含 GICv3 ITS）和 `cherry_sdio` |
-| `cherry-ext4-fstools` | 再加入 `cherry_ext4` 和 `cherry_fstools` |
-| `vibe-coding-dev` | 组件拆成 18 个独立仓库（子模块），加入网络、NVMe、AHCI、进程与用户空间等 |
-| `technical-blogs` | 从零移植的技术博客，以及 FreeRTOS、LK、ThreadX 共用 arch 层的对比实验 |
+| [Phase 1：AArch64 裸机引导与 UART 输出](docs/phase1-AArch64裸机引导与UART输出.md) | 项目结构、`startup.S`、链接脚本、SCTLR 的坑、PL011 驱动与 `vsnprintf` |
+| [Phase 2：异常向量表与 GICv2 中断](docs/phase2-异常向量表与GICv2中断.md) | 16 项异常向量表、中断上下文保存、通用定时器时钟 |
+| [Phase 2：GICv3 中断与通用定时器](docs/phase2-GICv3中断与通用定时器.md) | ICC 系统寄存器、Group 1 非安全中断、Redistributor、从 EL2 降到 EL1 |
+| [Phase 3：集成 FreeRTOS](docs/phase3-FreeRTOS集成.md) | TCB、上下文保存与恢复、SVC 与抢占调度 |
+| [Phase 4：FreeRTOS SMP](docs/phase4-FreeRTOS-SMP.md) | SGI 0 跨核 Yield、自旋锁、PSCI 多核启动、32 核调度验证 |
+| [单镜像架构](docs/unikernel-architecture.md) | 启动、BSP、内核、运行时和应用怎样组织在一个 ELF 里 |
 
-当前分支：**`technical-blogs`**。
+## 代码
 
-## 博客
+博文写到最后得到的就是这份代码：FreeRTOS V11 SMP 内核、AArch64 SMP 移植层、与内核无关的 arch 抽象层、板级支持包，以及一套在 QEMU 上自动运行的多核调度验收。
 
-| 文档 | 内容 |
-| --- | --- |
-| [Phase 2（GICv2）](docs/phase2-异常向量表与GICv2中断.md) | 异常向量表、中断上下文、通用定时器 |
-| [Phase 2（GICv3）](docs/phase2-GICv3中断与通用定时器.md) | ICC 系统寄存器、Group 1 非安全中断、Redistributor、EL2 降级 |
-| [Phase 3](docs/phase3-FreeRTOS集成.md) | FreeRTOS 集成：TCB、上下文保存与恢复、SVC 与抢占调度 |
-| [Phase 4](docs/phase4-FreeRTOS-SMP.md) | FreeRTOS SMP：SGI 0 跨核 Yield、自旋锁、PSCI 多核启动、32 核压测 |
-| [单镜像架构](docs/unikernel-architecture.md) | 启动、BSP、内核、运行时与应用在一个 ELF 里的组织方式 |
-| [演进记录](status.md) | SMP 调度器与 arch 抽象层的修改和调试记录 |
+<p align="center"><img src="docs/images/architecture.svg" alt="系统架构" width="900"></p>
 
-## 三个内核共用 arch 层
+- **FreeRTOS V11 SMP**：1–32 核，任务亲和性、优先级抢占、同优先级时间片轮转，队列、信号量、互斥锁。
+- **AArch64 SMP 移植**：上下文保存与恢复、每核异常栈，跨核 Yield 走 GICv3 SGI 0。
+- **arch 抽象层**：核号与 MPIDR 映射、内联 LL/SC 原子操作、屏障、原始 / 递归自旋锁、IRQ 注册与分发、异常记录。
+- **BSP**：EL2 → EL1 启动，GICv3（系统寄存器接口）、Generic Timer（1000 Hz）、PL011 串口，PSCI `CPU_ON` 拉起从核。
 
-<p align="center"><img src="docs/images/architecture.svg" alt="三内核共用 arch 层" width="900"></p>
+### 启动流程
 
-`arch/` 提供与内核无关的 AArch64 原语：核号与 MPIDR 映射、原子操作、屏障、原始 / 递归自旋锁、IRQ 注册与分发、异常记录、线程句柄和向量表安装。三个内核各自保留自己的调度器和上下文切换汇编，只把这些公共部分接到 arch 层上。
-
-三个内核都带一个调度验收程序，打印同样的 `[sched-verify]` / `[xsync-verify]` 标记，由同一个 `tests/acceptance/accept_qemu_sched.py` 判定：
-
-<p align="center"><img src="docs/images/testing.svg" alt="自动化验收" width="900"></p>
+<p align="center"><img src="docs/images/boot.svg" alt="启动流程" width="900"></p>
 
 ## 构建与运行
 
-这个分支用 Make 构建。
+```bash
+# 1. 安装依赖（Ubuntu 20.04 或更新版本，实体机、虚拟机、WSL2 都可以）
+sudo apt-get update
+sudo apt-get install -y gcc-aarch64-linux-gnu qemu-system-arm python3 python3-pip
+pip3 install scons            # 装在 ~/.local/bin，确认它在 PATH 里
 
-| 目标 | 作用 |
-| --- | --- |
-| `make all` / `make run` | 构建 / 运行 FreeRTOS 镜像 |
-| `make sched-full` / `make sched-cross` / `make sched-smp` | FreeRTOS 验收：full、跨核压测、两者都跑 |
-| `make lk-kernel` / `make lk-run` / `make lk-sched-full` / `make lk-sched-smp` | LK 的构建、运行与验收 |
-| `make threadx-kernel` / `make threadx-run` / `make threadx-sched-full` / `make threadx-sched-smp` | ThreadX 的构建、运行与验收 |
-| `make arch-sched-matrix` | 依次跑三个内核的验收 |
+# 2. 获取代码
+git clone https://github.com/Surest-ok/FreeRTOS.git
+cd FreeRTOS
 
-公共选项：`CORES`（默认 2）、`TIMEOUT`、`SCHED_MODE`、`LOG_LEVEL`、`TICK_BROADCAST`。
+# 3. 构建，生成 build/bsp/freertos_smp.elf 和 freertos_smp.bin
+scons -j$(nproc)
 
-依赖：
+# 4. 在 QEMU 上运行（默认 2 核）
+scons run
+```
 
-- FreeRTOS：`gcc-aarch64-linux-gnu`、`qemu-system-arm`、`python3`。
-- ThreadX：`aarch64-none-elf-` 裸机工具链，以及 ThreadX 源码，路径由 `THREADX_SRC` 指定（默认指向作者本机的目录，需要按自己的环境设置）。
+退出 QEMU：先按 `Ctrl+A`，松开后再按 `X`。
 
-## 现状
+常用选项：`CORES`（核数，默认 2，最多 32）、`SCHED_MODE`（`full` 或 `cross`）、`LOG_LEVEL`（0–7，7 打开 SMP 诊断）、`TICK_BROADCAST`（0 / 1）。例如 `scons CORES=4 run`。`make` 是 `scons` 的薄封装：`make run`、`make sched-full`、`make sched-cross`、`make clean`。
 
-这个分支停在博客写作时的状态，在当前环境（gcc 11.4、QEMU 10.2）上实测：
+## 验收
 
-| 内核 | 结果 |
-| --- | --- |
-| FreeRTOS | 用 gcc 10 及以上链接失败：`kernel/Makefile`、`bsp/Makefile` 没有 `-mno-outline-atomics`，原子操作引用了 libgcc 的 `__aarch64_ldadd8_relax`。加上这个选项后能构建，但 2 核验收不通过。可运行的 FreeRTOS 请使用 `master` 分支。 |
-| LK | `make lk-sched-full CORES=4` 通过；2 核时 `prio` 一项不通过。 |
-| ThreadX | `CORES=4` 能构建运行，`sem`、`queue`、`mutex` 三项不通过。 |
+```bash
+scons test                     # 调度、亲和性、优先级、轮转与同步原语
+scons SCHED_MODE=cross test    # 跨核信号量、队列、互斥锁、自旋锁压测
+```
+
+<p align="center"><img src="docs/images/testing.svg" alt="自动化验收" width="900"></p>
+
+通过时的最后两行：
+
+```text
+freertos: [sched-verify] active=PASS idle=PASS affinity=PASS coverage=PASS progress=PASS prio=PASS rr=PASS sem=PASS queue=PASS mutex=PASS spin=PASS cores=2 ...
+[SCHED-TEST] SUMMARY result=PASS mode=full cores=2 markers=2
+```
+
+各项的含义见 [Phase 4](docs/phase4-FreeRTOS-SMP.md#6-验证)。
+
+## 目录结构
+
+```text
+.
+├── SConstruct            构建编排：内核、arch、BSP，QEMU 运行与验收目标
+├── Makefile              scons 的快捷封装
+├── kernel/               FreeRTOS V11 SMP 内核、MemMang/、port/（AArch64 SMP 移植）
+├── arch/                 arch 抽象层：include/arch_api/ 接口、aarch64/arch.c 实现、rules.py 编译规则
+├── include/              FreeRTOSConfig.h、portmacro.h 与板级公共头文件
+├── bsp/                  startup.S、GICv3、定时器、PL011、验收探针（src/app.c）
+├── scripts/              直接启动 QEMU 的脚本
+├── tests/acceptance/     验收脚本 accept_qemu_sched.py
+└── docs/                 博文与插图
+```
+
+在这份代码上加入文件系统、网络、存储驱动、进程模型等组件的版本在 [`vibe-coding-dev`](https://github.com/Surest-ok/FreeRTOS/tree/vibe-coding-dev) 分支。
 
 ## 许可证
 
-本仓库的代码采用 MIT 许可证。`kernel/` 下的 FreeRTOS、`lk/` 下的 LK 和 ThreadX 源码保留各自的许可证与版权声明。
+[MIT](LICENSE)。`kernel/` 下的 FreeRTOS 内核源码同样采用 MIT 许可证，各文件保留其原始版权声明。

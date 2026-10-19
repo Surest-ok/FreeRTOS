@@ -1,9 +1,18 @@
 # Build artifacts
 build/
+build-*/
 *.elf
 *.bin
 *.axf
 *.map
+*.o
+*.a
+*.d
+.sconsign.dblite
+.sconf_temp/
+config.log
+__pycache__/
+*.pyc
 
 # IDE files
 .vscode/
@@ -18,9 +27,15 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
-*.o
 
 # Debug files
 *.gdbinit
 debug/
-logs/FreeRTOS-Kernel/
+logs/
+
+# Author / Writing documents (User requested to exclude docx)
+*.docx
+*.doc
+~$*.docx
+~$*.doc
+

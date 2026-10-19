@@ -1,0 +1,23 @@
+# -*- python -*-
+"""
+SCons script for Architecture Abstraction Layer (arch)
+"""
+from SCons.Script import *
+
+Import('env')
+
+arch_env = env.Clone()
+
+# Architecture layer include path
+arch_env.Append(CPPPATH=[
+    '#arch/include',
+])
+
+# Arch sources
+arch_sources = [
+    'aarch64/arch.c',
+]
+
+arch_objs = arch_env.Object(arch_sources)
+
+Return('arch_objs')

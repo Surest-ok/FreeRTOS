@@ -1,9 +1,7 @@
 #ifndef ARCH_IPI_H
 #define ARCH_IPI_H
 
-#ifndef TX_PORT_H
 #include <stdint.h>
-#endif
 
 #include "arch_api/arch.h"
 #include "arch_api/barrier.h"

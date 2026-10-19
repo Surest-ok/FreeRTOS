@@ -1,9 +1,7 @@
 #ifndef ARCH_ARCH_H
 #define ARCH_ARCH_H
 
-#ifndef TX_PORT_H
 #include <stdint.h>
-#endif
 
 static inline uint64_t arch_read_mpidr(void)
 {

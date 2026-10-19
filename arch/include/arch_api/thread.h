@@ -1,9 +1,7 @@
 #ifndef ARCH_THREAD_H
 #define ARCH_THREAD_H
 
-#ifndef TX_PORT_H
 #include <stdint.h>
-#endif
 
 typedef enum {
     ARCH_KERNEL_FREERTOS = 1,
