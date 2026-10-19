@@ -40,8 +40,8 @@
         55
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -56,12 +56,12 @@
       "label": "02  ukernel_start",
       "sublabel": "串口 · GICv3 · 定时器 · 创建任务",
       "pos": [
-        335,
+        360,
         55
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -76,12 +76,12 @@
       "label": "03  FreeRTOS 调度",
       "sublabel": "主核开始调度 · 启动监控任务",
       "pos": [
-        630,
+        680,
         55
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -96,12 +96,12 @@
       "label": "04  PSCI CPU_ON",
       "sublabel": "监控任务 · 拉起从核",
       "pos": [
-        40,
-        180
+        680,
+        230
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -116,12 +116,12 @@
       "label": "05  组件初始化",
       "sublabel": "逐个 init · 并运行自检",
       "pos": [
-        335,
-        180
+        360,
+        230
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -136,12 +136,12 @@
       "label": "06  Shell",
       "sublabel": "cherry_shell_start · 串口交互",
       "pos": [
-        630,
-        180
+        40,
+        230
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -157,11 +157,11 @@
       "sublabel": "",
       "pos": [
         40,
-        365
+        470
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -176,12 +176,12 @@
       "label": "02  timer",
       "sublabel": "",
       "pos": [
-        187,
-        365
+        230,
+        470
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -196,12 +196,12 @@
       "label": "03  vfs",
       "sublabel": "",
       "pos": [
-        334,
-        365
+        420,
+        470
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -216,12 +216,12 @@
       "label": "04  pci",
       "sublabel": "",
       "pos": [
-        481,
-        365
+        610,
+        470
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -236,12 +236,12 @@
       "label": "05  sdio",
       "sublabel": "",
       "pos": [
-        628,
-        365
+        800,
+        470
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -256,12 +256,12 @@
       "label": "06  ahci",
       "sublabel": "",
       "pos": [
-        775,
-        365
+        800,
+        570
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -276,12 +276,12 @@
       "label": "07  ext4",
       "sublabel": "",
       "pos": [
-        40,
-        421
+        610,
+        570
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -296,12 +296,12 @@
       "label": "08  fstools",
       "sublabel": "",
       "pos": [
-        187,
-        421
+        420,
+        570
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -316,12 +316,12 @@
       "label": "09  挂载根文件系统",
       "sublabel": "",
       "pos": [
-        334,
-        421
+        230,
+        570
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -336,12 +336,12 @@
       "label": "10  workqueue",
       "sublabel": "",
       "pos": [
-        481,
-        421
+        40,
+        570
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -356,12 +356,12 @@
       "label": "11  health",
       "sublabel": "",
       "pos": [
-        628,
-        421
+        40,
+        670
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -376,12 +376,12 @@
       "label": "12  process",
       "sublabel": "",
       "pos": [
-        775,
-        421
+        230,
+        670
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -396,12 +396,12 @@
       "label": "13  net",
       "sublabel": "",
       "pos": [
-        40,
-        477
+        420,
+        670
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -416,12 +416,12 @@
       "label": "14  nvme",
       "sublabel": "",
       "pos": [
-        187,
-        477
+        610,
+        670
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -436,12 +436,12 @@
       "label": "15  usbd",
       "sublabel": "",
       "pos": [
-        334,
-        477
+        800,
+        670
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -456,12 +456,12 @@
       "label": "16  kmod",
       "sublabel": "",
       "pos": [
-        481,
-        477
+        800,
+        770
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -476,12 +476,12 @@
       "label": "17  ebpf",
       "sublabel": "",
       "pos": [
-        628,
-        477
+        610,
+        770
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -496,12 +496,12 @@
       "label": "18  drm",
       "sublabel": "",
       "pos": [
-        775,
-        477
+        420,
+        770
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -516,12 +516,12 @@
       "label": "19  mesa",
       "sublabel": "",
       "pos": [
-        40,
-        533
+        230,
+        770
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -536,12 +536,12 @@
       "label": "20  shell",
       "sublabel": "",
       "pos": [
-        187,
-        533
+        40,
+        770
       ],
       "size": [
-        132,
-        40
+        160,
+        70
       ],
       "sources": [
         {
@@ -557,11 +557,11 @@
       "sublabel": "",
       "pos": [
         40,
-        310
+        402
       ],
       "size": [
-        867,
-        36
+        920,
+        44
       ],
       "sources": [
         {
@@ -577,11 +577,11 @@
       "sublabel": "workqueue 与 health 由 cherry_kal 提供；/dev/sdb 有 Ubuntu 镜像时挂载到 /，devfs 挂到 /dev。",
       "pos": [
         40,
-        605
+        900
       ],
       "size": [
-        867,
-        64
+        920,
+        85
       ],
       "sources": [
         {
@@ -591,5 +591,174 @@
     }
   ],
   "boundaries": [],
-  "connections": []
+  "connections": [
+    {
+      "id": "flow-1",
+      "from": "block-e0001",
+      "to": "block-e0004",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-2",
+      "from": "block-e0004",
+      "to": "block-e0008",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-3",
+      "from": "block-e0008",
+      "to": "block-e0012",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "flow-4",
+      "from": "block-e0012",
+      "to": "block-e0016",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-5",
+      "from": "block-e0016",
+      "to": "block-e0020",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-6",
+      "from": "block-e0025",
+      "to": "block-e0028",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-7",
+      "from": "block-e0028",
+      "to": "block-e0031",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-8",
+      "from": "block-e0031",
+      "to": "block-e0034",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-9",
+      "from": "block-e0034",
+      "to": "block-e0037",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-10",
+      "from": "block-e0037",
+      "to": "block-e0040",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "flow-11",
+      "from": "block-e0040",
+      "to": "block-e0043",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-12",
+      "from": "block-e0043",
+      "to": "block-e0046",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-13",
+      "from": "block-e0046",
+      "to": "block-e0049",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-14",
+      "from": "block-e0049",
+      "to": "block-e0051",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-15",
+      "from": "block-e0051",
+      "to": "block-e0054",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "flow-16",
+      "from": "block-e0054",
+      "to": "block-e0057",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-17",
+      "from": "block-e0057",
+      "to": "block-e0060",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-18",
+      "from": "block-e0060",
+      "to": "block-e0063",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-19",
+      "from": "block-e0063",
+      "to": "block-e0066",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-20",
+      "from": "block-e0066",
+      "to": "block-e0069",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "flow-21",
+      "from": "block-e0069",
+      "to": "block-e0072",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-22",
+      "from": "block-e0072",
+      "to": "block-e0075",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-23",
+      "from": "block-e0075",
+      "to": "block-e0078",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-24",
+      "from": "block-e0078",
+      "to": "block-e0081",
+      "fromSide": "left",
+      "toSide": "right"
+    }
+  ]
 }

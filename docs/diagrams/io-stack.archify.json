@@ -191,7 +191,7 @@
     },
     {
       "id": "block-e0028",
-      "type": "backend",
+      "type": "external",
       "icon": "none",
       "label": "ich9-ahci",
       "sublabel": "",
@@ -211,7 +211,7 @@
     },
     {
       "id": "block-e0030",
-      "type": "backend",
+      "type": "external",
       "icon": "none",
       "label": "nvme",
       "sublabel": "",
@@ -231,7 +231,7 @@
     },
     {
       "id": "block-e0032",
-      "type": "backend",
+      "type": "external",
       "icon": "none",
       "label": "sdhci-pci",
       "sublabel": "",
@@ -351,7 +351,7 @@
     },
     {
       "id": "block-e0048",
-      "type": "backend",
+      "type": "external",
       "icon": "none",
       "label": "virtio-net-pci",
       "sublabel": "QEMU user 网络",
