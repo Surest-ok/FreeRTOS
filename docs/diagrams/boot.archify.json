@@ -40,8 +40,8 @@
         55
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -56,12 +56,12 @@
       "label": "02  ukernel_start",
       "sublabel": "串口 · GICv3 · 定时器 · 创建任务",
       "pos": [
-        335,
+        360,
         55
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -76,12 +76,12 @@
       "label": "03  FreeRTOS 调度",
       "sublabel": "主核开始调度 · 启动监控任务",
       "pos": [
-        630,
+        680,
         55
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -96,12 +96,12 @@
       "label": "04  PSCI CPU_ON",
       "sublabel": "监控任务 · 拉起从核",
       "pos": [
-        40,
-        180
+        680,
+        230
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -116,12 +116,12 @@
       "label": "05  验收探针",
       "sublabel": "固定核 worker · 同步原语探针",
       "pos": [
-        335,
-        180
+        360,
+        230
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -136,12 +136,12 @@
       "label": "06  [sched-verify]",
       "sublabel": "监控任务周期 · 汇总打印",
       "pos": [
-        630,
-        180
+        40,
+        230
       ],
       "size": [
-        260,
-        96
+        280,
+        110
       ],
       "sources": [
         {
@@ -151,5 +151,41 @@
     }
   ],
   "boundaries": [],
-  "connections": []
+  "connections": [
+    {
+      "id": "flow-1",
+      "from": "block-e0001",
+      "to": "block-e0004",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-2",
+      "from": "block-e0004",
+      "to": "block-e0008",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-3",
+      "from": "block-e0008",
+      "to": "block-e0012",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "flow-4",
+      "from": "block-e0012",
+      "to": "block-e0016",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "flow-5",
+      "from": "block-e0016",
+      "to": "block-e0020",
+      "fromSide": "left",
+      "toSide": "right"
+    }
+  ]
 }

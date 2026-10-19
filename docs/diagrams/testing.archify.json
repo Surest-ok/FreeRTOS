@@ -36,12 +36,12 @@
       "label": "01  scons test",
       "sublabel": "SCHED_MODE=full / cross · CORES=N",
       "pos": [
-        40.0,
-        55.0
+        40,
+        55
       ],
       "size": [
-        176.0,
-        88.0
+        215,
+        115
       ],
       "sources": [
         {
@@ -56,12 +56,12 @@
       "label": "02  accept_qemu_sched.py",
       "sublabel": "启动 QEMU · 读取串口、解析标记",
       "pos": [
-        248.0,
-        55.0
+        280,
+        55
       ],
       "size": [
-        176.0,
-        88.0
+        215,
+        115
       ],
       "sources": [
         {
@@ -76,12 +76,12 @@
       "label": "03  QEMU",
       "sublabel": "virt · GICv3 · PL011 串口",
       "pos": [
-        456.0,
-        55.0
+        520,
+        55
       ],
       "size": [
-        176.0,
-        88.0
+        215,
+        115
       ],
       "sources": [
         {
@@ -96,12 +96,12 @@
       "label": "04  镜像内的探针任务",
       "sublabel": "调度 · 同步",
       "pos": [
-        664.0,
-        55.0
+        760,
+        55
       ],
       "size": [
-        176.0,
-        88.0
+        215,
+        115
       ],
       "sources": [
         {
@@ -116,12 +116,12 @@
       "label": "[sched-verify]",
       "sublabel": "full：在线 · 亲和性 · 优先级 · 轮转 · 信号量 · 队列 · 互斥锁",
       "pos": [
-        56,
-        235
+        40,
+        310
       ],
       "size": [
-        374,
-        110
+        450,
+        140
       ],
       "sources": [
         {
@@ -136,12 +136,12 @@
       "label": "[xsync-verify]",
       "sublabel": "cross：跨核信号量 · 队列 · 互斥锁 · 自旋锁压测",
       "pos": [
-        466,
-        235
+        525,
+        310
       ],
       "size": [
-        374,
-        110
+        450,
+        140
       ],
       "sources": [
         {
@@ -156,11 +156,11 @@
       "label": "SUMMARY",
       "sublabel": "全部要求项 pass：通过；panic / abort / 超时：失败",
       "pos": [
-        56,
-        370
+        40,
+        560
       ],
       "size": [
-        374,
+        935,
         110
       ],
       "sources": [
@@ -170,17 +170,106 @@
       ]
     }
   ],
-  "boundaries": [
+  "boundaries": [],
+  "connections": [
     {
-      "kind": "region",
-      "label": "串口上的结果标记",
-      "wraps": [
-        "block-e0019",
-        "block-e0022",
-        "block-e0025"
+      "id": "flow-1",
+      "from": "block-e0001",
+      "to": "block-e0004",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-2",
+      "from": "block-e0004",
+      "to": "block-e0008",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-3",
+      "from": "block-e0008",
+      "to": "block-e0012",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "flow-4",
+      "from": "block-e0012",
+      "to": "block-e0019",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          867.5,
+          228
+        ],
+        [
+          265.0,
+          228
+        ]
       ],
-      "pad": 16
+      "label": "full / quick",
+      "labelAt": [
+        566.25,
+        228
+      ]
+    },
+    {
+      "id": "flow-5",
+      "from": "block-e0012",
+      "to": "block-e0022",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          867.5,
+          258
+        ],
+        [
+          750.0,
+          258
+        ]
+      ],
+      "label": "cross*",
+      "labelAt": [
+        808.75,
+        258
+      ]
+    },
+    {
+      "id": "flow-7",
+      "from": "block-e0019",
+      "to": "block-e0025",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          265.0,
+          505
+        ],
+        [
+          507.5,
+          505
+        ]
+      ]
+    },
+    {
+      "id": "flow-8",
+      "from": "block-e0022",
+      "to": "block-e0025",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          750.0,
+          505
+        ],
+        [
+          507.5,
+          505
+        ]
+      ]
     }
-  ],
-  "connections": []
+  ]
 }
