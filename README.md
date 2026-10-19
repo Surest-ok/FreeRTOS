@@ -11,18 +11,7 @@
 
 <p align="center"><img src="docs/images/architecture.svg" alt="FreeRTOS SMP 系统架构" width="900"></p>
 
-## 分支
-
-| 分支 | 内容 |
-| --- | --- |
-| `master` | FreeRTOS SMP 内核、AArch64 移植层、arch 抽象层和 BSP，以及多核调度验收 |
-| `cherry-vfs` | 加入第一批组件：`cherry_kal`、`cherry_printk`、`cherry_timer`、`cherry_vfs`、`cherry_shell` |
-| `cherry-pci-sdio` | 再加入 `cherry_pci`（含 GICv3 ITS）和 `cherry_sdio` |
-| `cherry-ext4-fstools` | 再加入 `cherry_ext4` 和 `cherry_fstools` |
-| `vibe-coding-dev` | 组件拆成 18 个独立仓库（子模块），加入网络、NVMe、AHCI、进程与用户空间等 |
-| `technical-blogs` | 从零移植的技术博客，以及 FreeRTOS、LK、ThreadX 共用 arch 层的对比实验 |
-
-当前分支：**`vibe-coding-dev`**。
+从零移植 FreeRTOS SMP 的博文和对应的最小代码在 [`master`](https://github.com/Surest-ok/FreeRTOS/tree/master) 分支。
 
 ## 特性
 
