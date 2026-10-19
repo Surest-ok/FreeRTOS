@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 系统架构（最小内核）",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "ab491d779deb522871fd4f6210f26c0e7c8a5acc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0003",
+      "type": "frontend",
+      "icon": "none",
+      "label": "调度验收探针",
+      "sublabel": "Core 0 监控任务 · 固定核 worker · 优先级 / 轮转 / 同步原语探针",
+      "pos": [
+        56.0,
+        88.6
+      ],
+      "size": [
+        768.0,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0008",
+      "type": "backend",
+      "icon": "none",
+      "label": "FreeRTOS V11 SMP 内核",
+      "sublabel": "kernel/ · 任务 · 队列 · 定时器",
+      "pos": [
+        56.0,
+        227.8
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0011",
+      "type": "backend",
+      "icon": "none",
+      "label": "AArch64 SMP 移植层",
+      "sublabel": "kernel/port/ · 上下文切换 · SGI 0",
+      "pos": [
+        318.4,
+        227.8
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0014",
+      "type": "backend",
+      "icon": "none",
+      "label": "arch 抽象层",
+      "sublabel": "arch/ · 核号 · 原子 · 自旋锁 · IRQ",
+      "pos": [
+        580.8,
+        227.8
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0019",
+      "type": "backend",
+      "icon": "none",
+      "label": "startup.S",
+      "sublabel": "EL2  /  EL1 · 每核栈 · BSS",
+      "pos": [
+        56.0,
+        367.0
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0022",
+      "type": "backend",
+      "icon": "none",
+      "label": "GICv3 · Generic Timer",
+      "sublabel": "中断路由 · 时钟中断",
+      "pos": [
+        318.4,
+        367.0
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0025",
+      "type": "backend",
+      "icon": "none",
+      "label": "PL011 · PSCI",
+      "sublabel": "串口 · CPU_ON 拉起从核",
+      "pos": [
+        580.8,
+        367.0
+      ],
+      "size": [
+        243.2,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0030",
+      "type": "external",
+      "icon": "none",
+      "label": "Cortex-A53 × N",
+      "sublabel": "CORES = 1…32",
+      "pos": [
+        56.0,
+        506.2
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0033",
+      "type": "external",
+      "icon": "none",
+      "label": "GICv3",
+      "sublabel": "GICD · GICR · SGI",
+      "pos": [
+        252.8,
+        506.2
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0036",
+      "type": "external",
+      "icon": "none",
+      "label": "Generic Timer",
+      "sublabel": "1000 Hz 时钟",
+      "pos": [
+        449.6,
+        506.2
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0039",
+      "type": "external",
+      "icon": "none",
+      "label": "PL011 串口",
+      "sublabel": "0x09000000",
+      "pos": [
+        646.4,
+        506.2
+      ],
+      "size": [
+        177.6,
+        76.8
+      ],
+      "sources": [
+        {
+          "path": "docs/images/architecture.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "应用与验收  bsp/src/app.c",
+      "wraps": [
+        "block-e0003"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "FreeRTOS SMP",
+      "wraps": [
+        "block-e0008",
+        "block-e0011",
+        "block-e0014"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "板级支持包  bsp/",
+      "wraps": [
+        "block-e0019",
+        "block-e0022",
+        "block-e0025"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "硬件  QEMU virt",
+      "wraps": [
+        "block-e0030",
+        "block-e0033",
+        "block-e0036",
+        "block-e0039"
+      ],
+      "pad": 16
+    }
+  ],
+  "connections": []
+}

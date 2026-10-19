@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 启动流程（最小内核）",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/boot.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "ab491d779deb522871fd4f6210f26c0e7c8a5acc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0001",
+      "type": "backend",
+      "icon": "none",
+      "label": "01  startup.S",
+      "sublabel": "EL2  /  EL1 · 栈 · BSS · 向量表",
+      "pos": [
+        40,
+        55
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0004",
+      "type": "backend",
+      "icon": "none",
+      "label": "02  ukernel_start",
+      "sublabel": "串口 · GICv3 · 定时器 · 创建任务",
+      "pos": [
+        335,
+        55
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0008",
+      "type": "backend",
+      "icon": "none",
+      "label": "03  FreeRTOS 调度",
+      "sublabel": "主核开始调度 · 启动监控任务",
+      "pos": [
+        630,
+        55
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0012",
+      "type": "backend",
+      "icon": "none",
+      "label": "04  PSCI CPU_ON",
+      "sublabel": "监控任务 · 拉起从核",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0016",
+      "type": "backend",
+      "icon": "none",
+      "label": "05  验收探针",
+      "sublabel": "固定核 worker · 同步原语探针",
+      "pos": [
+        335,
+        180
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0020",
+      "type": "backend",
+      "icon": "none",
+      "label": "06  [sched-verify]",
+      "sublabel": "监控任务周期 · 汇总打印",
+      "pos": [
+        630,
+        180
+      ],
+      "size": [
+        260,
+        96
+      ],
+      "sources": [
+        {
+          "path": "docs/images/boot.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [],
+  "connections": []
+}

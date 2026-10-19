@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreeRTOS SMP · 自动化验收（最小内核）",
+    "locale": "zh-CN",
+    "output": "docs/diagrams/testing.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:Surest-ok/FreeRTOS.git",
+      "revision": "ab491d779deb522871fd4f6210f26c0e7c8a5acc",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "应用与验收"
+        },
+        "backend": {
+          "label": "系统组件"
+        },
+        "external": {
+          "label": "硬件平台"
+        },
+        "security": {
+          "label": "内核抽象服务"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "block-e0001",
+      "type": "backend",
+      "icon": "none",
+      "label": "01  scons test",
+      "sublabel": "SCHED_MODE=full / cross · CORES=N",
+      "pos": [
+        40.0,
+        55.0
+      ],
+      "size": [
+        176.0,
+        88.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0004",
+      "type": "backend",
+      "icon": "none",
+      "label": "02  accept_qemu_sched.py",
+      "sublabel": "启动 QEMU · 读取串口、解析标记",
+      "pos": [
+        248.0,
+        55.0
+      ],
+      "size": [
+        176.0,
+        88.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0008",
+      "type": "backend",
+      "icon": "none",
+      "label": "03  QEMU",
+      "sublabel": "virt · GICv3 · PL011 串口",
+      "pos": [
+        456.0,
+        55.0
+      ],
+      "size": [
+        176.0,
+        88.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0012",
+      "type": "backend",
+      "icon": "none",
+      "label": "04  镜像内的探针任务",
+      "sublabel": "调度 · 同步",
+      "pos": [
+        664.0,
+        55.0
+      ],
+      "size": [
+        176.0,
+        88.0
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0019",
+      "type": "backend",
+      "icon": "none",
+      "label": "[sched-verify]",
+      "sublabel": "full：在线 · 亲和性 · 优先级 · 轮转 · 信号量 · 队列 · 互斥锁",
+      "pos": [
+        56,
+        235
+      ],
+      "size": [
+        374,
+        110
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0022",
+      "type": "backend",
+      "icon": "none",
+      "label": "[xsync-verify]",
+      "sublabel": "cross：跨核信号量 · 队列 · 互斥锁 · 自旋锁压测",
+      "pos": [
+        466,
+        235
+      ],
+      "size": [
+        374,
+        110
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    },
+    {
+      "id": "block-e0025",
+      "type": "backend",
+      "icon": "none",
+      "label": "SUMMARY",
+      "sublabel": "全部要求项 pass：通过；panic / abort / 超时：失败",
+      "pos": [
+        56,
+        370
+      ],
+      "size": [
+        374,
+        110
+      ],
+      "sources": [
+        {
+          "path": "docs/images/testing.excalidraw"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "串口上的结果标记",
+      "wraps": [
+        "block-e0019",
+        "block-e0022",
+        "block-e0025"
+      ],
+      "pad": 16
+    }
+  ],
+  "connections": []
+}
